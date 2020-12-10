@@ -1,1 +1,1 @@
-# canvas-project-coord
+# myuni-project-coord
