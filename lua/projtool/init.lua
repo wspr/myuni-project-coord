@@ -277,6 +277,7 @@ end
 
 
 function proj:check_assignment(assign_data,check_bool)
+  print("CHECKING ASSIGNMENT MARKING")
 
   local Nrubric = #canvas.assignments[proj.assign_name_canvas].rubric
 
@@ -306,9 +307,9 @@ function proj:check_assignment(assign_data,check_bool)
     j.metadata.assessment_check.rubric_incomplete = false
     j.metadata.assessment_check.rubric_sum = 0
     j.metadata.assessment_check.rubric_error = false
-    if j.grade then
+    if j.metadata.supervisor_mark then
       j.metadata.assessment_check.graded = true
-      print("Grade: "..j.grade)
+      print("Grade: "..j.metadata.supervisor_mark)
       if j.rubric_assessment then
         j.metadata.assessment_check.rubric = true
         for ii,jj in pairs(j.rubric_assessment) do
@@ -322,9 +323,9 @@ function proj:check_assignment(assign_data,check_bool)
         end
         if rubric_count == Nrubric then
           print("Rubric complete: " .. rubric_count .. " of " .. Nrubric .. " entries.")
-          if math.abs(rubric_sum-j.grade)>=0.5 then
+          if math.abs(rubric_sum-j.metadata.supervisor_mark)>=0.5 then
             j.metadata.assessment_check.rubric_error = true
-            print("ERROR: rubric sum ("..rubric_sum..") does not match final mark awarded ("..j.grade..")")
+            print("ERROR: rubric sum ("..rubric_sum..") does not match final mark awarded ("..j.metadata.supervisor_mark..")")
             rubric_fail = true
           end
         elseif rubric_count < Nrubric then
@@ -339,7 +340,7 @@ function proj:check_assignment(assign_data,check_bool)
       if rubric_fail then
         if check_bool then
           print("Rubric fail: send message? Type y to do so:")
-          proj:message_rubric_fail( io.read()=="y" ,j,j.grade,rubric_sum,rubric_count,Nrubric)
+          proj:message_rubric_fail( io.read()=="y" ,j,j.metadata.supervisor_mark,rubric_sum,rubric_count,Nrubric)
         end
       end
     else
@@ -374,9 +375,7 @@ end
 function proj:check_moderated(assign_data)
   print("CHECKING MODERATED ASSIGNMENT MARKING")
 
-  local Nrubric = 9
-  local Nmarked = 0
-
+  local Nrubric = #canvas.assignments[self.assign_name_canvas].rubric
   local cc = 0
 
   for i,j in pairs(assign_data) do
@@ -421,14 +420,12 @@ function proj:check_moderated(assign_data)
             proj:message_rubric_no_grade(io.read()=="y",j,assr)
       else
         for ii,jj in ipairs(jg.rubric_assessments) do
-          assr = jj.assessor_name
-          scr  = jj.score
 
           if jj.score==nil then
             error("      Assessor: "..jj.assessor_name.." - rubric entries but no score.")
             print("Rubric fail: send message? Type y to do so:")
             local remind_check = io.read()
-            proj:message_rubric_no_grade(remind_check=="y",j,assr)
+            proj:message_rubric_no_grade(remind_check=="y",j,jj.assessor_name)
           end
 
           for iii,jjj in pairs(jj.data) do
@@ -441,7 +438,6 @@ function proj:check_moderated(assign_data)
           end
 
           if rubric_count == Nrubric then
-            Nmarked = Nmarked + 1
             print("      Assessor: "..jj.assessor_name.." ("..jj.score..") - rubric complete.")
             if jj.score==nil then
               pretty.dump(jj)
@@ -462,6 +458,8 @@ function proj:check_moderated(assign_data)
             proj:message_rubric_fail(remind_check=="y",j,jj.score,rubric_sum,rubric_count,Nrubric,jj.assessor_name)
           end
 
+          assr = jj.assessor_name
+          scr  = jj.score
         end
       end
 
@@ -502,7 +500,8 @@ function proj:message_reminder_add(j,markers_msg)
   end
 
   markers_msg[acad_name].msg = markers_msg[acad_name].msg ..
-    "\n • " .. j.user.name .. ": " .. j.metadata.proj_title .. "\n     <" .. j.metadata.url .. ">\n"
+    "\n • " .. j.user.name .. ": " .. j.metadata.proj_title .. " ("..j.metadata.proj_id..")" ..
+    "\n     <" .. j.metadata.url .. ">\n"
 
 end
 
@@ -592,7 +591,7 @@ function proj:message_rubric_fail(remind_check,j,score,rubric_sum,rubric_count,N
     body      = "Dear " .. assessor_name .. ",\n\n" .. [[
 This is an semi-automated reminder. ]]  .. "\n\n" .. [[
 You have assessed the following student/group:]] .. "\n\n" ..
-j.user.name .. ": " .. j.metadata.proj_title .. "\n\n" .. [[
+j.user.name .. ": " .. j.metadata.proj_title .. " ("..j.metadata.proj_id..")" .. "\n\n" .. [[
 You have awarded them a grade of ]] .. score .. "/100 but " .. rubric_fail_str .. "\n\n" .. [[
 Please correct this at the assessment page via the following link:]] .. "\n\n" ..
 j.metadata.url .. "\n\n" .. proj.message.signoff
@@ -607,8 +606,8 @@ function proj:message_rubric_no_grade(remind_check,j,assessor_name)
     subject   = proj.assign_name_colloq.." marking: " .. j.user.name ,
     body      = "Dear " .. assessor_name .. ",\n\n" .. [[
 This is an semi-automated reminder. ]]  .. "\n\n" .. [[
-You have assessed the following student:]] .. "\n\n" ..
-j.metadata.proj_id .. ": " .. j.metadata.proj_title .. "\n\n" .. [[
+You have assessed the following student/group:]] .. "\n\n" ..
+j.user.name .. ": " .. j.metadata.proj_title .. " ("..j.metadata.proj_id..")" .. "\n\n" .. [[
 You have not yet awarded them a total mark but all rubric entries have been completed.]] .. "\n\n" .. [[
 Once you are ready to finalise their mark, enter it in the assessment page via the following link:]] .. "\n\n    " ..
 j.metadata.url .. "\n\n" .. proj.message.signoff
@@ -633,8 +632,7 @@ For traceability, the grade MUST be entered via the marking rubric in MyUni and 
 
 Your continued efforts to make these courses a success are much appreciated.
 
-Not that separate reminders are sent separately for MEng and BEng reports/papers in each semester.
-]] .. "\n\n" .. proj.message.signoff
+Not that separate reminders are sent separately for MEng and BEng reports/papers in each semester.]]
 
 
 function proj:assessor_reminder_final(remind_check,subm)
@@ -650,7 +648,7 @@ function proj:assessor_reminder_final(remind_check,subm)
     end
 
     markers_msg[acad_name][sup_or_mod] = markers_msg[acad_name][sup_or_mod] ..
-      "\n • Project " .. j.metadata.proj_id .. ": " .. j.metadata.proj_title .. "\n     <" .. j.metadata.url .. ">\n"
+      "\n • " .. j.user.name .. ": " .. j.metadata.proj_title .. " ("..j.metadata.proj_id..")" .. "\n     <" .. j.metadata.url .. ">\n"
 
   end
 
@@ -689,12 +687,156 @@ function proj:assessor_reminder_final(remind_check,subm)
       course    = canvas.courseid,
       canvasid  = proj.all_staff[acad_name].id ,
       subject   = proj.assign_name_colloq.." marking",
-      body      = salutation .. reminder_body_opening .. "\n" .. body .. reminder_body_close
+      body      = salutation .. reminder_body_opening .. "\n" .. body .. reminder_body_close .. "\n\n" .. proj.message.signoff
     })
 
   end
 
 end
+
+
+local grade_ranks = {"Close", "Near", "Far", "Problem", "Critical"}
+local grade_thresh = {4,8,12,16,20}
+local resolve_flag = {"Y","Y","y","n","N"}
+local good_thresh =  5 -- <
+local safe_thresh = 10 -- <
+local oops_thresh = 20 -- <
+
+
+function proj:resolve_grades(canvas_subfin)
+
+
+  for i,j in pairs(canvas_subfin) do
+
+    if (j.metadata.supervisor_mark and j.metadata.moderator_mark) then
+
+      local csv_resolve = j.metadata.resolve
+      local grade_diff = math.abs(j.metadata.supervisor_mark - j.metadata.moderator_mark)
+
+      if j.metadata.resolve == "" then
+
+        local close_rank
+        for gg = 1,5 do
+          if grade_diff < grade_thresh[gg] then
+            close_rank = gg
+            canvas_subfin[i].metadata.resolve = resolve_flag[gg]
+            break
+          end
+        end
+
+        if close_rank then
+          print("=====================================")
+          print("# Assessment resolution: "..j.user.name..", "..j.metadata.proj_title.." ("..j.metadata.proj_id..")")
+          print("Supervisor - "..j.metadata.supervisor_mark.." - "..j.metadata.supervisor)
+          print("Moderator  - "..j.metadata.moderator_mark.." - "..j.metadata.moderator)
+          print("Difference - "..grade_diff.." - "..grade_ranks[close_rank])
+
+          print("## Send resolution? Type y to do so:")
+          resolve_check = io.read()=="y"
+
+          self:message_resolution(resolve_check,j,close_rank,false)
+          if not(resolve_check) then
+            j.metadata.resolve = ""
+          end
+        end
+
+      elseif j.metadata.resolve == "n" then
+
+        local close_rank
+        for gg = 1,5 do
+          if grade_diff < grade_thresh[gg] then
+            close_rank = gg
+            canvas_subfin[i].metadata.resolve = resolve_flag[gg]
+            break
+          end
+        end
+
+        if (csv_resolve == "n" or csv_resolve == "N") and close_rank < 4 then
+          print("=====================================")
+          print("# Assessment resolution: "..j.user.name..", "..j.metadata.proj_title.." ("..j.metadata.proj_id..")")
+          print("INCONSISTENCY RESOLVED")
+          print("Supervisor - "..j.metadata.supervisor_mark.." - "..j.metadata.supervisor)
+          print("Moderator  - "..j.metadata.moderator_mark.." - "..j.metadata.moderator)
+          print("Difference - "..grade_diff.." - "..grade_ranks[close_rank])
+
+          print("## Send resolution? Type y to do so:")
+          resolve_check = io.read()
+
+          self:message_resolution(resolve_check=="y",j,close_rank,true)
+          if not(resolve_check == "y") then
+            canvas_subfin[i].metadata.resolve = "N"
+          end
+        end
+
+      end
+
+    end
+  end
+
+end
+
+
+local resolve_msg = {
+  { subject = "Marking thanks" ,
+    body = [[
+These grades are very close and will be averaged to calculate the final grade for the group.]] } ,
+  { subject = "Marking thanks" ,
+    body = [[
+These grades are quite consistent and will be averaged to calculate the final grade for the group.]] } ,
+  { subject = "Marking concern" ,
+    body = [[
+These grades are somewhat inconsistent but are close enough that, unless I hear otherwise from you, they will be averaged to calculate the final grade for the group. I invite you to view the assessment of your colleague, and discuss with them, to consider the discrepancy.]] } ,
+  { subject = "Marking resolution needed" ,
+    body = [[
+These grades are inconsistent and must be resolved. Please discuss with your colleague to reappraise your assessments.
+
+After discussion, update your mark against the rubric. Your marks do not need to be identical; we will still take an average of the two to calculate the final mark for the group.
+
+If you cannot come to a sufficiently close assessment we will organise a third assessment by another independent moderator.]] } ,
+  { subject = "Marking 3rd moderator" ,
+    body = [[
+These grades differ considerably and to resolve this issue we will be organising a third assessment by another independent moderator.]] } ,
+}
+
+
+function proj:message_resolution(send_bool,j,close_rank,inconsistent_resolved)
+
+  local body_text = "\n\n" .. [[
+You have assessed the following student/group:]] .. "\n\n" ..
+" • " .. j.user.name .. ": " .. j.metadata.proj_title .. " ("..j.metadata.proj_id..")" .. "\n\n" ..
+    "They have been awarded marks of: " .. "\n\n" ..
+    " • Supervisor - "..j.metadata.supervisor_mark..    " (" .. j.metadata.supervisor .. ")\n" ..
+    " • Moderator  - "..j.metadata.moderator_mark.." (" .. j.metadata.moderator .. ")\n\n"
+
+  if inconsistent_resolved then
+    body_text = body_text .. "Thank you for re-assessing and/or reviewing your marks for this project, they are now close enough to be resolved without a third assessor." .. "\n\n"
+  end
+
+  local body_end = "\n\n" .. [[
+You may view your own assessment at the following link after logging into MyUni:
+
+    • ]] .. j.metadata.url .. "\n" .. [[
+
+If you wish to update your assessment, please make the changes directly in MyUni and let us know by email.
+
+Thank you for your significant contributions towards the success of our honours projects.]]
+
+  canvas:message_user(send_bool,{
+    canvasid  = proj.all_staff[j.metadata.supervisor].id ,
+    subject   = proj.assign_name_colloq.." marking: " .. resolve_msg[close_rank].subject .. " ("..j.metadata.proj_id..")" ,
+    body      = "Dear " .. j.metadata.supervisor .. body_text .. resolve_msg[close_rank].body .. body_end .. "\n\n" .. proj.message.signoff
+          })
+
+  canvas:message_user(send_bool,{
+    canvasid  = proj.all_staff[j.metadata.moderator].id ,
+    subject   = proj.assign_name_colloq.." marking: " .. resolve_msg[close_rank].subject .. " ("..j.metadata.proj_id..")" ,
+    body      = "Dear " .. j.metadata.moderator .. body_text .. resolve_msg[close_rank].body .. body_end .. "\n\n" .. proj.message.signoff
+          })
+
+end
+
+
+
 
 
 
