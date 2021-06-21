@@ -403,12 +403,6 @@ function proj:check_moderated(assign_data)
       error("No provisional grades? This shouldn't happen.")
     end
 
-    local rubric_data  = {}
-    local rubric_count = 0
-    local rubric_sum   = 0
-    local rubric_fail  = false
-    local grade_count = 0
-
     assign_data[i].marks = assign_data[i].marks or {}
 
     print("\n"..cc..". Student: "..j.user.name)
@@ -438,6 +432,12 @@ function proj:check_moderated(assign_data)
             proj:message_rubric_no_grade(io.read()=="y",j,assr)
       else
         for ii,jj in ipairs(jg.rubric_assessments) do
+
+          local rubric_data  = {}
+          local rubric_count = 0
+          local rubric_sum   = 0
+          local rubric_fail  = false
+          local grade_count = 0
 
           if jj.score==nil then
             error("      Assessor: "..jj.assessor_name.." - rubric entries but no score.")
@@ -471,9 +471,7 @@ function proj:check_moderated(assign_data)
           end
 
           if rubric_fail then
-            print("Rubric fail: send message? Type y to do so:")
-            local remind_check = io.read()
-            proj:message_rubric_fail(remind_check=="y",j,jj.score,rubric_sum,rubric_count,Nrubric,jj.assessor_name)
+              print("Rubric fail: send message? Type y to do so:")              proj:message_rubric_fail(io.read()=="y",j,jj.score,rubric_sum,rubric_count,Nrubric,jj.assessor_name)
           end
 
           assr = jj.assessor_name
@@ -600,7 +598,9 @@ function proj:message_rubric_fail(remind_check,j,score,rubric_sum,rubric_count,N
   elseif rubric_count == Nrubric then
     rubric_fail_str = "the sum of your rubric entries is " .. rubric_sum .. ". Please correct the total and/or the rubric to ensure these are consistent."
   else
-    error("This shouldn't happen")
+    print("rubric_count = "..rubric_count)
+    print("Nrubric = "..Nrubric)
+    error("Rubric count does not compare properly. This shouldn't happen")
   end
 
   canvas:message_user(remind_check,{
