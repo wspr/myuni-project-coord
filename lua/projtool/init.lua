@@ -167,6 +167,17 @@ end
 
 
 
+function proj:get_submissions(get_bool)
+
+  local canvas_subfin = canvas:get_assignment(get_bool,self.assign_name_canvas,{include={"provisional_grades","user","rubric_assessment"}})
+  canvas_subfin = proj:subm_remove(canvas_subfin)
+
+  return canvas_subfin
+
+end
+
+
+
 function proj:subm_remove(subm)
   local to_remove = {}
   for i,j in ipairs(subm) do
@@ -193,10 +204,14 @@ end
 function proj:add_assessment_metadata(canvas_subm)
 
   local resolve = {}
+  local override = {}
+  local comments = {}
   if path.exists(self.marks_csv) then
     local f = csv.open(self.marks_csv)
     for fields in f:lines() do
-      resolve[fields[2]] = fields[9]
+      resolve[fields[2]]  = fields[9]
+      override[fields[2]] = fields[10]
+      comments[fields[2]] = fields[11]
     end
   end
 
@@ -216,7 +231,9 @@ function proj:add_assessment_metadata(canvas_subm)
       subm[student_id].metadata.moderator   = proj.proj_data[ind].moderator
       subm[student_id].metadata.school      = proj.proj_data[ind].school
       subm[student_id].metadata.url  = canvas.url .. canvas.course_prefix .. "gradebook/speed_grader?assignment_id="..subm_entry.assignment_id.."#%7B%22student_id%22%3A%22"..subm_entry.user_id.."%22%7D"
-      subm[student_id].metadata.resolve = resolve[student_id] or ""
+      subm[student_id].metadata.resolve  = resolve[student_id]  or ""
+      subm[student_id].metadata.override = override[student_id] or ""
+      subm[student_id].metadata.comments = comments[student_id] or ""
     else
       print("No metadata found for this student/group.")
     end
@@ -235,7 +252,7 @@ function proj:export_csv_marks_moderated(subm,arg)
   local weightings = arg.weightings or {0.5,0.5}
 
   local ff = io.output(self.marks_csv)
-  io.write("INDEX,USERID,NAME,SCHOOL,PROJID,TITLE,MARK,DIFF,RESOLVED,SUPERVISOR,SUPMARK,MODERATOR,MODMARK,MOD2,MODMARK2,URL,ASSESSOR1,SCORE1,ASSESSOR2,SCORE2,ASSESSOR3,SCORE3,ASSESSOR4,SCORE4,\n")
+  io.write("INDEX,USERID,NAME,SCHOOL,PROJID,TITLE,MARK,DIFF,RESOLVED,OVERRIDE,COMMENTS,SUPERVISOR,SUPMARK,MODERATOR,MODMARK,URL,ASSESSOR1,SCORE1,ASSESSOR2,SCORE2,ASSESSOR3,SCORE3,ASSESSOR4,SCORE4,\n")
   local cc = 0
   for i,j in pairs(subm) do
     cc = cc+1
@@ -252,25 +269,25 @@ function proj:export_csv_marks_moderated(subm,arg)
       (j.user.name or "")..","..
       (j.metadata.school or "")..","..
       (j.metadata.proj_id or "")..","..
-      "\""..(j.metadata.proj_title or "").."\""..","..
+      "\"'"..(j.metadata.proj_title or "").."'\""..","..
       (mark or "")..","..
       (diff or "")..","..
-      (resolved or "")..","..
+      (j.metadata.resolve  or "")..","..
+      (j.metadata.override or "")..","..
+      (j.metadata.comments or "")..","..
       (j.metadata.supervisor or "")..","..
       (j.metadata.supervisor_mark or "")..","..
       (j.metadata.moderator or "")..","..
       (j.metadata.moderator_mark or "")..","..
-      (j.metadata.moder2 or "")..","..
-      (j.metadata.grade_mod2 or "")..","..
       (j.metadata.url or "")..","
 
     for kk,vv in pairs(j.marks) do
       writestr = writestr..kk..","..vv..","
     end
+
     io.write(writestr.."\n")
   end
   io.close(ff)
-
 
 end
 
@@ -369,6 +386,7 @@ function proj:check_assignment(assign_data,check_bool)
   return
 
 end
+
 
 
 
@@ -632,7 +650,7 @@ For traceability, the grade MUST be entered via the marking rubric in MyUni and 
 
 Your continued efforts to make these courses a success are much appreciated.
 
-Not that separate reminders are sent separately for MEng and BEng reports/papers in each semester.]]
+Note that separate reminders are sent separately for MEng and BEng reports/papers in each semester.]]
 
 
 function proj:assessor_reminder_final(remind_check,subm)
@@ -695,16 +713,60 @@ function proj:assessor_reminder_final(remind_check,subm)
 end
 
 
-local grade_ranks = {"Close", "Near", "Far", "Problem", "Critical"}
-local grade_thresh = {4,8,12,16,20}
-local resolve_flag = {"Y","Y","y","n","N"}
-local good_thresh =  5 -- <
-local safe_thresh = 10 -- <
-local oops_thresh = 20 -- <
+
+local resolve_msg = {
+  {
+    threshold = 5 ,
+    subject = "Marking thanks" ,
+    rank = "Close",
+    flag = "Y",
+    body = [[
+These grades are very close and will be taken to calculate the final grade for the group.]]
+  } ,
+  {
+    threshold = 10 ,
+    subject = "Marking thanks" ,
+    rank = "Near",
+    flag = "Y",
+    body = [[
+These grades are quite consistent and will be taken to calculate the final grade for the group.]]
+  } ,
+  {
+    threshold = 15 ,
+    subject = "Marking concern" ,
+    rank = "Far",
+    flag = "y",
+    body = [[
+These grades are rather inconsistent but are close enough that, unless I hear otherwise from you, they will be taken to calculate the final grade for the student/group. I invite you to view the assessment of your colleague, and discuss with them, to consider the discrepancy.]]
+  } ,
+  {
+    threshold = 20 ,
+    subject = "Marking resolution needed" ,
+    rank = "Problem",
+    flag = "n",
+    body = [[
+These grades are inconsistent and must be resolved. Please discuss with your colleague to reappraise your assessments.
+
+After discussion, update your mark against the rubric in MyUni as needed. Your marks do not need to be identical; we will still take an average of the two to calculate the final mark for the student/group.
+
+If you cannot come to a sufficiently close assessment we will organise a third assessment by another independent moderator.]]
+  } ,
+  {
+    threshold = 99 ,
+    subject = "Marking 3rd moderator" ,
+    rank = "Critical",
+    flag = "N",
+    body = [[
+These grades are inconsistent and must be resolved. Please discuss with your colleague to reappraise your assessments.
+
+After discussion, update your mark against the rubric in MyUni as needed. Your marks do not need to be identical; we will still take an average of the two to calculate the final mark for the student/group.
+
+We will also organise a third assessment by another independent moderator.]]
+  } ,
+}
 
 
 function proj:resolve_grades(canvas_subfin)
-
 
   for i,j in pairs(canvas_subfin) do
 
@@ -716,10 +778,10 @@ function proj:resolve_grades(canvas_subfin)
       if j.metadata.resolve == "" then
 
         local close_rank
-        for gg = 1,5 do
-          if grade_diff < grade_thresh[gg] then
+        for gg = 1,#resolve_msg do
+          if grade_diff <= resolve_msg[gg].threshold then
             close_rank = gg
-            canvas_subfin[i].metadata.resolve = resolve_flag[gg]
+            canvas_subfin[i].metadata.resolve = resolve_msg[close_rank].flag
             break
           end
         end
@@ -729,24 +791,25 @@ function proj:resolve_grades(canvas_subfin)
           print("# Assessment resolution: "..j.user.name..", "..j.metadata.proj_title.." ("..j.metadata.proj_id..")")
           print("Supervisor - "..j.metadata.supervisor_mark.." - "..j.metadata.supervisor)
           print("Moderator  - "..j.metadata.moderator_mark.." - "..j.metadata.moderator)
-          print("Difference - "..grade_diff.." - "..grade_ranks[close_rank])
+          print("Difference - "..grade_diff.." - "..resolve_msg[close_rank].rank)
+          print("Resolve flag - "..j.metadata.resolve)
 
           print("## Send resolution? Type y to do so:")
           resolve_check = io.read()=="y"
 
           self:message_resolution(resolve_check,j,close_rank,false)
           if not(resolve_check) then
-            j.metadata.resolve = ""
+            canvas_subfin[i].metadata.resolve = ""
           end
         end
 
       elseif j.metadata.resolve == "n" then
 
         local close_rank
-        for gg = 1,5 do
-          if grade_diff < grade_thresh[gg] then
+        for gg = 1,#resolve_msg do
+          if grade_diff <= resolve_msg[gg].threshold then
             close_rank = gg
-            canvas_subfin[i].metadata.resolve = resolve_flag[gg]
+            canvas_subfin[i].metadata.resolve = resolve_msg[close_rank].flag
             break
           end
         end
@@ -757,14 +820,14 @@ function proj:resolve_grades(canvas_subfin)
           print("INCONSISTENCY RESOLVED")
           print("Supervisor - "..j.metadata.supervisor_mark.." - "..j.metadata.supervisor)
           print("Moderator  - "..j.metadata.moderator_mark.." - "..j.metadata.moderator)
-          print("Difference - "..grade_diff.." - "..grade_ranks[close_rank])
+          print("Difference - "..grade_diff.." - "..resolve_msg[close_rank].rank)
 
           print("## Send resolution? Type y to do so:")
-          resolve_check = io.read()
+          resolve_check = io.read()=="y"
 
-          self:message_resolution(resolve_check=="y",j,close_rank,true)
-          if not(resolve_check == "y") then
-            canvas_subfin[i].metadata.resolve = "N"
+          self:message_resolution(resolve_check,j,close_rank,true)
+          if not(resolve_check) then
+            canvas_subfin[i].metadata.resolve = csv_resolve
           end
         end
 
@@ -775,28 +838,6 @@ function proj:resolve_grades(canvas_subfin)
 
 end
 
-
-local resolve_msg = {
-  { subject = "Marking thanks" ,
-    body = [[
-These grades are very close and will be averaged to calculate the final grade for the group.]] } ,
-  { subject = "Marking thanks" ,
-    body = [[
-These grades are quite consistent and will be averaged to calculate the final grade for the group.]] } ,
-  { subject = "Marking concern" ,
-    body = [[
-These grades are somewhat inconsistent but are close enough that, unless I hear otherwise from you, they will be averaged to calculate the final grade for the group. I invite you to view the assessment of your colleague, and discuss with them, to consider the discrepancy.]] } ,
-  { subject = "Marking resolution needed" ,
-    body = [[
-These grades are inconsistent and must be resolved. Please discuss with your colleague to reappraise your assessments.
-
-After discussion, update your mark against the rubric. Your marks do not need to be identical; we will still take an average of the two to calculate the final mark for the group.
-
-If you cannot come to a sufficiently close assessment we will organise a third assessment by another independent moderator.]] } ,
-  { subject = "Marking 3rd moderator" ,
-    body = [[
-These grades differ considerably and to resolve this issue we will be organising a third assessment by another independent moderator.]] } ,
-}
 
 
 function proj:message_resolution(send_bool,j,close_rank,inconsistent_resolved)
@@ -819,7 +860,7 @@ You may view your own assessment at the following link after logging into MyUni:
 
 If you wish to update your assessment, please make the changes directly in MyUni and let us know by email.
 
-Thank you for your significant contributions towards the success of our honours projects.]]
+Thank you for your significant contributions towards the success of our capstone project courses.]]
 
   canvas:message_user(send_bool,{
     canvasid  = proj.all_staff[j.metadata.supervisor].id ,
