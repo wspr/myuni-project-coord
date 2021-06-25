@@ -8,4 +8,7 @@ build = {
    modules = {} -- auto detected within "lua/"
 }
 dependencies = {
+  "csv",
+  "binser",
+  "penlight",
 }
