@@ -13,8 +13,8 @@ end
 function proj:set_assign_name_canvas(str)
   self.assign_name_canvas = str
 end
-function proj:set_assign_grouped(str)
-  self.assign_grouped = str
+function proj:set_assign_grouped(bool)
+  self.assign_grouped = bool
 end
 
 return proj

@@ -21,7 +21,7 @@ function proj:check_assignment(assign_data,check_bool)
     if j.metadata == nil then
       cc = cc+1
       pretty.dump(j)
-      error("Student: "..j.user.name.."  ("..j.user.sis_user_id..")")
+      error("No metadata for student '"..j.user.name.."'  ("..j.user.sis_user_id..")")
     end
   end
   if cc>0 then
@@ -32,6 +32,7 @@ function proj:check_assignment(assign_data,check_bool)
 
     print("\nStudent: "..j.user.name.."  ("..j.user.sis_user_id..")")
     print("Supervisor: "..j.metadata.supervisor)
+    print("URL: "..j.metadata.url)
     local rubric_data  = {}
     local rubric_count = 0
     local rubric_sum   = 0
@@ -149,8 +150,8 @@ function proj:check_moderated(assign_data)
         end
         scr  = jg.score
         print("      Assessor: "..assr.." ("..scr..") - score but no rubric.")
-            print("Rubric fail: send message? Type y to do so:")
-            self:message_rubric_no_grade(io.read()=="y",j,assr)
+        print("Rubric fail: send message? Type y to do so:")
+        self:message_rubric_no_grade(io.read()=="y",j,assr)
       else
         for ii,jj in ipairs(jg.rubric_assessments) do
 
@@ -158,42 +159,41 @@ function proj:check_moderated(assign_data)
           local rubric_count = 0
           local rubric_sum   = 0
           local rubric_fail  = false
-          local grade_count = 0
-
-          if jj.score==nil then
-            error("      Assessor: "..jj.assessor_name.." - rubric entries but no score.")
-            print("Rubric fail: send message? Type y to do so:")
-            local remind_check = io.read()
-            self:message_rubric_no_grade(remind_check=="y",j,jj.assessor_name)
-          end
 
           for iii,jjj in pairs(jj.data) do
             rubric_data[iii] = jjj.points
             if jjj.points then
-              rubric_sum = rubric_sum + jjj.points
-  --            print("  Rubric mark: " .. jjj.points)
-              rubric_count = rubric_count+1
+              rubric_sum   = rubric_sum + jjj.points
+              rubric_count = rubric_count + 1
             end
           end
 
-          if rubric_count == Nrubric then
-            print("      Assessor: "..jj.assessor_name.." ("..jj.score..") - rubric complete.")
-            if jj.score==nil then
-              pretty.dump(jj)
-              error("No SCORE table entry? This shouldn't happen.")
+          if jj.score==nil then
+            print("      Assessor: "..jj.assessor_name.." - rubric entries but no score.")
+            print("Rubric fail: send message? Type y to do so:")
+            local remind_check = io.read()
+            if rubric_count == Nrubric then
+              print("      Assessor: "..jj.assessor_name.." ("..rubric_sum..") - rubric complete but no SCORE.")
+              self:message_rubric_no_grade(remind_check=="y",j,jj.assessor_name)
             end
-            if rubric_sum-jj.score>0.5 or rubric_sum-jj.score<-0.5 then
-              print("      Assessor: "..jj.assessor_name.." ("..jj.score..") - ERROR: rubric sum ("..rubric_sum..") does not match final mark awarded ("..jj.score..")")
+          else
+
+            if rubric_count == Nrubric then
+              print("      Assessor: "..jj.assessor_name.." ("..jj.score..") - rubric complete.")
+              if rubric_sum-jj.score>0.5 or rubric_sum-jj.score<-0.5 then
+                print("      Assessor: "..jj.assessor_name.." ("..jj.score..") - ERROR: rubric sum ("..rubric_sum..") does not match final mark awarded ("..jj.score..")")
+                rubric_fail = true
+              end
+            elseif rubric_count < Nrubric then
+              print("      Assessor: "..jj.assessor_name.." ("..jj.score..") - ERROR: Only "..rubric_count.." of "..Nrubric.." rubric entries completed.")
               rubric_fail = true
             end
-          elseif rubric_count < Nrubric then
-            print("      Assessor: "..jj.assessor_name.." ("..jj.score..") - ERROR: Only "..rubric_count.." of "..Nrubric.." rubric entries completed.")
-            rubric_fail = true
-          end
 
-          if rubric_fail then
-              print("Rubric fail: send message? Type y to do so:")
-              self:message_rubric_fail(io.read()=="y",j,jj.score,rubric_sum,rubric_count,Nrubric,jj.assessor_name)
+            if rubric_fail then
+                print("Rubric fail: send message? Type y to do so:")
+                self:message_rubric_fail(io.read()=="y",j,jj.score,rubric_sum,rubric_count,Nrubric,jj.assessor_name)
+            end
+
           end
 
           assr = jj.assessor_name

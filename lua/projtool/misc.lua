@@ -40,7 +40,12 @@ end
 
 function proj:get_submissions(get_bool)
 
-  local subm = canvas:get_assignment(get_bool,self.assign_name_canvas,{include={"provisional_grades","user","rubric_assessment"}})
+  local subm
+  if self.assign_grouped then
+    subm = canvas:get_assignment(get_bool,self.assign_name_canvas,{grouped=true,include={"group","user","rubric_assessment"}})
+  else
+    subm = canvas:get_assignment(get_bool,self.assign_name_canvas,{include={"provisional_grades","user","rubric_assessment"}})
+  end
   subm = self:subm_remove(subm)
 
   return subm
@@ -50,24 +55,26 @@ end
 
 
 function proj:subm_remove(subm)
-  local to_remove = {}
+  local subout = {}
+  local to_keep = true
   for i,j in ipairs(subm) do
-    if j.excused == nil then
-      if j.user.sis_user_id == nil then -- maybe check against a black list, or similar
-        print("Student has no login id: "..subm[i].user.name)
-        to_remove[#to_remove+1] = i
-      end
-    else
-      if j.excused then
-        print("Student excused: "..subm[i].user.name)
-        to_remove[#to_remove+1] = i
-      end
+    if string.sub(j.user.sis_user_id,1,2) == "sv" then
+      print(" - Academic student view (SV) user: "..subm[i].user.name)
+      to_keep = false
+    end
+    if j.user.sis_user_id == nil then -- maybe check against a black list, or similar
+      print(" - Student has no login id: "..subm[i].user.name)
+      to_keep = false
+    end
+    if j.excused then
+      print(" - Student excused: "..subm[i].user.name)
+      to_keep = false
+    end
+    if to_keep then
+      subout[#subout+1] = j
     end
   end
-  for i=#to_remove,1,-1 do
-    table.remove(subm,to_remove[i])
-  end
-  return subm
+  return subout
 end
 
 
@@ -87,8 +94,8 @@ function proj:add_assessment_metadata(canvas_subm)
   end
 
   subm = {}
-  for _,subm_entry in ipairs(canvas_subm) do
-    print("Processing submission by: "..subm_entry.user.name)
+  for i,subm_entry in ipairs(canvas_subm) do
+    print(i..": Processing submission by: "..subm_entry.user.name)
 
     local student_id = subm_entry.user.sis_user_id
     local ind = self.student_ind[student_id]
@@ -126,9 +133,23 @@ function proj:export_csv_marks_moderated(subm,arg)
 
   local ff = io.output(self.marks_csv)
   io.write("INDEX,USERID,NAME,SCHOOL,PROJID,TITLE,MARK,DIFF,RESOLVED,OVERRIDE,COMMENTS,SUPERVISOR,SUPMARK,MODERATOR,MODMARK,URL,ASSESSOR1,SCORE1,ASSESSOR2,SCORE2,ASSESSOR3,SCORE3,ASSESSOR4,SCORE4,\n")
-  local cc = 0
-  for i,j in pairs(subm) do
-    cc = cc+1
+
+  local nameind = {}
+  for i in pairs(subm) do
+    nameind[#nameind+1] = i
+  end
+  table.sort(nameind,function(n1,n2)
+    local res
+    if (subm[n1].metadata.school == subm[n2].metadata.school) then
+      res = (subm[n1].metadata.supervisor > subm[n2].metadata.supervisor)
+    else
+      res = (subm[n1].metadata.school > subm[n2].metadata.school)
+    end
+    return res
+  end)
+
+  for cc,n in ipairs(nameind) do
+    j = subm[n]
     j.metadata = j.metadata or {}
 
     local mark, diff, resolved
@@ -191,171 +212,6 @@ end
 
 
 
-
-
-function proj:message_reminder_add(j,markers_msg)
-
-  local acad_name    = j.metadata.supervisor
-  if markers_msg[acad_name] == nil then
-    markers_msg[acad_name] = {}
-    markers_msg[acad_name].cid = self.all_staff[j.metadata.supervisor].id
-    markers_msg[acad_name].msg = ""
-  end
-
-  markers_msg[acad_name].msg =
-    markers_msg[acad_name].msg .. "\n" ..
-    " • " .. j.user.name .. ": " .. j.metadata.proj_title ..
-      "(" .. j.metadata.proj_id .. ")" .. "\n" ..
-    "     <" .. j.metadata.url .. ">\n"
-
-end
-
-
-
-function proj:assessor_reminder_interim(remind_check,markers_msg,only_them)
-
-  for acad_name,j in pairs(markers_msg) do
-
-    -- process filter to restrict messaging to all but one
-    local proceed = false
-    if only_them == nil then
-      proceed = true
-    else
-      if acad_name == only_them then
-        proceed = true
-      end
-    end
-
-    if proceed then
-      canvas:message_user(remind_check,{
-        canvasid  = self.all_staff[acad_name].id ,
-        subject   = self.assign_name_colloq .. " marking",
-        body      = "Dear " .. acad_name .. ",\n\n" .. self.message.interim.body_opening .. j.msg .. self.message.interim.body_close .. self.message.signoff
-              })
-    end
-
-  end
-
-end
-
-
-
-
-
-
-
-
-
-
-
-
-function proj:message_reminder_add(j,sup_or_mod,markers_msg)
-
-  local acad_name = j.metadata[sup_or_mod]
-
-  if markers_msg[acad_name] == nil then
-    markers_msg[acad_name] = {}
-    markers_msg[acad_name].supervisor = ""
-    markers_msg[acad_name].moderator  = ""
-  end
-
-  local assess_str = ""
-  if not(self.assign_grouped) then
-   assess_str =
-     j.user.name .. "\n" ..
-     "   Project title: "
-  end
-
-  markers_msg[acad_name][sup_or_mod] = markers_msg[acad_name][sup_or_mod] .. "\n" ..
-    " • " .. assess_str .. j.metadata.proj_title ..
-    " (ID: " .. j.metadata.proj_id .. ") \n" ..
-    "   Submitted: " .. j.submitted_at .. "\n" ..
-    "   SpeedGrader link: <" .. j.metadata.url .. ">\n"
-
-  return markers_msg
-end
-
-
-function proj:assessor_reminder_interim(remind_check,subm,only_them)
-
-  local markers_msg = {}
-  for i,j in pairs(subm) do
-    if not(j.grade) then
-      markers_msg = proj:message_reminder_add(j,"supervisor",markers_msg)
-    end
-  end
-
-  for acad_name,j in pairs(markers_msg) do
-
-    local salutation = "Dear " .. acad_name .. ",\n\n"
-    local body = j.supervisor
-
-    local proceed = false
-    if only_them == nil then
-      proceed = true
-    else
-      if acad_name == only_them then
-        proceed = true
-      end
-    end
-    if proceed then
-      canvas:message_user(remind_check,{
-        course    = canvas.courseid,
-        canvasid  = self.all_staff[acad_name].id ,
-        subject   = self.assign_name_colloq.." marking",
-        body      = salutation .. self.message.interim.body_opening .. body .. self.message.interim.body_close .. self.message.signoff
-      })
-    end
-
-  end
-
-end
-
-
-
-function proj:assessor_reminder_final(remind_check,subm)
-
-  local sup_lede = "# Supervisor assessment\n"
-  local mod_lede = "# Moderator assessment\n"
-
-  local markers_msg = {}
-
-  for i,j in pairs(subm) do
-   if not(j.metadata==nil) then
-     if not(j.metadata.supervisor_mark) then
-       markers_msg = proj:message_reminder_add(j,"supervisor",markers_msg)
-     end
-     if not(j.metadata.moderator_mark) then
-       markers_msg = proj:message_reminder_add(j,"moderator",markers_msg)
-     end
-   end
-  end
-
-  for acad_name,j in pairs(markers_msg) do
-
-    local salutation = "Dear " .. acad_name .. ",\n\n"
-    local body = ""
-
-    if not(j.supervisor == "") then
-      body = body .. sup_lede .. j.supervisor
-    end
-    if not(j.supervisor == "") and not(j.moderator == "") then
-      body = body .. "\n"
-    end
-    if not(j.moderator == "") then
-      body = body .. mod_lede .. j.moderator
-    end
-
-    canvas:message_user(remind_check,{
-      course    = canvas.courseid,
-      canvasid  = self.all_staff[acad_name].id ,
-      subject   = self.assign_name_colloq.." marking",
-      body      = salutation .. self.message.final.body_opening .. body .. self.message.final.body_close .. self.message.signoff
-    })
-
-  end
-
-end
 
 
 
@@ -494,10 +350,6 @@ You have assessed the following student/group:]] .. "\n\n" ..
     " • Supervisor - "..j.metadata.supervisor_mark..    " (" .. j.metadata.supervisor .. ")\n" ..
     " • Moderator  - "..j.metadata.moderator_mark.." (" .. j.metadata.moderator .. ")\n\n"
 
-  if inconsistent_resolved then
-    body_text = body_text .. "Thank you for re-assessing and/or reviewing your marks for this project, they are now close enough to be resolved without a third assessor." .. "\n\n"
-  end
-
   local body_end = "\n\n" .. [[
 You may view your own assessment at the following link after logging into MyUni:
 
@@ -506,6 +358,15 @@ You may view your own assessment at the following link after logging into MyUni:
 If you wish to update your assessment, please make the changes directly in MyUni and let us know by email.
 
 Thank you for your significant contributions towards the success of our capstone project courses.]]
+
+  local close_text = ""
+  if inconsistent_resolved then
+    close_text =  "Thank you for re-assessing and/or reviewing your marks for this project, they are now close enough to be resolved without a third assessor."
+  else
+    close_text = resolve_msg[close_rank].body
+  end
+
+  local msg =
 
   canvas:message_user(send_bool,{
     canvasid  =
@@ -517,11 +378,10 @@ Thank you for your significant contributions towards the success of our capstone
       self.assign_name_colloq ..
       " marking: " ..
       resolve_msg[close_rank].subject ..
-      " ("..j.metadata.proj_id..")" ,
+      " ("..j.metadata.proj_id..")"   ,
     body      =
       "Dear " .. j.metadata.supervisor .. ", " .. j.metadata.moderator ..
-      body_text .. resolve_msg[close_rank].body .. body_end ..
-      self.message.signoff
+      body_text .. close_text .. body_end .. self.message.signoff   ,
           })
 
 end

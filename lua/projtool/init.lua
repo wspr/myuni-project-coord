@@ -13,6 +13,7 @@ copy_functions("projtool.setters")
 copy_functions("projtool.people")
 copy_functions("projtool.messages")
 copy_functions("projtool.check")
+copy_functions("projtool.reminders")
 copy_functions("projtool.misc")
 
 return proj
