@@ -9,6 +9,9 @@ local canvas  = require("canvas-lms")
 local proj = {}
 
 
+
+
+
 function proj:read_csv_data(csvfile)
 
   print("Reading CSV data of students/projects/supervisors/moderators")
@@ -93,42 +96,42 @@ function proj:get_canvas_ids(opt)
     local not_found_canvas = ""
     for k,v in pairs(self.all_staff) do
       if not(k == "") then
-      print(k)
-      local search_term = k
-      local staff_uoa_id = self.all_staff_ids[k]
-      if staff_uoa_id == "" then
-        search_term = k
-        print("Searching for name:  '"..search_term.."'")
-      else
-        search_term = staff_uoa_id
-        print("Searching for name:  '"..k.."' (ID: "..staff_uoa_id..")")
-      end
-      local tmp = canvas:find_user(search_term)
-      local match_ind = 0
-      for i,j in ipairs(tmp) do
-        print("Found:  '"..j.name.."' ("..j.login_id..")")
-      end
-      if #tmp == 1 then
-        match_ind = 1
-      elseif #tmp > 1 then
-        local count_exact = 0
+        print(k)
+        local search_term = k
+        local staff_uoa_id = self.all_staff_ids[k]
+        if staff_uoa_id == "" then
+          search_term = k
+          print("Searching for name:  '"..search_term.."'")
+        else
+          search_term = staff_uoa_id
+          print("Searching for name:  '"..k.."' (ID: "..staff_uoa_id..")")
+        end
+        local tmp = canvas:find_user(search_term)
+        local match_ind = 0
         for i,j in ipairs(tmp) do
-          if j.name == k then
-            count_exact = count_exact + 1
-            match_ind = i
+          print("Found:  '"..j.name.."' ("..j.login_id..")")
+        end
+        if #tmp == 1 then
+          match_ind = 1
+        elseif #tmp > 1 then
+          local count_exact = 0
+          for i,j in ipairs(tmp) do
+            if j.name == k then
+              count_exact = count_exact + 1
+              match_ind = i
+            end
+          end
+          if count_exact > 1 then
+            error("Multiple exact matches for name found. This is a problem! New code needed to identify staff members by their ID number as well.")
           end
         end
-        if count_exact > 1 then
-          error("Multiple exact matches for name found. This is a problem! New code needed to identify staff members by their ID number as well.")
+        if match_ind > 0 then
+          self.all_staff[k] = tmp[match_ind]
+          id_lookup[tmp[match_ind].id] = k
+        else
+          print("No user found for name: "..k)
+          not_found_canvas = not_found_canvas.."    "..search_term.."\n"
         end
-      end
-      if match_ind > 0 then
-        self.all_staff[k] = tmp[match_ind]
-        id_lookup[tmp[match_ind].id] = k
-      else
-        print("No user found for name: "..k)
-        not_found_canvas = not_found_canvas.."    "..search_term.."\n"
-      end
       end
     end
     for k,v in pairs(id_lookup) do

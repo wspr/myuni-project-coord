@@ -16,5 +16,8 @@ end
 function proj:set_assign_grouped(bool)
   self.assign_grouped = bool
 end
+function proj:set_coordinators(tbl)
+  self.coordinator = tbl
+end
 
 return proj

@@ -140,10 +140,12 @@ function proj:export_csv_marks_moderated(subm,arg)
   end
   table.sort(nameind,function(n1,n2)
     local res
-    if (subm[n1].metadata.school == subm[n2].metadata.school) then
-      res = (subm[n1].metadata.supervisor > subm[n2].metadata.supervisor)
+    if (subm[n1].metadata.school == subm[n2].metadata.school) and (subm[n1].metadata.supervisor == subm[n2].metadata.supervisor) then
+      res = (subm[n1].metadata.proj_id < subm[n2].metadata.proj_id)
+    elseif (subm[n1].metadata.school == subm[n2].metadata.school) then
+      res = (subm[n1].metadata.supervisor < subm[n2].metadata.supervisor)
     else
-      res = (subm[n1].metadata.school > subm[n2].metadata.school)
+      res = (subm[n1].metadata.school < subm[n2].metadata.school)
     end
     return res
   end)
@@ -185,13 +187,31 @@ function proj:export_csv_marks_moderated(subm,arg)
 
 end
 
+
+
 function proj:export_csv_marks(subm)
+
+  local nameind = {}
+  for i in pairs(subm) do
+    nameind[#nameind+1] = i
+  end
+  table.sort(nameind,function(n1,n2)
+    local res
+    if (subm[n1].metadata.school == subm[n2].metadata.school) and (subm[n1].metadata.supervisor == subm[n2].metadata.supervisor) then
+      res = (subm[n1].metadata.proj_id < subm[n2].metadata.proj_id)
+    elseif (subm[n1].metadata.school == subm[n2].metadata.school) then
+      res = (subm[n1].metadata.supervisor < subm[n2].metadata.supervisor)
+    else
+      res = (subm[n1].metadata.school < subm[n2].metadata.school)
+    end
+    return res
+  end)
 
   local ff = io.output(self.marks_csv)
   io.write("INDEX,USERID,NAME,SCHOOL,PROJID,TITLE,SUPERVISOR,MARK,URL\n")
-  local cc = 0
-  for _,j in pairs(subm) do
-    cc = cc+1
+
+  for cc,n in ipairs(nameind) do
+    j = subm[n]
     j.metadata = j.metadata or {}
     local writestr = cc..","..
       (j.user.sis_user_id or "")..","..
@@ -205,6 +225,7 @@ function proj:export_csv_marks(subm)
 
     io.write(writestr.."\n")
   end
+
   io.close(ff)
 
 end
