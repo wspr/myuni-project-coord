@@ -18,7 +18,7 @@ function proj:read_csv_data(csvfile)
 
   self.proj_data = {}
   self.student_ind = {}
-  self.all_staff = {}
+  self.all_staff = self.all_staff or {}
   self.all_staff_ids = {}
 
   local f = csv.open(csvfile)
@@ -73,6 +73,43 @@ function proj:read_csv_data(csvfile)
 end
 
 
+function proj:find_user(name,staff_uoa_id)
+
+  local search_term = name
+
+  if staff_uoa_id == "" then
+    print("Searching for name:  '"..search_term.."'")
+  else
+    search_term = staff_uoa_id
+    print("Searching for name:  '"..name.."' using ID: "..staff_uoa_id)
+  end
+  local tmp = canvas:find_user(search_term)
+  local match_ind = 0
+  for i,j in ipairs(tmp) do
+    print("Found:  '"..j.name.."' ("..j.login_id..")")
+  end
+  if #tmp == 1 then
+    match_ind = 1
+  elseif #tmp > 1 then
+    local count_exact = 0
+    for i,j in ipairs(tmp) do
+      if j.name == k then
+        count_exact = count_exact + 1
+        match_ind = i
+      end
+    end
+    if count_exact > 1 then
+      error("Multiple exact matches for name found. This is a problem! New code needed to identify staff members by their ID number as well.")
+    end
+  end
+
+  if match_ind > 0 then
+    return tmp[match_ind]
+  else
+    print("No user found for name: "..k)
+  end
+
+end
 
 
 function proj:get_canvas_ids(opt)
@@ -96,46 +133,17 @@ function proj:get_canvas_ids(opt)
     local not_found_canvas = ""
     for k,v in pairs(self.all_staff) do
       if not(k == "") then
-        print(k)
-        local search_term = k
-        local staff_uoa_id = self.all_staff_ids[k]
-        if staff_uoa_id == "" then
-          search_term = k
-          print("Searching for name:  '"..search_term.."'")
-        else
-          search_term = staff_uoa_id
-          print("Searching for name:  '"..k.."' (ID: "..staff_uoa_id..")")
-        end
-        local tmp = canvas:find_user(search_term)
-        local match_ind = 0
-        for i,j in ipairs(tmp) do
-          print("Found:  '"..j.name.."' ("..j.login_id..")")
-        end
-        if #tmp == 1 then
-          match_ind = 1
-        elseif #tmp > 1 then
-          local count_exact = 0
-          for i,j in ipairs(tmp) do
-            if j.name == k then
-              count_exact = count_exact + 1
-              match_ind = i
-            end
-          end
-          if count_exact > 1 then
-            error("Multiple exact matches for name found. This is a problem! New code needed to identify staff members by their ID number as well.")
-          end
-        end
-        if match_ind > 0 then
-          self.all_staff[k] = tmp[match_ind]
-          id_lookup[tmp[match_ind].id] = k
-        else
-          print("No user found for name: "..k)
+        local tbl = self:find_user(k,self.all_staff_ids[k])
+        if tbl == nil then
           not_found_canvas = not_found_canvas.."    "..search_term.."\n"
+        else
+          self.all_staff[k] = tbl
+          id_lookup[tbl.id] = k
         end
       end
     end
-    for k,v in pairs(id_lookup) do
-      self.all_staff[k] = v
+    for kk,vv in pairs(id_lookup) do
+      self.all_staff[kk] = vv
     end
     if not_found_canvas ~= "" then
       error("## Canvas users not found, check their names and/or add them via Toolkit:\n\n"..not_found_canvas)

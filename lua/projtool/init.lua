@@ -15,5 +15,6 @@ copy_functions("projtool.messages")
 copy_functions("projtool.check")
 copy_functions("projtool.reminders")
 copy_functions("projtool.misc")
+copy_functions("projtool.marksprint")
 
 return proj

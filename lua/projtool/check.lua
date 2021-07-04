@@ -136,6 +136,7 @@ function proj:check_moderated(assign_data)
     print("Project: "..j.metadata.proj_title)
     print("Supervisor: "..j.metadata.supervisor)
     print("Moderator: "..j.metadata.moderator)
+    print("URL: "..j.metadata.url)
 
     for ig,jg in ipairs(j.provisional_grades) do
 --      print("Grade "..ig)
@@ -156,7 +157,7 @@ function proj:check_moderated(assign_data)
         for ii,jj in ipairs(jg.rubric_assessments) do
 
           local rubric_data  = {}
-          local rubric_count = 0
+          local rubric_count = #jj.data
           local rubric_sum   = 0
           local rubric_fail  = false
 
@@ -245,8 +246,11 @@ function proj:message_rubric_fail(remind_check,j,score,rubric_sum,rubric_count,N
     error("Rubric count does not compare properly. This shouldn't happen")
   end
 
+  local coord = self.coordinators[j.metadata.school]
+  local coord_id = self.all_staff[coord].id
+
   canvas:message_user(remind_check,{
-    canvasid  = self.all_staff[assessor_name].id ,
+    canvasid  = {self.all_staff[assessor_name].id,coord_id} ,
     subject   = self.assign_name_colloq.." marking: " .. j.user.name ,
     body      = "Dear " .. assessor_name .. ",\n\n" .. [[
 This is an semi-automated reminder. ]]  .. "\n\n" .. [[
@@ -263,8 +267,11 @@ function proj:message_rubric_no_grade(remind_check,j,assessor_name)
 
   local assessor_name = assessor_name or j.metadata.supervisor
 
+  local coord = self.coordinators[j.metadata.school]
+  local coord_id = self.all_staff[coord].id
+
   canvas:message_user(remind_check,{
-    canvasid  = self.all_staff[assessor_name].id ,
+    canvasid  = {self.all_staff[assessor_name].id,coord_id} ,
     subject   = self.assign_name_colloq.." marking: " .. j.user.name ,
     body      = "Dear " .. assessor_name .. ",\n\n" .. [[
 This is an semi-automated reminder. ]]  .. "\n\n" .. [[

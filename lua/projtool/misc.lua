@@ -42,9 +42,9 @@ function proj:get_submissions(get_bool)
 
   local subm
   if self.assign_grouped then
-    subm = canvas:get_assignment(get_bool,self.assign_name_canvas,{grouped=true,include={"group","user","rubric_assessment"}})
+    subm = canvas:get_assignment(get_bool,self.assign_name_canvas,{grouped=true,include={"group","user","rubric_assessment","submission_comments"}})
   else
-    subm = canvas:get_assignment(get_bool,self.assign_name_canvas,{include={"provisional_grades","user","rubric_assessment"}})
+    subm = canvas:get_assignment(get_bool,self.assign_name_canvas,{include={"provisional_grades","user","rubric_assessment","submission_comments"}})
   end
   subm = self:subm_remove(subm)
 
@@ -86,6 +86,7 @@ function proj:add_assessment_metadata(canvas_subm)
   local comments = {}
   if path.exists(self.marks_csv) then
     local f = csv.open(self.marks_csv)
+    -- TODO: use {header=true}
     for fields in f:lines() do
       resolve[fields[2]]  = fields[9]
       override[fields[2]] = fields[10]
@@ -387,13 +388,15 @@ Thank you for your significant contributions towards the success of our capstone
     close_text = resolve_msg[close_rank].body
   end
 
-  local msg =
+  local coord = self.coordinators[j.metadata.school]
+  local coord_id = self.all_staff[coord].id
 
   canvas:message_user(send_bool,{
     canvasid  =
       {
         self.all_staff[j.metadata.supervisor].id ,
         self.all_staff[j.metadata.moderator].id  ,
+        coord_id
       } ,
     subject   =
       self.assign_name_colloq ..
