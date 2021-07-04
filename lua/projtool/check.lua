@@ -153,8 +153,10 @@ function proj:check_moderated(assign_data)
         print("      Assessor: "..assr.." ("..scr..") - score but no rubric.")
         print("Rubric fail: send message? Type y to do so:")
         self:message_rubric_no_grade(io.read()=="y",j,assr)
-      else
-        for ii,jj in ipairs(jg.rubric_assessments) do
+      elseif #jg.rubric_assessments > 0 then
+
+        do
+          local jj = jg.rubric_assessments[#jg.rubric_assessments]
 
           local rubric_data  = {}
           local rubric_count = #jj.data
