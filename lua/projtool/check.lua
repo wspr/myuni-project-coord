@@ -1,12 +1,7 @@
 
 
-local csv     = require("csv")
 local pretty  = require("pl.pretty")
-local data    = require("pl.data")
-local path    = require("pl.path")
-local binser  = require("binser")
 local canvas  = require("canvas-lms")
-
 
 local proj = {}
 
@@ -17,7 +12,7 @@ function proj:check_assignment(assign_data,check_bool)
   local Nrubric = #canvas.assignments[self.assign_name_canvas].rubric
 
   local cc = 0
-  for i,j in pairs(assign_data) do
+  for _,j in pairs(assign_data) do
     if j.metadata == nil then
       cc = cc+1
       pretty.dump(j)
@@ -28,12 +23,11 @@ function proj:check_assignment(assign_data,check_bool)
     error("Student submission(s) above missing METADATA. Resolve errors above before continuing.")
   end
 
-  for i,j in pairs(assign_data) do
+  for _,j in pairs(assign_data) do
 
     print("\nStudent: "..j.user.name.."  ("..j.user.sis_user_id..")")
     print("Supervisor: "..j.metadata.supervisor)
     print("URL: "..j.metadata.url)
-    local rubric_data  = {}
     local rubric_count = 0
     local rubric_sum   = 0
     local rubric_fail  = false
@@ -49,8 +43,7 @@ function proj:check_assignment(assign_data,check_bool)
       print("Grade: "..grade)
       if j.rubric_assessment then
         j.metadata.assessment_check.rubric = true
-        for ii,jj in pairs(j.rubric_assessment) do
-          rubric_data[ii] = jj.points
+        for _,jj in pairs(j.rubric_assessment) do
           if jj.points then
             rubric_sum = rubric_sum + jj.points
 --            print("  Rubric mark: " .. jj.points)
@@ -84,8 +77,7 @@ function proj:check_assignment(assign_data,check_bool)
     else
       if j.rubric_assessment then
         print("Checking rubric:")
-        for ii,jj in pairs(j.rubric_assessment) do
-          rubric_data[ii] = jj.points
+        for _,jj in pairs(j.rubric_assessment) do
           if jj.points then
             rubric_count = rubric_count+1
           end
@@ -138,7 +130,7 @@ function proj:check_moderated(assign_data)
     print("Moderator: "..j.metadata.moderator)
     print("URL: "..j.metadata.url)
 
-    for ig,jg in ipairs(j.provisional_grades) do
+    for _,jg in ipairs(j.provisional_grades) do
 --      print("Grade "..ig)
       local assr
       local scr
@@ -158,13 +150,11 @@ function proj:check_moderated(assign_data)
         do
           local jj = jg.rubric_assessments[#jg.rubric_assessments]
 
-          local rubric_data  = {}
           local rubric_count = #jj.data
           local rubric_sum   = 0
           local rubric_fail  = false
 
-          for iii,jjj in pairs(jj.data) do
-            rubric_data[iii] = jjj.points
+          for _,jjj in pairs(jj.data) do
             if jjj.points then
               rubric_sum   = rubric_sum + jjj.points
               rubric_count = rubric_count + 1
@@ -233,7 +223,7 @@ end
 
 function proj:message_rubric_fail(remind_check,j,score,rubric_sum,rubric_count,Nrubric,assessor_name)
 
-  local assessor_name = assessor_name or j.metadata.supervisor
+  local assr = assessor_name or j.metadata.supervisor
 
   local rubric_fail_str = ""
   if rubric_count == 0 then
@@ -252,9 +242,9 @@ function proj:message_rubric_fail(remind_check,j,score,rubric_sum,rubric_count,N
   local coord_id = self.all_staff[coord].id
 
   canvas:message_user(remind_check,{
-    canvasid  = {self.all_staff[assessor_name].id,coord_id} ,
+    canvasid  = {self.all_staff[assr].id,coord_id} ,
     subject   = self.assign_name_colloq.." marking: " .. j.user.name ,
-    body      = "Dear " .. assessor_name .. ",\n\n" .. [[
+    body      = "Dear " .. assr .. ",\n\n" .. [[
 This is an semi-automated reminder. ]]  .. "\n\n" .. [[
 You have assessed the following student/group:]] .. "\n\n" ..
 j.user.name .. ": " .. j.metadata.proj_title .. " ("..j.metadata.proj_id..")" .. "\n\n" .. [[
@@ -267,15 +257,15 @@ end
 
 function proj:message_rubric_no_grade(remind_check,j,assessor_name)
 
-  local assessor_name = assessor_name or j.metadata.supervisor
+  local assr = assessor_name or j.metadata.supervisor
 
   local coord = self.coordinators[j.metadata.school]
   local coord_id = self.all_staff[coord].id
 
   canvas:message_user(remind_check,{
-    canvasid  = {self.all_staff[assessor_name].id,coord_id} ,
+    canvasid  = {self.all_staff[assr].id,coord_id} ,
     subject   = self.assign_name_colloq.." marking: " .. j.user.name ,
-    body      = "Dear " .. assessor_name .. ",\n\n" .. [[
+    body      = "Dear " .. assr .. ",\n\n" .. [[
 This is an semi-automated reminder. ]]  .. "\n\n" .. [[
 You have assessed the following student/group:]] .. "\n\n" ..
 j.user.name .. ": " .. j.metadata.proj_title .. " ("..j.metadata.proj_id..")" .. "\n\n" .. [[

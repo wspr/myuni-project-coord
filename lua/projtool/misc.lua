@@ -94,7 +94,7 @@ function proj:add_assessment_metadata(canvas_subm)
     end
   end
 
-  subm = {}
+  local subm = {}
   for i,subm_entry in ipairs(canvas_subm) do
     print(i..": Processing submission by: "..subm_entry.user.name)
 

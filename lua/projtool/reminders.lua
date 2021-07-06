@@ -1,5 +1,5 @@
 
-local pretty  = require("pl.pretty")
+-- local pretty  = require("pl.pretty")
 
 local canvas = require("canvas-lms")
 local proj = {}
@@ -19,7 +19,7 @@ function proj:message_reminder_add(j,markers_msg,args)
     markers_msg[acad_name].school = {}
   end
 
-  local assess_str = ""
+  local assess_str
   if assign_grouped then
     assess_str = ""
   else
@@ -45,7 +45,7 @@ end
 function proj:assessor_reminder_interim(remind_check,subm,only_them)
 
   local markers_msg = {}
-  for i,j in pairs(subm) do
+  for _,j in pairs(subm) do
     if not(j.grade) then
       markers_msg = self:message_reminder_add(j,markers_msg,{whom="supervisor",grouped=false})
     end
@@ -90,7 +90,7 @@ end
 function proj:assessor_reminder_prelim(remind_check,subm,only_them)
 
   local markers_msg = {}
-  for i,j in pairs(subm) do
+  for _,j in pairs(subm) do
     if not(j.grade) then
       markers_msg = self:message_reminder_add(j,markers_msg,{whom="supervisor",grouped=true})
     end
@@ -138,7 +138,7 @@ function proj:assessor_reminder_final(remind_check,subm)
 
   local markers_msg = {}
 
-  for i,j in pairs(subm) do
+  for _,j in pairs(subm) do
    if not(j.metadata==nil) then
      if not(j.metadata.supervisor_mark) then
        markers_msg = self:message_reminder_add(j,markers_msg,{whom="supervisor",grouped=false})

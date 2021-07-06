@@ -1,14 +1,10 @@
 
-local pretty = require("pl.pretty")
-local canvas = require("canvas-lms")
+--local pretty = require("pl.pretty")
 local proj = {}
-
 
 function proj:print_marks(assign_data,args)
 
   local who = args.who
-
-  local Nrubric = #canvas.assignments[self.assign_name_canvas].rubric
   local cc = 0
 
   for i,j in pairs(assign_data) do
@@ -28,7 +24,6 @@ function proj:print_marks(assign_data,args)
       print("Moderator: "..j.metadata.moderator)
       print("URL: "..j.metadata.url)
 
-pretty.dump(j)
       local ff = io.output("assessments/"..j.user.login_id..".tex")
       io.write [[
 \documentclass{article}
@@ -45,7 +40,7 @@ pretty.dump(j)
 
       for _,prov_grade in ipairs(j.provisional_grades) do
 
-        jd = prov_grade.rubric_assessments[#prov_grade.rubric_assessments]
+        local jd = prov_grade.rubric_assessments[#prov_grade.rubric_assessments]
         -- only take the last entry from an assessor
 
         io.write [[
@@ -80,7 +75,7 @@ pretty.dump(j)
 \bottomrule
 \end{tabular}
 ]]
-        for iid,jjd in ipairs(prov_grade.submission_comments) do
+        for _,jjd in ipairs(prov_grade.submission_comments) do
           if jd.assessor_name == jjd.author_name then
             io.write("\\subsubsection*{Comments}")
             io.write(jjd.comment)
