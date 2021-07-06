@@ -164,9 +164,18 @@ function proj:assessor_reminder_final(remind_check,subm)
       body = body .. mod_lede .. j.moderator
     end
 
+    local recip = { self.all_staff[acad_name].id }
+    if self.coordinators then
+      for i in pairs(j.school) do
+        print("School: "..i)
+        local coord = self.coordinators[i]
+        print("Coordinator: "..coord)
+        recip[#recip+1] = self.all_staff[coord].id
+      end
+    end
     canvas:message_user(remind_check,{
       course    = canvas.courseid,
-      canvasid  = self.all_staff[acad_name].id ,
+      canvasid  = recip ,
       subject   = self.assign_name_colloq.." marking",
       body      = salutation .. self.message.final.body_opening .. body .. self.message.final.body_close .. self.message.signoff
     })

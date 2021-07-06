@@ -388,16 +388,18 @@ Thank you for your significant contributions towards the success of our capstone
     close_text = resolve_msg[close_rank].body
   end
 
-  local coord = self.coordinators[j.metadata.school]
-  local coord_id = self.all_staff[coord].id
-
-  canvas:message_user(send_bool,{
-    canvasid  =
-      {
+  local recip = {
         self.all_staff[j.metadata.supervisor].id ,
         self.all_staff[j.metadata.moderator].id  ,
-        coord_id
-      } ,
+  }
+  if self.coordinators then
+    local coord = self.coordinators[j.metadata.school]
+    local coord_id = self.all_staff[coord].id
+    recip[#recip+1] = coord_id
+  end
+
+  canvas:message_user(send_bool,{
+    canvasid  = recip ,
     subject   =
       self.assign_name_colloq ..
       " marking: " ..
