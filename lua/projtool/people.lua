@@ -1,7 +1,6 @@
 
 local csv     = require("csv")
-local pretty  = require("pl.pretty")
-local data    = require("pl.data")
+-- local pretty  = require("pl.pretty")
 local path    = require("pl.path")
 local binser  = require("binser")
 local canvas  = require("canvas-lms")
@@ -28,9 +27,9 @@ function proj:read_csv_data(csvfile)
     cc = cc+1
     if cc == 1 then
       local errorcount = {}
-      local function checkcol(fields,col,str)
-        if not(fields[col] == str) then
-          errorcount[#errorcount+1] = " - Column "..col..": expected '"..str.."', found '"..fields[col].."'"
+      local function checkcol(ff,col,str)
+        if not(ff[col] == str) then
+          errorcount[#errorcount+1] = " - Column "..col..": expected '"..str.."', found '"..ff[col].."'"
         end
       end
       checkcol(fields,1,"Name")
@@ -85,7 +84,7 @@ function proj:find_user(name,staff_uoa_id)
   end
   local tmp = canvas:find_user(search_term)
   local match_ind = 0
-  for i,j in ipairs(tmp) do
+  for _,j in ipairs(tmp) do
     print("Found:  '"..j.name.."' ("..j.login_id..")")
   end
   if #tmp == 1 then
@@ -93,7 +92,7 @@ function proj:find_user(name,staff_uoa_id)
   elseif #tmp > 1 then
     local count_exact = 0
     for i,j in ipairs(tmp) do
-      if j.name == k then
+      if j.name == name then
         count_exact = count_exact + 1
         match_ind = i
       end
@@ -106,21 +105,21 @@ function proj:find_user(name,staff_uoa_id)
   if match_ind > 0 then
     return tmp[match_ind]
   else
-    print("No user found for name: "..k)
+    print("No user found for name: "..name)
   end
 
 end
 
 
-function proj:get_canvas_ids(opt)
+function proj:get_canvas_ids(opt_arg)
 
   print("Searching for supervisors/moderators in Canvas")
 
   local cache_path = canvas.cache_dir.."AllStaff.lua"
 
-  local download_check = true
+  local download_check
   if path.exists(cache_path) then
-    local opt = opt or {download="ask"}
+    local opt = opt_arg or {download="ask"}
     download_check = self:dl_check(opt,"Look up all supervisor/moderator Canvas IDs?")
   else
     print "Staff Canvas IDs not found, downloading."
@@ -131,14 +130,14 @@ function proj:get_canvas_ids(opt)
 
   if download_check then
     local not_found_canvas = ""
-    for k,v in pairs(self.all_staff) do
-      if not(k == "") then
-        local tbl = self:find_user(k,self.all_staff_ids[k])
+    for name in pairs(self.all_staff) do
+      if not(name == "") then
+        local tbl = self:find_user(name,self.all_staff_ids[name])
         if tbl == nil then
-          not_found_canvas = not_found_canvas.."    "..search_term.."\n"
+          not_found_canvas = not_found_canvas.."    "..name.."\n"
         else
-          self.all_staff[k] = tbl
-          id_lookup[tbl.id] = k
+          self.all_staff[name] = tbl
+          id_lookup[tbl.id] = name
         end
       end
     end

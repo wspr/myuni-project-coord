@@ -1,10 +1,8 @@
 
 
 local csv     = require("csv")
-local pretty  = require("pl.pretty")
-local data    = require("pl.data")
+--local pretty  = require("pl.pretty")
 local path    = require("pl.path")
-local binser  = require("binser")
 local canvas  = require("canvas-lms")
 
 
@@ -19,8 +17,7 @@ function proj:dl_check(opt,str)
   local check_bool = false
   if opt.download == "ask" then
     print(str .. " Type y to do so:")
-    check_str = io.read()
-    if check_str == "y" then
+    if io.read() == "y" then
       check_bool = true
     end
   elseif opt.download == "always" then
@@ -152,10 +149,10 @@ function proj:export_csv_marks_moderated(subm,arg)
   end)
 
   for cc,n in ipairs(nameind) do
-    j = subm[n]
+    local j = subm[n]
     j.metadata = j.metadata or {}
 
-    local mark, diff, resolved
+    local mark, diff
     if j.metadata.supervisor_mark and j.metadata.moderator_mark then
       mark = weightings[1]*j.metadata.supervisor_mark + weightings[2]*j.metadata.moderator_mark
       diff = j.metadata.supervisor_mark-j.metadata.moderator_mark
@@ -212,7 +209,7 @@ function proj:export_csv_marks(subm)
   io.write("INDEX,USERID,NAME,SCHOOL,PROJID,TITLE,SUPERVISOR,MARK,URL\n")
 
   for cc,n in ipairs(nameind) do
-    j = subm[n]
+    local j = subm[n]
     j.metadata = j.metadata or {}
     local writestr = cc..","..
       (j.user.sis_user_id or "")..","..
@@ -318,7 +315,7 @@ function proj:resolve_grades(canvas_subfin)
           print("Resolve flag - "..j.metadata.resolve)
 
           print("## Send resolution? Type y to do so:")
-          resolve_check = io.read()=="y"
+          local resolve_check = io.read()=="y"
 
           self:message_resolution(resolve_check,j,close_rank,false)
           if not(resolve_check) then
@@ -346,7 +343,7 @@ function proj:resolve_grades(canvas_subfin)
           print("Difference - "..grade_diff.." - "..resolve_msg[close_rank].rank)
 
           print("## Send resolution? Type y to do so:")
-          resolve_check = io.read()=="y"
+          local resolve_check = io.read()=="y"
 
           self:message_resolution(resolve_check,j,close_rank,true)
           if not(resolve_check) then
@@ -381,7 +378,7 @@ If you wish to update your assessment, please make the changes directly in MyUni
 
 Thank you for your significant contributions towards the success of our capstone project courses.]]
 
-  local close_text = ""
+  local close_text
   if inconsistent_resolved then
     close_text =  "Thank you for re-assessing and/or reviewing your marks for this project, they are now close enough to be resolved without a third assessor."
   else
