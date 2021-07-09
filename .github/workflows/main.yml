@@ -1,10 +1,8 @@
 
-name: Check code and deploy docs
+name: Check code
 
 on:
-  # Triggers the workflow on push events for the master branch, only
-  push:
-    branches: [ master ]
+  branches: [ main ]
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
