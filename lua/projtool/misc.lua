@@ -35,7 +35,7 @@ end
 
 
 
-function proj:get_submissions(get_bool)
+function proj:get_submissions(get_bool,cvs)
 
   local subm
   if self.assign_grouped then
@@ -44,6 +44,10 @@ function proj:get_submissions(get_bool)
     subm = canvas:get_assignment(get_bool,self.assign_name_canvas,{include={"provisional_grades","user","rubric_assessment","submission_comments"}})
   end
   subm = self:subm_remove(subm)
+
+  if csv then
+    self.assignment_setup = cvs.assignments[self.assign_name_canvas]
+  end
 
   return subm
 
