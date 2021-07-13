@@ -104,8 +104,14 @@ end
 
 
 
-function proj:check_moderated(assign_data)
+function proj:check_moderated(assign_data,args)
   print("CHECKING MODERATED ASSIGNMENT MARKING")
+
+  local args = args or {}
+  local check_bool = args.check
+  if check_bool == nil then
+    check_bool = false
+  end
 
   local Nrubric = #canvas.assignments[self.assign_name_canvas].rubric
   local cc = 0
@@ -131,10 +137,11 @@ function proj:check_moderated(assign_data)
     print("URL: "..j.metadata.url)
 
     for _,jg in ipairs(j.provisional_grades) do
---      print("Grade "..ig)
       local assr
       local scr
+
       if #jg.rubric_assessments == 0 and not(jg.score==nil) then
+
         assr = (jg.assessor_name or self.all_staff[jg.scorer_id])
         if assr == nil then
           local usr = canvas:get(canvas.course_prefix.."users/"..jg.scorer_id)
@@ -143,55 +150,65 @@ function proj:check_moderated(assign_data)
         end
         scr  = jg.score
         print("      Assessor: "..assr.." ("..scr..") - score but no rubric.")
-        print("Rubric fail: send message? Type y to do so:")
-        self:message_rubric_no_grade(io.read()=="y",j,assr)
+        if check_bool then
+          print("Rubric fail: send message? Type y to do so:")
+          self:message_rubric_no_grade(io.read()=="y",j,assr)
+        end
+
       elseif #jg.rubric_assessments > 0 then
 
-        do
-          local jj = jg.rubric_assessments[#jg.rubric_assessments]
+        -- always take most recent assessment (in fact, not sure when there ever would be more than one but sometimes it seems to happen)
+        local jj = jg.rubric_assessments[#jg.rubric_assessments]
+        assr = jj.assessor_name
 
-          local rubric_count = #jj.data
-          local rubric_sum   = 0
-          local rubric_fail  = false
+        local rubric_count = 0
+        local rubric_sum   = 0
+        local rubric_fail  = false
 
-          for _,jjj in pairs(jj.data) do
-            if jjj.points then
-              rubric_sum   = rubric_sum + jjj.points
-              rubric_count = rubric_count + 1
-            end
+        for _,jjj in pairs(jj.data) do
+          if jjj.points then
+            rubric_sum   = rubric_sum + jjj.points
+            rubric_count = rubric_count + 1
           end
+        end
 
-          if jj.score==nil then
-            print("      Assessor: "..jj.assessor_name.." - rubric entries but no score.")
-            print("Rubric fail: send message? Type y to do so:")
-            local remind_check = io.read()
-            if rubric_count == Nrubric then
-              print("      Assessor: "..jj.assessor_name.." ("..rubric_sum..") - rubric complete but no SCORE.")
-              self:message_rubric_no_grade(remind_check=="y",j,jj.assessor_name)
+        if jj.score==nil then
+
+          if rubric_count == Nrubric then
+            print("      Assessor: "..jj.assessor_name.." ("..rubric_sum..") - rubric complete but no score.")
+            if check_bool then
+              print("Rubric fail: send message? Type y to do so:")
+              self:message_rubric_no_grade(io.read()=="y",j,jj.assessor_name)
             end
           else
-
-            if rubric_count == Nrubric then
-              print("      Assessor: "..jj.assessor_name.." ("..jj.score..") - rubric complete.")
-              if rubric_sum-jj.score>0.5 or rubric_sum-jj.score<-0.5 then
-                print("      Assessor: "..jj.assessor_name.." ("..jj.score..") - ERROR: rubric sum ("..rubric_sum..") does not match final mark awarded ("..jj.score..")")
-                rubric_fail = true
-              end
-            elseif rubric_count < Nrubric then
-              print("      Assessor: "..jj.assessor_name.." ("..jj.score..") - ERROR: Only "..rubric_count.." of "..Nrubric.." rubric entries completed.")
-              rubric_fail = true
-            end
-
-            if rubric_fail then
-                print("Rubric fail: send message? Type y to do so:")
-                self:message_rubric_fail(io.read()=="y",j,jj.score,rubric_sum,rubric_count,Nrubric,jj.assessor_name)
-            end
-
+            print("      Assessor: "..jj.assessor_name.." - "..rubric_count.." of "..Nrubric.." rubric entries and no score.")
           end
 
-          assr = jj.assessor_name
+          if jg.score then
+            scr  = jg.score
+            print("      Score manually entered by assessor ("..scr..")")
+          end
+        else
           scr  = jj.score
+
+          if rubric_count == Nrubric then
+            print("      Assessor: "..jj.assessor_name.." ("..jj.score..") - rubric complete.")
+            if rubric_sum-jj.score>0.5 or rubric_sum-jj.score<-0.5 then
+              print("      Assessor: "..jj.assessor_name.." ("..jj.score..") - ERROR: rubric sum ("..rubric_sum..") does not match final mark awarded ("..jj.score..")")
+              rubric_fail = true
+            end
+          elseif rubric_count < Nrubric then
+            print("      Assessor: "..jj.assessor_name.." ("..jj.score..") - ERROR: Only "..rubric_count.." of "..Nrubric.." rubric entries completed.")
+            rubric_fail = true
+          end
+
+          if rubric_fail and check_bool then
+              print("Rubric fail: send message? Type y to do so:")
+              self:message_rubric_fail(io.read()=="y",j,jj.score,rubric_sum,rubric_count,Nrubric,jj.assessor_name)
+          end
+
         end
+
       end
 
       if assr and scr then
@@ -208,7 +225,7 @@ function proj:check_moderated(assign_data)
     end
 
     -- for debugging:
-    if j.user.name == "Jane Doe" then
+    if j.user.name == "Mengyao Wang" then
       pretty.dump(assign_data[i])
       error()
     end
