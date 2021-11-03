@@ -26,7 +26,7 @@ function proj:summarise_marks(assign_data,args)
   local function texencode(str)
     str = str:gsub("&","\\&")
     str = str:gsub("_","\\_")
-    str = str:gsub("^","\\^")
+    str = str:gsub("%^","\\^")
     str = str:gsub("%%","\\%%")
     str = str:gsub("#","\\#")
     str = str:gsub("{","\\{")
@@ -115,7 +115,7 @@ function proj:summarise_marks(assign_data,args)
           end
           local comments = (jjd.comments or "")
           if comments == "" then
-            comments = "[\\emph{none}]"
+            comments = "[none]"
           end
           io.write(
               iid.."&"..

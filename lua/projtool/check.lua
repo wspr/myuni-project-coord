@@ -226,8 +226,8 @@ function proj:check_moderated(assign_data,args)
 
     -- for debugging:
     if j.user.name == "Mengyao Wang" then
-      pretty.dump(assign_data[i])
-      error()
+    --  pretty.dump(assign_data[i])
+  --    error()
     end
 
   end
