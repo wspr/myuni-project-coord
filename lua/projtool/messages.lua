@@ -13,9 +13,7 @@ William Robertson, on behalf of the Project Coordination Team
 ]]
 
 proj.message.prelim.body_opening = [[
-As an honours project supervisor, you are now required to assess the following preliminary reports.
-
-Marks are due by Monday 5 July, 2021. This is an semi-automated reminder.
+As an honours project supervisor, you are now required to assess the following preliminary reports. This is a semi-automated reminder.
 
 Follow the links below to take you straight to the reports for assessment in MyUni. If the link doesn't work first time, you will now be logged into MyUni and following the link again will work correctly.
 ]]
@@ -35,9 +33,7 @@ Your continued efforts to make these courses a success are much appreciated.
 ]]
 
 proj.message.interim.body_opening = [[
-As a supervisor, you are now required to assess of the following deliverables.
-
-Marks are due by Monday 5 July, 2021. This is an semi-automated reminder.
+As a supervisor, you are now required to assess of the following deliverables. This is a semi-automated reminder.
 
 The Interim Paper is a HURDLE requirement for the course. If the student receives a fail mark they may eligible for an Additional Assessment to resubmit. Please contact your School's project coordinator to organise this.
 
@@ -62,17 +58,15 @@ Your continued efforts to make these courses a success are much appreciated.
 
 proj.message.final.body_opening =
 [[
-As a supervisor/moderator, you are now required to assess of the following deliverables.
+As a supervisor/moderator, you are now required to assess of the following deliverables. This is a semi-automated reminder.
 
-Marks are due by Monday 28 June, 2021. This is an semi-automated reminder.
+Please attempt to complete this task as soon as possible to ensure there is time to compare the supervisor and moderator marks for this assessment. Late marking will result in a delay to release the results to the students.
 
-Please attempt to complete this task as soon as possible to ensure there is time to compare the supervisor and moderator marks for this report. Late assessment will result in a delay to release the marks to the students.
-
-Follow the links below to take you straight to the reports for assessment in MyUni. CHECK THE STUDENT YOU ARE TAKEN TO. If the link doesn't work first time, you will now be logged into MyUni and following the link again will work correctly.
+Follow the links below to take you straight to the reports/papers for assessment in MyUni.
 ]]
 
 proj.message.final.body_close = "\n" .. [[
-For traceability, the grade MUST be entered via the marking rubric in MyUni, and short written feedback provided in the MyUni comment box next to the rubric. If you wish to annotate their report, use either the "SpeedGrader" interface or mark up separately and upload via the comments form. Annotated feedback is NOT directly visible to the students.
+For traceability, the marks MUST be entered via the marking rubric in MyUni, with written feedback best provide through the rubric against each marking criterion. If you wish to annotate their report, please use the "SpeedGrader" interface to ensure blind assessment.
 
 Do NOT apply any kind of adjustment for late penalty or other non-compliance for the assessment unless it is explicitly addressed in the marking rubric. These penalties will be applied by the course coordinator.
 

@@ -60,12 +60,31 @@ function proj:read_csv_data(csvfile)
       self.proj_data[nn].moderator     = fields[8] or ""
       self.proj_data[nn].moderator_id  = fields[9] or ""
 
-      self.student_ind[self.proj_data[nn].student_id] = nn
-      self.all_staff[self.proj_data[nn].supervisor] = {}
-      self.all_staff[self.proj_data[nn].moderator]  = {}
+      local student_id = self.proj_data[nn].student_id
+      local super = self.proj_data[nn].supervisor
+      local moder = self.proj_data[nn].moderator
 
-      self.all_staff_ids[self.proj_data[nn].supervisor] = self.proj_data[nn].supervisor_id
-      self.all_staff_ids[self.proj_data[nn].moderator]  = self.proj_data[nn].moderator_id
+      self.student_ind[student_id] = nn
+
+      self.all_staff[super] = {}
+      self.all_staff[moder]  = {}
+
+      self.all_staff_ids[super] = self.proj_data[nn].supervisor_id
+      self.all_staff_ids[moder] = self.proj_data[nn].moderator_id
+
+      self.assessors = self.assessors or {}
+      self.assessors[super] = self.assessors[super] or {}
+      self.assessors[moder] = self.assessors[moder] or {}
+
+      self.assessors[super][csvfile] = self.assessors[super][csvfile] or {}
+      self.assessors[moder][csvfile] = self.assessors[moder][csvfile] or {}
+
+      self.assessors[super][csvfile].supervisor = self.assessors[super][csvfile].supervisor or {}
+      self.assessors[moder][csvfile].moderator  = self.assessors[moder][csvfile].moderator  or {}
+
+      self.assessors[super][csvfile].supervisor[student_id] = nn
+      self.assessors[moder][csvfile].moderator[student_id]  = nn
+
     end
   end
 

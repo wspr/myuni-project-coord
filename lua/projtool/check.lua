@@ -129,8 +129,11 @@ function proj:check_moderated(assign_data,args)
     if j.metadata == nil then
       pretty.dump(j)
       pretty.dump(self.student_ind)
-      error("Student information not included in CSV file. Check?")
-    end
+      print("Student information not included in CSV file. Type y to abort, anything else to continue:")
+      if io.read()=="y" then
+        error("You aborted")
+      end
+    else
     print("Project: "..j.metadata.proj_title)
     print("Supervisor: "..j.metadata.supervisor)
     print("Moderator: "..j.metadata.moderator)
@@ -152,7 +155,7 @@ function proj:check_moderated(assign_data,args)
         print("      Assessor: "..assr.." ("..scr..") - score but no rubric.")
         if check_bool then
           print("Rubric fail: send message? Type y to do so:")
-          self:message_rubric_no_grade(io.read()=="y",j,assr)
+          self:message_rubric_fail(io.read()=="y",j,scr,0,0,Nrubric,assr)
         end
 
       elseif #jg.rubric_assessments > 0 then
@@ -204,7 +207,7 @@ function proj:check_moderated(assign_data,args)
 
           if rubric_fail and check_bool then
               print("Rubric fail: send message? Type y to do so:")
-              self:message_rubric_fail(io.read()=="y",j,jj.score,rubric_sum,rubric_count,Nrubric,jj.assessor_name)
+              self:message_rubric_fail(io.read()=="y",j,scr,rubric_sum,rubric_count,Nrubric,assr)
           end
 
         end
@@ -223,11 +226,12 @@ function proj:check_moderated(assign_data,args)
         end
       end
     end
+    end
 
     -- for debugging:
-    if j.user.name == "Mengyao Wang" then
+    if j.user.name == "Will Robertson" then
     --  pretty.dump(assign_data[i])
-  --    error()
+    --  error()
     end
 
   end
@@ -267,7 +271,7 @@ You have assessed the following student/group:]] .. "\n\n" ..
 j.user.name .. ": " .. j.metadata.proj_title .. " ("..j.metadata.proj_id..")" .. "\n\n" .. [[
 You have awarded them a grade of ]] .. score .. "/100 but " .. rubric_fail_str .. "\n\n" .. [[
 Please correct this at the assessment page via the following link:]] .. "\n\n" ..
-j.metadata.url .. self.message.signoff
+j.metadata.url .. "\n\n" .. self.message.signoff
           })
 
 end
@@ -288,7 +292,7 @@ You have assessed the following student/group:]] .. "\n\n" ..
 j.user.name .. ": " .. j.metadata.proj_title .. " ("..j.metadata.proj_id..")" .. "\n\n" .. [[
 You have not yet awarded them a total mark but all rubric entries have been completed.]] .. "\n\n" .. [[
 Once you are ready to finalise their mark, enter it in the assessment page via the following link:]] .. "\n\n    " ..
-j.metadata.url .. self.message.signoff
+j.metadata.url .. "\n\n" .. self.message.signoff
           })
 
 end
