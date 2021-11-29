@@ -178,13 +178,13 @@ function proj:check_moderated(assign_data,args)
         if jj.score==nil then
 
           if rubric_count == Nrubric then
-            print("      Assessor: "..jj.assessor_name.." ("..rubric_sum..") - rubric complete but no score.")
+            print("      Assessor: "..assr.." ("..rubric_sum..") - rubric complete but no score.")
             if check_bool then
               print("Rubric fail: send message? Type y to do so:")
-              self:message_rubric_no_grade(io.read()=="y",j,jj.assessor_name)
+              self:message_rubric_no_grade(io.read()=="y",j,assr)
             end
           else
-            print("      Assessor: "..jj.assessor_name.." - "..rubric_count.." of "..Nrubric.." rubric entries and no score.")
+            print("      Assessor: "..assr.." - "..rubric_count.." of "..Nrubric.." rubric entries and no score.")
           end
 
           if jg.score then
@@ -195,13 +195,13 @@ function proj:check_moderated(assign_data,args)
           scr  = jj.score
 
           if rubric_count == Nrubric then
-            print("      Assessor: "..jj.assessor_name.." ("..jj.score..") - rubric complete.")
-            if rubric_sum-jj.score>0.5 or rubric_sum-jj.score<-0.5 then
-              print("      Assessor: "..jj.assessor_name.." ("..jj.score..") - ERROR: rubric sum ("..rubric_sum..") does not match final mark awarded ("..jj.score..")")
+            print("      Assessor: "..assr.." ("..scr..") - rubric complete.")
+            if rubric_sum-jj.score>0.5 or rubric_sum-scr<-0.5 then
+              print("      Assessor: "..assr.." ("..scr..") - ERROR: rubric sum ("..rubric_sum..") does not match final mark awarded ("..jj.score..")")
               rubric_fail = true
             end
           elseif rubric_count < Nrubric then
-            print("      Assessor: "..jj.assessor_name.." ("..jj.score..") - ERROR: Only "..rubric_count.." of "..Nrubric.." rubric entries completed.")
+            print("      Assessor: "..assr.." ("..scr..") - ERROR: Only "..rubric_count.." of "..Nrubric.." rubric entries completed.")
             rubric_fail = true
           end
 
@@ -260,6 +260,9 @@ function proj:message_rubric_fail(remind_check,j,score,rubric_sum,rubric_count,N
   end
 
   local coord = self.coordinators[j.metadata.school]
+  if coord == nil then
+    error("Coordinator not found.")
+  end
   local coord_id = self.all_staff[coord].id
 
   canvas:message_user(remind_check,{

@@ -4,7 +4,18 @@ local pretty = require("pl.pretty")
 
 local proj = {}
 
-function proj:summarise_marks(assign_data,args)
+  local function texencode(str)
+    str = str:gsub("&","\\&")
+    str = str:gsub("_","\\_")
+    str = str:gsub("%^","\\^")
+    str = str:gsub("%%","\\%%")
+    str = str:gsub("#","\\#")
+    str = str:gsub("{","\\{")
+    str = str:gsub("}","\\}")
+    return str
+  end
+
+function proj:summarise_marks(assign_data,assign_data2,args)
 
   local args = args or {}
   local who = args.who
@@ -21,17 +32,6 @@ function proj:summarise_marks(assign_data,args)
   end
   if not path.exists(subpath.."build") then
     os.execute("mkdir "..subpath.."build")
-  end
-
-  local function texencode(str)
-    str = str:gsub("&","\\&")
-    str = str:gsub("_","\\_")
-    str = str:gsub("%^","\\^")
-    str = str:gsub("%%","\\%%")
-    str = str:gsub("#","\\#")
-    str = str:gsub("{","\\{")
-    str = str:gsub("}","\\}")
-    return str
   end
 
   for i,j in pairs(assign_data) do
@@ -86,12 +86,30 @@ function proj:summarise_marks(assign_data,args)
   , j.metadata.moderator
 ))
 
-      for _,prov_grade in ipairs(j.provisional_grades) do
+      for _,prov_grade in ipairs(assign_data[i].provisional_grades) do
+        self:assessor_print(prov_grade)
+      end
+      for _,prov_grade in ipairs(assign_data2[i].provisional_grades) do
+        self:assessor_print(prov_grade)
+      end
+      io.write [[
+\end{document}
+]]
+      io.close(ff)
+      for ii = 1,runs do
+        os.execute("cd "..buildpath.."; /Library/TeX/texbin/pdflatex "..filename.." ;")
+      end
+      os.execute("cp "..buildpath.."/"..filename..".pdf "..subpath.." ;")
+    end
+  end
+end
 
-        local jd = prov_grade.rubric_assessments[#prov_grade.rubric_assessments]
-        -- only take the last entry from an assessor
+function proj:assessor_print(prov_grade)
 
-        if jd then
+      local jd = prov_grade.rubric_assessments[#prov_grade.rubric_assessments]
+      -- only take the last entry from an assessor
+
+      if jd then
 
         io.write [[
 \Needspace{0.4\textheight}
@@ -126,7 +144,7 @@ function proj:summarise_marks(assign_data,args)
               "\\\\\n")
         end
         io.write("\\midrule\n"..
-              "".."&"..
+              "".."&&"..
               "\\textbf{Total}".."&"..
               "\\textbf{"..(jd.score or "").."}".."&"..
               ""..
@@ -144,19 +162,8 @@ function proj:summarise_marks(assign_data,args)
             io.write("\\subsubsection*{Comments}\\endgroup")
           end
         end
-        end
       end
-      io.write [[
-\end{document}
-]]
-      io.close(ff)
-      for ii = 1,runs do
-        os.execute("cd "..buildpath.."; /Library/TeX/texbin/pdflatex "..filename.." ;")
-      end
-      os.execute("cp "..buildpath.."/"..filename..".pdf "..subpath.." ;")
-    end
-  end
-end
 
+end
 
 return proj

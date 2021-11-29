@@ -66,10 +66,10 @@ If this is necessary, please advise ASAP to allow us to resolve the situation in
 function proj:resolve_grades(canvas_subfin,canvas_submod)
 
   for i,j in pairs(canvas_submod) do
-    print("Processing moderated paper: "..i)
+    if (canvas_subfin[i] == nil) then
+      error("Processing moderating submission: no matching supervisor assessment found? Project: "..i)
+    end
     if not(canvas_submod[i].metadata == nil) then
-      print(canvas_subfin[i].metadata.proj_title)
-      print(canvas_submod[i].metadata.proj_title)
       canvas_subfin[i].metadata.moderator_mark = canvas_submod[i].metadata.moderator_mark
       canvas_subfin[i].metadata.supervisor_url = canvas_subfin[i].metadata.url
       canvas_subfin[i].metadata.moderator_url  = canvas_submod[i].metadata.url
