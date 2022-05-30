@@ -45,7 +45,7 @@ function proj:get_submissions(get_bool,cvs)
   end
   subm = self:subm_remove(subm)
 
-  if csv then
+  if cvs then
     self.assignment_setup = cvs.assignments[self.assign_name_canvas]
   end
 
