@@ -181,7 +181,7 @@ function proj:export_csv_marks(subm)
     return res
   end)
 
-  print("Writing marks to file: '"..self.marks_csv"'...")
+  print("Writing marks to file: '"..self.marks_csv.."'...")
   local ff = io.output(self.marks_csv)
   io.write("INDEX,USERID,NAME,SCHOOL,PROJID,TITLE,SUPERVISOR,MARK,URL\n")
 
