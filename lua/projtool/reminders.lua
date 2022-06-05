@@ -83,6 +83,7 @@ function proj:assessor_reminder_interim(remind_check,subm,only_them)
       canvas:message_user(remind_check,{
         course    = canvas.courseid,
         canvasid  = recip ,
+        group_conversation = true ,
         subject   = self.assign_name_colloq.." marking",
         body      = salutation .. self.message.interim.body_opening .. body .. self.message.interim.body_close .. self.message.signoff
       })
@@ -93,48 +94,6 @@ function proj:assessor_reminder_interim(remind_check,subm,only_them)
 end
 
 
-
-function proj:assessor_reminder_prelim(remind_check,subm,only_them)
-
-  local markers_msg = {}
-  for _,j in pairs(subm) do
-    if not(j.grade) then
-      markers_msg = self:message_reminder_add(j,markers_msg,{whom="supervisor",grouped=true})
-    end
-  end
-
-  for acad_name,j in pairs(markers_msg) do
-
-    local salutation = "Dear " .. acad_name .. ",\n\n"
-    local body = j.supervisor
-
-    local proceed = false
-    if only_them == nil then
-      proceed = true
-    else
-      if acad_name == only_them then
-        proceed = true
-      end
-    end
-    if proceed then
-      local this_body =
-        salutation ..
-        self.message.prelim.body_opening ..
-        body ..
-        self.message.prelim.body_close ..
-        self.message.signoff
-
-      canvas:message_user(remind_check,{
-        course    = canvas.courseid,
-        canvasid  = self.all_staff[acad_name].id ,
-        subject   = self.assign_name_colloq.." marking",
-        body      = this_body
-      })
-    end
-
-  end
-
-end
 
 
 
@@ -181,10 +140,11 @@ function proj:assessor_reminder_plan(remind_check,subm,only_them)
         self.message.signoff
 
       canvas:message_user(remind_check,{
-        course    = canvas.courseid,
+        course    = canvas.courseid ,
         canvasid  = recip ,
-        subject   = self.assign_name_colloq.." marking",
-        body      = this_body
+        group_conversation = true ,
+        subject   = self.assign_name_colloq.." marking" ,
+        body      = this_body ,
       })
     end
 
@@ -261,6 +221,7 @@ function proj:assessor_reminder_final(remind_check,subm1,subm2,args)
       canvas:message_user(remind_check,{
         course    = canvas.courseid,
         canvasid  = recip ,
+        group_conversation = true ,
         subject   = self.assign_name_colloq.." marking",
         body      = this_body
       })
