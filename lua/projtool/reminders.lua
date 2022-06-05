@@ -138,6 +138,62 @@ end
 
 
 
+function proj:assessor_reminder_plan(remind_check,subm,only_them)
+
+  local markers_msg = {}
+  for _,j in pairs(subm) do
+    if not(j.grade) then
+      markers_msg = self:message_reminder_add(j,markers_msg,{whom="supervisor",grouped=true})
+    end
+  end
+
+  for acad_name,j in pairs(markers_msg) do
+
+    local salutation = "Dear " .. acad_name .. ",\n\n"
+    local body = j.supervisor
+
+    local proceed = false
+    if only_them == nil then
+      proceed = true
+    else
+      if acad_name == only_them then
+        proceed = true
+      end
+    end
+    if proceed then
+      local recip = {}
+      for i in pairs(j.school) do
+        print("School: "..i)
+        pretty.dump(self.coordinators)
+        local coord = self.coordinators[i]
+        print("Coordinator: "..coord)
+        recip[#recip+1] = self.all_staff[coord].id
+      end
+      if self.all_staff[acad_name].id == nil then
+        error("Assessor '"..acad_name.."' not found in staff list.")
+      end
+      recip[#recip+1] = self.all_staff[acad_name].id
+      local this_body =
+        salutation ..
+        self.message.plan.body_opening ..
+        body ..
+        self.message.plan.body_close ..
+        self.message.signoff
+
+      canvas:message_user(remind_check,{
+        course    = canvas.courseid,
+        canvasid  = recip ,
+        subject   = self.assign_name_colloq.." marking",
+        body      = this_body
+      })
+    end
+
+  end
+
+end
+
+
+
 function proj:assessor_reminder_final(remind_check,subm1,subm2,args)
 
   local args = args or {}

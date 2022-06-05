@@ -38,9 +38,14 @@ function proj:check_assignment(assign_data,check_bool)
     j.metadata.assessment_check.rubric_sum = 0
     j.metadata.assessment_check.rubric_error = false
     local grade = j.grade
+    local marks_lost = 0
     if grade then
       j.metadata.assessment_check.graded = true
-      print("Grade: "..grade)
+      print("Grade: "..grade.." | Entered grade: "..j.entered_grade)
+      if j.late then
+        marks_lost = j.points_deducted
+        print("LATE - points deducted: "..marks_lost)
+      end
       if j.rubric_assessment then
         j.metadata.assessment_check.rubric = true
         for _,jj in pairs(j.rubric_assessment) do
@@ -53,7 +58,7 @@ function proj:check_assignment(assign_data,check_bool)
         end
         if rubric_count == Nrubric then
           print("Rubric complete: " .. rubric_count .. " of " .. Nrubric .. " entries.")
-          if math.abs(rubric_sum-grade)>=0.5 then
+          if math.abs(rubric_sum-grade-marks_lost)>=0.5 then
             j.metadata.assessment_check.rubric_error = true
             print("ERROR: rubric sum ("..rubric_sum..") does not match final mark awarded ("..grade..")")
             rubric_fail = true
@@ -94,6 +99,12 @@ function proj:check_assignment(assign_data,check_bool)
         print("Assessment not started yet.")
       end
     end
+
+    -- for debugging:
+--    if j.user.name == "Flynn Pisani" then
+--      pretty.dump(j)
+--      error()
+--    end
 
   end
 
@@ -229,9 +240,9 @@ function proj:check_moderated(assign_data,args)
     end
 
     -- for debugging:
-    if j.user.name == "Will Robertson" then
-    --  pretty.dump(assign_data[i])
-    --  error()
+    if j.user.name == "Flynn Pisani" then
+--      pretty.dump(assign_data[i])
+--      error()
     end
 
   end
