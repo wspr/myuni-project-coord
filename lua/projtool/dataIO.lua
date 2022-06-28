@@ -40,7 +40,8 @@ function proj:add_assessment_metadata(canvas_subm)
   for i,subm_entry in ipairs(canvas_subm) do
     print(i..": Processing submission by: "..subm_entry.user.name)
 
-    local student_id = subm_entry.user.sis_user_id
+    local student_id   = subm_entry.user.sis_user_id
+    local student_name = subm_entry.user.name
     local ind = self.student_ind[student_id]
 
     if ind then
@@ -69,7 +70,7 @@ function proj:add_assessment_metadata(canvas_subm)
       subm[hash_index].metadata.override    = override[hash_index] or ""
       subm[hash_index].metadata.comments    = comments[hash_index] or ""
     else
-      print("No metadata found for this student/group: "..student_id)
+      error("No metadata found for submission by: "..student_name.." (ID: "..student_id..")")
     end
 
   end
