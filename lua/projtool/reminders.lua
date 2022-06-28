@@ -210,6 +210,12 @@ end
 
 function proj:assessor_reminder_final(remind_check,subm1,subm2,args)
 
+  print("Add an intro message:")
+  local additional_message = io.read()
+  if not(additional_message == "") then
+    additional_message = additional_message .. "\n\n"
+  end
+
   local args = args or {}
   local only_them = args.only_them
   local grouped = args.grouped or false
@@ -270,7 +276,7 @@ function proj:assessor_reminder_final(remind_check,subm1,subm2,args)
     end
     if proceed then
       local this_body =
-        salutation .. self.message.final.body_opening .. body .. self.message.final.body_close .. self.message.signoff
+        salutation .. additional_message .. self.message.final.body_opening .. body .. self.message.final.body_close .. self.message.signoff
 
       canvas:message_user(remind_check,{
         course    = canvas.courseid,
