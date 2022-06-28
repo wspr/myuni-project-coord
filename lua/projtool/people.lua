@@ -21,6 +21,9 @@ function proj:read_csv_data(csvfile)
   self.all_staff_ids = {}
 
   local f = csv.open(csvfile)
+  if f == nil then
+    error("CSV file '"..csvfile.."' not found.")
+  end
   local cc = 0
   local nn = 0
   for fields in f:lines() do
