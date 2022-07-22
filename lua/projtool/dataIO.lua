@@ -188,6 +188,7 @@ function proj:export_csv_marks(subm)
 
   for cc,n in ipairs(nameind) do
     local j = subm[n]
+    
     j.metadata = j.metadata or {}
     local writestr = cc..","..
       (j.user.sis_user_id or "")..","..
@@ -195,11 +196,13 @@ function proj:export_csv_marks(subm)
       (j.metadata.school or "")..","..
       (j.metadata.proj_id or "")..","..
       "\"'"..(j.metadata.proj_title or "").."'\""..","..
-      (j.metadata.supervisor or "")..","..
+      "\""..(j.metadata.supervisor or "").."\""..","..
       (j.grade or "")..","..
       (j.metadata.url or "")
 
-    io.write(writestr.."\n")
+    if not(j.grade == "-1") then
+      io.write(writestr.."\n")
+	end    
   end
 
   io.close(ff)
