@@ -37,6 +37,7 @@ function proj:check_assignment(assign_data,check_bool)
     j.metadata.assessment_check.rubric_incomplete = false
     j.metadata.assessment_check.rubric_sum = 0
     j.metadata.assessment_check.rubric_error = false
+
     local grade = j.grade
     local marks_lost = 0
     if grade then
@@ -108,7 +109,7 @@ function proj:check_assignment(assign_data,check_bool)
 
   end
 
-  return
+  return assign_data
 
 end
 
