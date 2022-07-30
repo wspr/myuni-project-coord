@@ -6,43 +6,51 @@ local canvas  = require("canvas-lms")
 local proj = {}
 
 
-function proj:check_assignment(assign_data,check_bool)
+function proj:check_assignment(assign_data,check_bool,verbose)
+
+  local verbose = verbose or false
+
+  local loginfo
+  if verbose then
+    loginfo = function(x) print(x) end
+  else
+    loginfo = function(x) end
+  end
+
   print("CHECKING ASSIGNMENT MARKING")
 
   local Nrubric = #canvas.assignments[self.assign_name_canvas].rubric
 
-  local cc = 0
   for _,j in pairs(assign_data) do
     if j.metadata == nil then
-      cc = cc+1
       pretty.dump(j)
-      error("No metadata for student '"..j.user.name.."'  ("..j.user.sis_user_id..")")
+      error("No CSV metadata for student '"..j.user.name.."'  ("..j.user.sis_user_id..")")
     end
-  end
-  if cc>0 then
-    error("Student submission(s) above missing METADATA. Resolve errors above before continuing.")
   end
 
   for i,j in pairs(assign_data) do
 
-    print("\n"..i..". Student: "..j.user.name.."  ("..j.user.sis_user_id..")")
-    print("Supervisor: "..j.metadata.supervisor.." | Moderator: "..j.metadata.moderator)
-    print("URL: "..j.metadata.url)
-    local rubric_count = 0
-    local rubric_sum   = 0
-    local rubric_fail  = false
-    j.metadata.assessment_check = {}
-    j.metadata.assessment_check.graded = false
-    j.metadata.assessment_check.rubric = false
-    j.metadata.assessment_check.rubric_incomplete = false
-    j.metadata.assessment_check.rubric_sum = 0
-    j.metadata.assessment_check.rubric_error = false
-
-    assign_data[i].marks = assign_data[i].marks or {}
-
+    local assr
     local grade = j.grade
-    local marks_lost = 0
+
     if grade then
+
+      loginfo("\n"..i..". Student: "..j.user.name.."  ("..j.user.sis_user_id..")")
+      loginfo("Supervisor: "..j.metadata.supervisor.." | Moderator: "..j.metadata.moderator)
+      loginfo("URL: "..j.metadata.url)
+
+      local marks_lost = 0
+      local rubric_count = 0
+      local rubric_sum   = 0
+      local rubric_fail  = false
+      j.metadata.assessment_check = {}
+      j.metadata.assessment_check.graded = false
+      j.metadata.assessment_check.rubric = false
+      j.metadata.assessment_check.rubric_incomplete = false
+      j.metadata.assessment_check.rubric_sum = 0
+      j.metadata.assessment_check.rubric_error = false
+
+      assign_data[i].marks = assign_data[i].marks or {}
 
       assr = self.all_staff[j.grader_id]
       if assr == nil then
@@ -52,62 +60,66 @@ function proj:check_assignment(assign_data,check_bool)
       end
 
       j.metadata.assessment_check.graded = true
-      print("Grade: "..grade.." | Entered grade: "..j.entered_grade)
+      loginfo("Grade: "..grade.." | Entered grade: "..j.entered_grade)
       if j.late then
         marks_lost = j.points_deducted
-        print("LATE - points deducted: "..marks_lost)
+        loginfo("LATE - points deducted: "..marks_lost)
       end
       if j.rubric_assessment then
         j.metadata.assessment_check.rubric = true
         for _,jj in pairs(j.rubric_assessment) do
           if jj.points then
-            rubric_sum = rubric_sum + jj.points
---            print("  Rubric mark: " .. jj.points)
+            rubric_sum   = rubric_sum + jj.points
             rubric_count = rubric_count+1
           end
           j.metadata.assessment_check.rubric_sum = rubric_sum
         end
         if rubric_count == Nrubric then
-          print("Rubric complete: " .. rubric_count .. " of " .. Nrubric .. " entries.")
+          loginfo("Rubric complete: " .. rubric_count .. " of " .. Nrubric .. " entries.")
           if math.abs(rubric_sum-grade-marks_lost)>=0.5 then
             j.metadata.assessment_check.rubric_error = true
-            print("ERROR: rubric sum ("..rubric_sum..") does not match final mark awarded ("..grade..")")
+            loginfo("ERROR: rubric sum ("..rubric_sum..") does not match final mark awarded ("..grade..")")
             rubric_fail = true
           end
         elseif rubric_count < Nrubric then
           j.metadata.assessment_check.rubric_incomplete = true
-          print("ERROR: Only "..rubric_count.." of "..Nrubric.." rubric entries completed.")
+          loginfo("ERROR: Only "..rubric_count.." of "..Nrubric.." rubric entries completed.")
           rubric_fail = true
         end
       else
-        print("ERROR: Grade entered but no rubric information.")
+        loginfo("ERROR: Grade entered but no rubric information.")
         rubric_fail = true
       end
 
       if rubric_fail then
         if check_bool then
-          print("Rubric fail: send message? Type y to do so:")
+          loginfo("Rubric fail: send message? Type y to do so:")
           self:message_rubric_fail( io.read()=="y" ,j,grade,rubric_sum,rubric_count,Nrubric)
         end
       end
     else
       if j.rubric_assessment then
-        print("Checking rubric:")
+
+        loginfo("\n"..i..". Student: "..j.user.name.."  ("..j.user.sis_user_id..")")
+        loginfo("Supervisor: "..j.metadata.supervisor.." | Moderator: "..j.metadata.moderator)
+        loginfo("URL: "..j.metadata.url)
+
+        loginfo("Checking rubric:")
         for _,jj in pairs(j.rubric_assessment) do
           if jj.points then
             rubric_count = rubric_count+1
           end
         end
         if rubric_count < Nrubric then
-          print("Assessment started but not yet complete; no grade and only "..rubric_count.." of "..Nrubric.." rubric entries.")
+          loginfo("Assessment started but not yet complete; no grade and only "..rubric_count.." of "..Nrubric.." rubric entries.")
         else
           if check_bool then
-            print("Rubric complete but no grade: send message? Type y to do so:")
+            loginfo("Rubric complete but no grade: send message? Type y to do so:")
             self:message_rubric_no_grade( io.read()=="y" ,j)
           end
         end
       else
-        print("Assessment not started yet.")
+        -- loginfo("Assessment not started yet.")
       end
     end
 

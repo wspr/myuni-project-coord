@@ -10,7 +10,84 @@ local proj = {}
 
 
 
-function proj:add_assessment_metadata(canvas_subm)
+
+function proj:dl_check(opt,str)
+  opt.download = opt.download or "ask"
+  local check_bool = false
+  if opt.download == "ask" then
+    print(str .. " Type y to do so:")
+    if io.read() == "y" then
+      check_bool = true
+    end
+  elseif (opt.download == "always") or (opt.download == true) then
+    print(str .. " User requested 'Always'.")
+    check_bool = true
+  elseif (opt.download == "never") or (opt.download == false) then
+    print(str .. " User requested 'Never'.")
+  else
+    error("Interface: { download = 'ask' (default) | 'always' | 'never' } ")
+  end
+  return check_bool
+end
+
+
+
+
+
+
+
+function proj:get_submissions(get_bool,cvs,verbose)
+
+  local verbose = verbose or false
+
+  local subm
+  if self.assign_grouped then
+    subm = canvas:get_assignment(get_bool,self.assign_name_canvas,{grouped=true,include={"group","user","rubric_assessment","submission_comments"}})
+  else
+    subm = canvas:get_assignment(get_bool,self.assign_name_canvas,{include={"provisional_grades","user","rubric_assessment","submission_comments"}})
+  end
+  subm = self:subm_remove(subm,verbose)
+
+  if cvs then
+    self.assignment_setup = cvs.assignments[self.assign_name_canvas]
+  end
+
+  return subm
+
+end
+
+function proj:subm_remove(subm,verbose)
+  local verbose = verbose or false
+  local subout = {}
+  local to_keep = true
+  if verbose then print("Number of submissions: "..#subm) end
+  for i,j in ipairs(subm) do
+    to_keep = true
+    if string.sub(j.user.sis_user_id,1,2) == "sv" then
+      if verbose then print(" - Academic student view (SV) user: "..subm[i].user.name) end
+      to_keep = false
+    end
+    if j.user.sis_user_id == nil then -- maybe check against a black list, or similar
+      if verbose then print(" - Student has no login id: "..subm[i].user.name) end
+      to_keep = false
+    end
+    if j.excused then
+      if verbose then print(" - Student excused: "..subm[i].user.name) end
+      to_keep = false
+    end
+    if to_keep then
+      subout[#subout+1] = j
+    end
+  end
+  if verbose then print("Number of valid submissions: "..#subout) end
+  return subout
+end
+
+
+
+function proj:add_assessment_metadata(canvas_subm,verbose)
+
+  local verbose = verbose or false
 
   if self.assign_individual_submission==nil then
     self.assign_individual_submission = true
@@ -38,7 +115,9 @@ function proj:add_assessment_metadata(canvas_subm)
 
   local subm = {}
   for i,subm_entry in ipairs(canvas_subm) do
-    print(i..": Processing submission by: "..subm_entry.user.name)
+    if verbose then
+      print(i..": Processing submission by: "..subm_entry.user.name)
+    end
 
     local student_id   = subm_entry.user.sis_user_id
     local student_name = subm_entry.user.name

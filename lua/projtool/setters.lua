@@ -21,6 +21,9 @@ end
 function proj:set_assign_individual_submission(bool)
   self.assign_individual_submission = bool
 end
+function proj:set_assign_canvas_moderated(bool)
+  self.assign_canvas_moderated = bool
+end
 function proj:set_coordinators(tbl)
   self.coordinators = tbl
   if self.all_staff == nil then
