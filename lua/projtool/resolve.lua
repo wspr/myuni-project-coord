@@ -67,7 +67,8 @@ function proj:resolve_grades(canvas_subfin,canvas_submod)
 
   for i,j in pairs(canvas_submod) do
     if (canvas_subfin[i] == nil) then
-      error("Processing moderating submission: no matching supervisor assessment found? Project: "..i)
+      pretty.dump(canvas_subfin)
+      error("Processing moderating submission: no matching supervisor assessment found?\nStudent/Project: "..i)
     end
     if not(canvas_submod[i].metadata == nil) then
       canvas_subfin[i].metadata.moderator_mark = canvas_submod[i].metadata.moderator_mark

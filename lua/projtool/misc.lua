@@ -58,7 +58,13 @@ end
 function proj:subm_remove(subm)
   local subout = {}
   local to_keep = true
+  local count = 0
   for i,j in ipairs(subm) do
+    count = count + 1
+  end
+  print("Number of submissions: "..count)
+  for i,j in ipairs(subm) do
+    to_keep = true
     if string.sub(j.user.sis_user_id,1,2) == "sv" then
       print(" - Academic student view (SV) user: "..subm[i].user.name)
       to_keep = false
@@ -75,6 +81,11 @@ function proj:subm_remove(subm)
       subout[#subout+1] = j
     end
   end
+  count = 0
+  for i,j in ipairs(subout) do
+    count = count + 1
+  end
+  print("Number of valid submissions: "..count)
   return subout
 end
 

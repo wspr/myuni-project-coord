@@ -109,17 +109,19 @@ function proj:export_csv_marks_moderated(subm,arg)
   for i in pairs(subm) do
     nameind[#nameind+1] = i
   end
-  table.sort(nameind,function(n1,n2)
-    local res
-    if (subm[n1].metadata.school == subm[n2].metadata.school) and (subm[n1].metadata.supervisor == subm[n2].metadata.supervisor) then
-      res = (subm[n1].metadata.proj_id < subm[n2].metadata.proj_id)
-    elseif (subm[n1].metadata.school == subm[n2].metadata.school) then
-      res = (subm[n1].metadata.supervisor < subm[n2].metadata.supervisor)
-    else
-      res = (subm[n1].metadata.school < subm[n2].metadata.school)
+  table.sort(nameind,
+    function(n1,n2)
+      local res
+      if (subm[n1].metadata.school == subm[n2].metadata.school) and (subm[n1].metadata.supervisor == subm[n2].metadata.supervisor) then
+        res = (subm[n1].metadata.proj_id < subm[n2].metadata.proj_id)
+      elseif (subm[n1].metadata.school == subm[n2].metadata.school) then
+        res = (subm[n1].metadata.supervisor < subm[n2].metadata.supervisor)
+      else
+        res = (subm[n1].metadata.school < subm[n2].metadata.school)
+      end
+      return res
     end
-    return res
-  end)
+  )
 
   for cc,n in ipairs(nameind) do
     local j = subm[n]
@@ -142,23 +144,28 @@ function proj:export_csv_marks_moderated(subm,arg)
       (j.metadata.resolve  or "")..","..
       (j.metadata.override or "")..","..
       (j.metadata.comments or "")..","..
-      (j.metadata.supervisor or "")..","..
+      "\""..(j.metadata.supervisor or "").."\""..","..
       (j.metadata.supervisor_mark or "")..","..
-      (j.metadata.moderator or "")..","..
+      "\""..(j.metadata.moderator or "").."\""..","..
       (j.metadata.moderator_mark or "")..","..
       (j.metadata.supervisor_url or "")..","..
       (j.metadata.moderator_url or "")..","
 
-    for kk,vv in pairs(j.metadata.super_marks) do
-      writestr = writestr..kk..","..vv..","
+    if j.metadata.super_marks then
+      for kk,vv in pairs(j.metadata.super_marks) do
+        writestr = writestr.."\""..kk.."\","..vv..","
+      end
     end
-    for kk,vv in pairs(j.metadata.moder_marks) do
-      writestr = writestr..kk..","..vv..","
+    if j.metadata.moder_marks then
+      for kk,vv in pairs(j.metadata.moder_marks) do
+        writestr = writestr.."\""..kk.."\","..vv..","
+      end
     end
 
     io.write(writestr.."\n")
   end
   io.close(ff)
+  print("\n\n==================\nMarks CSV written:\n    "..self.marks_csv)
 
 end
 
@@ -188,7 +195,7 @@ function proj:export_csv_marks(subm)
 
   for cc,n in ipairs(nameind) do
     local j = subm[n]
-    
+
     j.metadata = j.metadata or {}
     local writestr = cc..","..
       (j.user.sis_user_id or "")..","..
@@ -202,7 +209,7 @@ function proj:export_csv_marks(subm)
 
     if not(j.grade == "-1") then
       io.write(writestr.."\n")
-	end    
+	end
   end
 
   io.close(ff)

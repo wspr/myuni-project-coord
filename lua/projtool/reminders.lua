@@ -296,8 +296,13 @@ end
 
 function proj:assessor_reminder(assm,remind_check,subm1,subm2,args)
 
-  print("Add an intro message:")
-  local additional_message = io.read()
+  local additional_message
+  if remind_check then
+    print("Add an intro message:")
+    additional_message = io.read()
+  else
+    additional_message = "[[Additional message would go here.]]"
+  end
   if not(additional_message == "") then
     additional_message = additional_message .. "\n\n"
   end
@@ -343,7 +348,7 @@ function proj:assessor_reminder(assm,remind_check,subm1,subm2,args)
     end
 
     local staff_lookup = self.all_staff[acad_name]
-    if staff_loopup == nil then
+    if staff_lookup == nil then
       error("Staff member not found: "..acad_name)
     end
     local recip = { self.all_staff[acad_name].id }
@@ -352,7 +357,9 @@ function proj:assessor_reminder(assm,remind_check,subm1,subm2,args)
         print("School: "..i)
         local coord = self.coordinators[i]
         print("Coordinator: "..coord)
-        recip[#recip+1] = self.all_staff[coord].id
+        if self.all_staff[coord].id ~= self.all_staff[acad_name].id then
+          recip[#recip+1] = self.all_staff[coord].id
+        end
       end
     end
 
@@ -366,7 +373,7 @@ function proj:assessor_reminder(assm,remind_check,subm1,subm2,args)
     end
     if proceed then
       local this_body =
-        salutation .. additional_message .. self.message[assm].body_opening .. body .. self.message[assm].body_close .. self.message.signoff
+        salutation .. additional_message .. self.message[assm].body_opening .. body .. self.message.body_close .. self.message.signoff
 
       canvas:message_user(remind_check,{
         course    = canvas.courseid,

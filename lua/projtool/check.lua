@@ -23,10 +23,10 @@ function proj:check_assignment(assign_data,check_bool)
     error("Student submission(s) above missing METADATA. Resolve errors above before continuing.")
   end
 
-  for _,j in pairs(assign_data) do
+  for i,j in pairs(assign_data) do
 
-    print("\nStudent: "..j.user.name.."  ("..j.user.sis_user_id..")")
-    print("Supervisor: "..j.metadata.supervisor)
+    print("\n"..i..". Student: "..j.user.name.."  ("..j.user.sis_user_id..")")
+    print("Supervisor: "..j.metadata.supervisor.." | Moderator: "..j.metadata.moderator)
     print("URL: "..j.metadata.url)
     local rubric_count = 0
     local rubric_sum   = 0
@@ -38,9 +38,19 @@ function proj:check_assignment(assign_data,check_bool)
     j.metadata.assessment_check.rubric_sum = 0
     j.metadata.assessment_check.rubric_error = false
 
+    assign_data[i].marks = assign_data[i].marks or {}
+
     local grade = j.grade
     local marks_lost = 0
     if grade then
+
+      assr = self.all_staff[j.grader_id]
+      if assr == nil then
+        local usr = canvas:get(canvas.course_prefix.."users/"..j.grader_id)
+        assr = usr.name
+        self.all_staff[j.grader_id] = usr.name
+      end
+
       j.metadata.assessment_check.graded = true
       print("Grade: "..grade.." | Entered grade: "..j.entered_grade)
       if j.late then
@@ -98,6 +108,18 @@ function proj:check_assignment(assign_data,check_bool)
         end
       else
         print("Assessment not started yet.")
+      end
+    end
+
+    if assr and grade then
+      assign_data[i].marks[assr] = grade
+      if not(assign_data[i].metadata==nil) then
+        if assign_data[i].metadata.supervisor == assr then
+          assign_data[i].metadata.supervisor_mark = grade
+        end
+        if assign_data[i].metadata.moderator == assr then
+          assign_data[i].metadata.moderator_mark = grade
+        end
       end
     end
 
