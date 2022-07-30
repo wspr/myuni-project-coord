@@ -293,4 +293,94 @@ function proj:assessor_reminder_final(remind_check,subm1,subm2,args)
 end
 
 
+
+function proj:assessor_reminder(assm,remind_check,subm1,subm2,args)
+
+  print("Add an intro message:")
+  local additional_message = io.read()
+  if not(additional_message == "") then
+    additional_message = additional_message .. "\n\n"
+  end
+
+  local args = args or {}
+  local only_them = args.only_them
+  local grouped = args.grouped or false
+
+  local sup_lede = "\n# Supervisor assessment\n"
+  local mod_lede = "\n# Moderator assessment\n"
+
+  local markers_msg = {}
+
+  for _,j in pairs(subm1) do
+   if not(j.metadata==nil) then
+     if not(j.metadata.supervisor_mark) then
+       markers_msg = self:message_reminder_add(j,markers_msg,{whom="supervisor",grouped=grouped})
+     end
+   end
+  end
+  for _,j in pairs(subm2) do
+   if not(j.metadata==nil) then
+     if not(j.metadata.moderator_mark) then
+       markers_msg = self:message_reminder_add(j,markers_msg,{whom="moderator",grouped=grouped})
+     end
+   end
+  end
+
+  for acad_name,j in pairs(markers_msg) do
+
+    print("MESSAGE: "..acad_name)
+    local salutation = "Dear " .. acad_name .. ",\n\n"
+    local body = ""
+
+    if not(j.supervisor == "") then
+      body = body .. sup_lede .. j.supervisor
+    end
+    if not(j.supervisor == "") and not(j.moderator == "") then
+      body = body .. "\n"
+    end
+    if not(j.moderator == "") then
+      body = body .. mod_lede .. j.moderator
+    end
+
+    local staff_lookup = self.all_staff[acad_name]
+    if staff_loopup == nil then
+      error("Staff member not found: "..acad_name)
+    end
+    local recip = { self.all_staff[acad_name].id }
+    if self.coordinators then
+      for i in pairs(j.school) do
+        print("School: "..i)
+        local coord = self.coordinators[i]
+        print("Coordinator: "..coord)
+        recip[#recip+1] = self.all_staff[coord].id
+      end
+    end
+
+    local proceed = false
+    if only_them == nil then
+      proceed = true
+    else
+      if acad_name == only_them then
+        proceed = true
+      end
+    end
+    if proceed then
+      local this_body =
+        salutation .. additional_message .. self.message[assm].body_opening .. body .. self.message[assm].body_close .. self.message.signoff
+
+      canvas:message_user(remind_check,{
+        course    = canvas.courseid,
+        canvasid  = recip ,
+        group_conversation = true ,
+        subject   = self.assign_name_colloq.." marking",
+        body      = this_body
+      })
+    end
+
+
+  end
+
+end
+
+
 return proj
