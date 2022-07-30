@@ -104,9 +104,9 @@ If this is necessary, please advise ASAP to allow us to resolve the situation in
 }
 
 
-function proj:resolve_grades(canvas_subfin,canvas_submod,assm)
+function proj:resolve_grades(canvas_subfin,canvas_submod)
 
-  local assm = assm or "final"
+  local assm = self.deliverable or "final"
 
   for i,j in pairs(canvas_submod) do
     if (canvas_subfin[i] == nil) then
@@ -179,7 +179,7 @@ function proj:resolve_grades(canvas_subfin,canvas_submod,assm)
           print("## Send updated resolution? Type y to do so:")
           local resolve_check = io.read()=="y"
 
-          self:message_resolution(resolve_check,j,close_rank,true,assm)
+          self:message_resolution(resolve_check,j,close_rank,true)
           if not(resolve_check) then
             canvas_subfin[i].metadata.resolve = csv_resolve
           end
@@ -196,9 +196,9 @@ end
 
 
 
-function proj:message_resolution(send_bool,j,close_rank,inconsistent_resolved,assm)
+function proj:message_resolution(send_bool,j,close_rank,inconsistent_resolved)
 
-  local assm = assm or "final"
+  local assm = self.deliverable or "final"
 
   local body_text = "\n\n" .. [[
 You have assessed the following student/group:]] .. "\n\n" ..

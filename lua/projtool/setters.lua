@@ -3,6 +3,9 @@
 
 local proj = {}
 
+function proj:set_deliverable(str)
+  self.deliverable = str
+end
 function proj:set_cohort(str)
   self.cohort = str
 end

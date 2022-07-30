@@ -294,7 +294,9 @@ end
 
 
 
-function proj:assessor_reminder(assm,remind_check,subm1,subm2,args)
+function proj:assessor_reminder(remind_check,subm1,subm2,args)
+
+  local assm = self.deliverable or "final"
 
   local additional_message
   if remind_check then
