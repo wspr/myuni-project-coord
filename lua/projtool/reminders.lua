@@ -84,7 +84,7 @@ function proj:assessor_reminder_interim(remind_check,subm,only_them)
         course    = canvas.courseid,
         canvasid  = recip ,
         subject   = self.assign_name_colloq.." marking",
-        body      = salutation .. self.message.interim.body_opening .. body .. self.message.interim.body_close .. self.message.signoff
+        body      = salutation .. self.message.interim.body_opening .. body .. self.message.body_close .. self.message.signoff
       })
     end
 
@@ -133,7 +133,7 @@ function proj:assessor_reminder_prelim(remind_check,subm,only_them)
         salutation ..
         self.message.prelim.body_opening ..
         body ..
-        self.message.prelim.body_close ..
+        self.message.body_close ..
         self.message.signoff
 
       canvas:message_user(remind_check,{
@@ -190,7 +190,7 @@ function proj:assessor_reminder_plan(remind_check,subm,only_them)
         salutation ..
         self.message.plan.body_opening ..
         body ..
-        self.message.plan.body_close ..
+        self.message.body_close ..
         self.message.signoff
 
       canvas:message_user(remind_check,{
@@ -276,7 +276,7 @@ function proj:assessor_reminder_final(remind_check,subm1,subm2,args)
     end
     if proceed then
       local this_body =
-        salutation .. additional_message .. self.message.final.body_opening .. body .. self.message.final.body_close .. self.message.signoff
+        salutation .. additional_message .. self.message.final.body_opening .. body .. self.message.body_close .. self.message.signoff
 
       canvas:message_user(remind_check,{
         course    = canvas.courseid,
@@ -318,19 +318,27 @@ function proj:assessor_reminder(remind_check,subm1,subm2,args)
 
   local markers_msg = {}
 
-  for _,j in pairs(subm1) do
-   if not(j.metadata==nil) then
-     if not(j.metadata.supervisor_mark) then
-       markers_msg = self:message_reminder_add(j,markers_msg,{whom="supervisor",grouped=grouped})
+  if subm2 then
+    for _,j in pairs(subm1) do
+     if not(j.metadata==nil) then
+       if not(j.metadata.supervisor_mark) then
+         markers_msg = self:message_reminder_add(j,markers_msg,{whom="supervisor",grouped=grouped})
+       end
      end
-   end
-  end
-  for _,j in pairs(subm2) do
-   if not(j.metadata==nil) then
-     if not(j.metadata.moderator_mark) then
-       markers_msg = self:message_reminder_add(j,markers_msg,{whom="moderator",grouped=grouped})
+    end
+    for _,j in pairs(subm2) do
+     if not(j.metadata==nil) then
+       if not(j.metadata.moderator_mark) then
+         markers_msg = self:message_reminder_add(j,markers_msg,{whom="moderator",grouped=grouped})
+       end
      end
-   end
+    end
+  else
+    for _,j in pairs(subm) do
+      if not(j.grade) then
+        markers_msg = self:message_reminder_add(j,markers_msg,{whom="supervisor",grouped=grouped})
+      end
+    end
   end
 
   for acad_name,j in pairs(markers_msg) do

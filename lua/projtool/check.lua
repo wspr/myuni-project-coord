@@ -14,7 +14,7 @@ function proj:check_assignment(assign_data,check_bool,verbose)
   if verbose then
     loginfo = function(x) print(x) end
   else
-    loginfo = function(x) end
+    loginfo = function(x) print(x) end
   end
 
   print("CHECKING ASSIGNMENT MARKING")
@@ -33,16 +33,17 @@ function proj:check_assignment(assign_data,check_bool,verbose)
     local assr
     local grade = j.grade
 
+    local marks_lost = 0
+    local rubric_count = 0
+    local rubric_sum   = 0
+    local rubric_fail  = false
+
     if grade then
 
       loginfo("\n"..i..". Student: "..j.user.name.."  ("..j.user.sis_user_id..")")
       loginfo("Supervisor: "..j.metadata.supervisor.." | Moderator: "..j.metadata.moderator)
       loginfo("URL: "..j.metadata.url)
 
-      local marks_lost = 0
-      local rubric_count = 0
-      local rubric_sum   = 0
-      local rubric_fail  = false
       j.metadata.assessment_check = {}
       j.metadata.assessment_check.graded = false
       j.metadata.assessment_check.rubric = false
@@ -114,7 +115,7 @@ function proj:check_assignment(assign_data,check_bool,verbose)
           loginfo("Assessment started but not yet complete; no grade and only "..rubric_count.." of "..Nrubric.." rubric entries.")
         else
           if check_bool then
-            loginfo("Rubric complete but no grade: send message? Type y to do so:")
+            print("Rubric complete but no grade: send message? Type y to do so:")
             self:message_rubric_no_grade( io.read()=="y" ,j)
           end
         end
@@ -125,10 +126,10 @@ function proj:check_assignment(assign_data,check_bool,verbose)
 
     if assr and grade then
       assign_data[i].marks[assr] = grade
+      if assign_data[i].metadata.supervisor == assr then
+        assign_data[i].metadata.supervisor_mark = grade
+      end
       if not(assign_data[i].metadata==nil) then
-        if assign_data[i].metadata.supervisor == assr then
-          assign_data[i].metadata.supervisor_mark = grade
-        end
         if assign_data[i].metadata.moderator == assr then
           assign_data[i].metadata.moderator_mark = grade
         end
@@ -136,10 +137,10 @@ function proj:check_assignment(assign_data,check_bool,verbose)
     end
 
     -- for debugging:
---    if j.user.name == "Flynn Pisani" then
---      pretty.dump(j)
---      error()
---    end
+--   if j.user.name == "Liangzhe Pan" then
+--     pretty.dump(j)
+--     error()
+--   end
 
   end
 

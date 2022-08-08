@@ -62,8 +62,6 @@ Please DO highlight any substantial evidence of plagiarism with the course coord
 
 Any students/groups who have not yet submitted will not be shown and will be included in future reminders.
 
-Note that separate reminders are sent separately for MEng and BEng reports/papers in each semester.
-
 Your continued efforts to make these courses a success are much appreciated.
 ]]
 
