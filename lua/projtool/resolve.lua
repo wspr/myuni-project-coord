@@ -1,8 +1,6 @@
 
 
-local csv     = require("csv")
 local pretty  = require("pl.pretty")
-local path    = require("pl.path")
 local canvas  = require("canvas-lms")
 
 
@@ -108,7 +106,7 @@ function proj:resolve_grades(canvas_subfin,canvas_submod)
 
   local assm = self.deliverable or "final"
 
-  for i,j in pairs(canvas_submod) do
+  for i in pairs(canvas_submod) do
     if (canvas_subfin[i] == nil) then
       pretty.dump(canvas_subfin)
       error("Processing moderating submission: no matching supervisor assessment found?\nStudent/Project: "..i)

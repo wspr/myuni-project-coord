@@ -8,7 +8,7 @@ local proj = {}
 
 function proj:check_assignment(assign_data,check_bool,verbose)
 
-  local verbose = verbose or false
+  verbose = verbose or false
 
   local loginfo
   if verbose then
@@ -119,8 +119,6 @@ function proj:check_assignment(assign_data,check_bool,verbose)
             self:message_rubric_no_grade( io.read()=="y" ,j)
           end
         end
-      else
-        -- loginfo("Assessment not started yet.")
       end
     end
 
@@ -154,7 +152,7 @@ end
 function proj:check_moderated(assign_data,args)
   print("CHECKING MODERATED ASSIGNMENT MARKING")
 
-  local args = args or {}
+  args = args or {}
   local check_bool = args.check
   if check_bool == nil then
     check_bool = false
@@ -276,10 +274,10 @@ function proj:check_moderated(assign_data,args)
     end
 
     -- for debugging:
-    if j.user.name == "Flynn Pisani" then
+--    if j.user.name == "Flynn Pisani" then
 --      pretty.dump(assign_data[i])
 --      error()
-    end
+--    end
 
   end
 

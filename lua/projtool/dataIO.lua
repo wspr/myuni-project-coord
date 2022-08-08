@@ -1,7 +1,7 @@
 
 
 local csv     = require("csv")
-local pretty  = require("pl.pretty")
+--local pretty  = require("pl.pretty")
 local path    = require("pl.path")
 local canvas  = require("canvas-lms")
 
@@ -38,7 +38,7 @@ end
 
 function proj:get_submissions(get_bool,cvs,verbose)
 
-  local verbose = verbose or false
+  verbose = verbose or false
 
   local subm
   if self.assign_grouped then
@@ -57,9 +57,9 @@ function proj:get_submissions(get_bool,cvs,verbose)
 end
 
 function proj:subm_remove(subm,verbose)
-  local verbose = verbose or false
+  verbose = verbose or false
   local subout = {}
-  local to_keep = true
+  local to_keep
   if verbose then print("Number of submissions: "..#subm) end
   for i,j in ipairs(subm) do
     to_keep = true
@@ -87,7 +87,7 @@ end
 
 function proj:add_assessment_metadata(canvas_subm,verbose)
 
-  local verbose = verbose or false
+  verbose = verbose or false
 
   if self.assign_individual_submission==nil then
     self.assign_individual_submission = true

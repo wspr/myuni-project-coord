@@ -1,6 +1,5 @@
 
 local path   = require("pl.path")
-local pretty = require("pl.pretty")
 
 local proj = {}
 
@@ -17,7 +16,7 @@ local proj = {}
 
 function proj:summarise_marks(assign_data,assign_data2,args)
 
-  local args = args or {}
+  args = args or {}
   local who = args.who
   local runs = args.runs or 2
   local subpath = args.path or "assessments"
@@ -96,7 +95,7 @@ function proj:summarise_marks(assign_data,assign_data2,args)
 \end{document}
 ]]
       io.close(ff)
-      for ii = 1,runs do
+      for _ = 1,runs do
         os.execute("cd "..buildpath.."; /Library/TeX/texbin/pdflatex "..filename.." ;")
       end
       os.execute("cp "..buildpath.."/"..filename..".pdf "..subpath.." ;")

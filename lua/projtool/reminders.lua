@@ -211,7 +211,7 @@ function proj:assessor_reminder_final(remind_check,subm1,subm2,args)
     additional_message = additional_message .. "\n\n"
   end
 
-  local args = args or {}
+  args = args or {}
   local only_them = args.only_them
   local grouped = args.grouped or false
 
@@ -302,7 +302,7 @@ function proj:assessor_reminder(remind_check,subm1,subm2,args)
     additional_message = additional_message .. "\n\n"
   end
 
-  local args = args or {}
+  args = args or {}
   local only_them = args.only_them
   local grouped = args.grouped or false
 
@@ -327,7 +327,7 @@ function proj:assessor_reminder(remind_check,subm1,subm2,args)
      end
     end
   else
-    for _,j in pairs(subm) do
+    for _,j in pairs(subm1) do
       if not(j.grade) then
         markers_msg = self:message_reminder_add(j,markers_msg,{whom="supervisor",grouped=grouped})
       end
