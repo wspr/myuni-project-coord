@@ -81,7 +81,6 @@ function proj:assessor_reminder_interim(remind_check,subm,only_them)
       end
       recip[#recip+1] = self.all_staff[acad_name].id
       canvas:message_user(remind_check,{
-        course    = canvas.courseid,
         canvasid  = recip ,
         subject   = self.assign_name_colloq.." marking",
         body      = salutation .. self.message.interim.body_opening .. body .. self.message.body_close .. self.message.signoff
@@ -137,9 +136,7 @@ function proj:assessor_reminder_prelim(remind_check,subm,only_them)
         self.message.signoff
 
       canvas:message_user(remind_check,{
-        course    = canvas.courseid ,
         canvasid  = recip ,
-        group_conversation = true ,
         subject   = self.assign_name_colloq.." marking",
         body      = this_body
       })
@@ -194,9 +191,7 @@ function proj:assessor_reminder_plan(remind_check,subm,only_them)
         self.message.signoff
 
       canvas:message_user(remind_check,{
-        course    = canvas.courseid ,
         canvasid  = recip ,
-        group_conversation = true ,
         subject   = self.assign_name_colloq.." marking" ,
         body      = this_body ,
       })
@@ -279,9 +274,7 @@ function proj:assessor_reminder_final(remind_check,subm1,subm2,args)
         salutation .. additional_message .. self.message.final.body_opening .. body .. self.message.body_close .. self.message.signoff
 
       canvas:message_user(remind_check,{
-        course    = canvas.courseid,
         canvasid  = recip ,
-        group_conversation = true ,
         subject   = self.assign_name_colloq.." marking",
         body      = this_body
       })
@@ -386,9 +379,7 @@ function proj:assessor_reminder(remind_check,subm1,subm2,args)
         salutation .. additional_message .. self.message[assm].body_opening .. body .. self.message.body_close .. self.message.signoff
 
       canvas:message_user(remind_check,{
-        course    = canvas.courseid,
         canvasid  = recip ,
-        group_conversation = true ,
         subject   = self.assign_name_colloq.." marking",
         body      = this_body
       })
