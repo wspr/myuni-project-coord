@@ -6,16 +6,10 @@ local canvas  = require("canvas-lms")
 local proj = {}
 
 
-function proj:check_assignment(assign_data,check_bool,verbose)
-
-  verbose = verbose or false
+function proj:check_assignment(assign_data,check_bool,assgn_lbl)
 
   local loginfo
-  if verbose then
-    loginfo = function(x) print(x) end
-  else
-    loginfo = function(x) print(x) end
-  end
+  loginfo = function(x) print(x) end
 
   print("CHECKING ASSIGNMENT MARKING")
 
@@ -33,7 +27,7 @@ function proj:check_assignment(assign_data,check_bool,verbose)
     local assr
     local grade = j.grade
 
-    local marks_lost = 0
+    local marks_lost   = 0
     local rubric_count = 0
     local rubric_sum   = 0
     local rubric_fail  = false
@@ -64,7 +58,10 @@ function proj:check_assignment(assign_data,check_bool,verbose)
       loginfo("Grade: "..grade.." | Entered grade: "..j.entered_grade)
       if j.late then
         marks_lost = j.points_deducted
-        loginfo("LATE - points deducted: "..marks_lost)
+        loginfo("LATE - points deducted: "..marks_lost.." - late by: "..(j.seconds_late/60).." min = "..(j.seconds_late/60/60).." hrs = "..(j.seconds_late/60/60/24).." days")
+        if j.seconds_late < 3600 then
+          error("Late penalty should be waived (<2hrs) -- correct manually")
+        end
       end
       if j.rubric_assessment then
         j.metadata.assessment_check.rubric = true
@@ -122,23 +119,18 @@ function proj:check_assignment(assign_data,check_bool,verbose)
       end
     end
 
-    if assr and grade then
-      assign_data[i].marks[assr] = grade
-      if assign_data[i].metadata.supervisor == assr then
-        assign_data[i].metadata.supervisor_mark = grade
-      end
-      if not(assign_data[i].metadata==nil) then
-        if assign_data[i].metadata.moderator == assr then
-          assign_data[i].metadata.moderator_mark = grade
-        end
-      end
+    if grade then
+      assign_data[i].metadata[assgn_lbl.."_mark"] = grade
+      assign_data[i].metadata[assgn_lbl.."_mark_entered"] = (j.entered_grade or grade)
+      assign_data[i].metadata[assgn_lbl.."_penalty"] = marks_lost
+      assign_data[i].metadata[assgn_lbl.."_seconds_late"] = (j.seconds_late or 0)
     end
 
     -- for debugging:
---   if j.user.name == "Liangzhe Pan" then
---     pretty.dump(j)
---     error()
---   end
+--  if j.user.name == "Nhu Nguyen" then
+--    pretty.dump(j)
+--    error()
+--  end
 
   end
 

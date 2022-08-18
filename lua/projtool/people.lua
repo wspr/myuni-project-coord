@@ -15,6 +15,7 @@ function proj:read_csv_data(csvfile)
 
   print("Reading CSV data of students/projects/supervisors/moderators")
 
+  self.projects = {}
   self.proj_data = {}
   self.student_ind = {}
   self.all_staff = self.all_staff or {}
@@ -62,6 +63,19 @@ function proj:read_csv_data(csvfile)
       self.proj_data[nn].supervisor_id = fields[7] or ""
       self.proj_data[nn].moderator     = fields[8] or ""
       self.proj_data[nn].moderator_id  = fields[9] or ""
+      self.proj_data[nn].myuni_proj_id = fields[10] or ""
+
+      local jj = self.proj_data[nn]
+      self.projects[jj.proj_id] = self.projects[jj.proj_id] or {}
+      self.projects[jj.proj_id].proj_title    = self.projects[jj.proj_id].proj_title    or jj.proj_title
+      self.projects[jj.proj_id].proj_id       = self.projects[jj.proj_id].proj_id       or jj.myuni_proj_id
+      self.projects[jj.proj_id].school        = self.projects[jj.proj_id].school        or jj.school
+      self.projects[jj.proj_id].supervisor    = self.projects[jj.proj_id].supervisor    or jj.supervisor
+      self.projects[jj.proj_id].supervisor_id = self.projects[jj.proj_id].supervisor_id or jj.supervisor_id
+      self.projects[jj.proj_id].student_ids   = self.projects[jj.proj_id].student_ids   or {}
+      self.projects[jj.proj_id].student_names = self.projects[jj.proj_id].student_names or {}
+      self.projects[jj.proj_id].student_ids[#self.projects[jj.proj_id].student_ids+1]     = self.proj_data[nn].student_id
+      self.projects[jj.proj_id].student_names[#self.projects[jj.proj_id].student_names+1] = self.proj_data[nn].student_name
 
       local student_id = self.proj_data[nn].student_id
       local super = self.proj_data[nn].supervisor

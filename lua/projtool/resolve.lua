@@ -113,6 +113,8 @@ function proj:resolve_grades(canvas_subfin,canvas_submod)
     end
     if not(canvas_submod[i].metadata == nil) then
       canvas_subfin[i].metadata.moderator_mark = canvas_submod[i].metadata.moderator_mark
+      canvas_subfin[i].metadata.moderator_mark_entered = canvas_submod[i].metadata.moderator_mark_entered
+      canvas_subfin[i].metadata.moderator_penalty = canvas_submod[i].metadata.moderator_penalty
       canvas_subfin[i].metadata.supervisor_url = canvas_subfin[i].metadata.url
       canvas_subfin[i].metadata.moderator_url  = canvas_submod[i].metadata.url
       canvas_subfin[i].metadata.super_marks    = canvas_subfin[i].marks
@@ -202,11 +204,21 @@ function proj:message_resolution(send_bool,j,close_rank,inconsistent_resolved)
 You have assessed the following student/group:]] .. "\n\n" ..
 " • " .. j.user.name .. ": " .. j.metadata.proj_title .. " ("..j.metadata.proj_id..")" .. "\n\n" ..
     "They have been awarded marks of: " .. "\n\n" ..
-    " • Supervisor - "..j.metadata.supervisor_mark..    " (" .. j.metadata.supervisor .. ")\n" ..
-    " • Moderator  - "..j.metadata.moderator_mark.." (" .. j.metadata.moderator .. ")\n\n"
+    " • Supervisor - "..j.metadata.supervisor_mark_entered.." (" .. j.metadata.supervisor .. ")\n" ..
+    " • Moderator  - "..j.metadata.moderator_mark_entered .." (" .. j.metadata.moderator  .. ")\n\n"
+
+  local penalty_text = ""
+  if j.late then
+    if j.metadata.supervisor_penalty ~= j.metadata.moderator_penalty then
+      error("Late penalties not equal. Manual fix needed.")
+    end
+    penalty_text =
+      "This report was submitted late with the following penalty (not included in the marks shown above):\n\n"..
+      " • Days late: "..string.format("%1.2f",j.metadata.supervisor_seconds_late/60/60/24).."\n"..
+      " • Penalty:  -"..string.format("%2.0f",j.metadata.supervisor_penalty).."\n\n"
+  end
 
   local body_end
-
   if self.assign_canvas_moderated then
     body_end = "\n\n" .. [[
 You may view your own assessment at the following links: (note you will not be able to see the rubric of the other assessor)
@@ -214,7 +226,7 @@ You may view your own assessment at the following links: (note you will not be a
     • Supervisor: ]] .. j.metadata.supervisor_url .. "\n" .. [[
     • Moderator: ]] .. j.metadata.moderator_url .. "\n" .. [[
 
-If you wish to update your assessment, please make the changes directly in MyUni.
+If you wish to update your assessment, please make the changes directly in MyUni via the rubric.
 
 Thank you for your significant contributions towards the success of our capstone project courses.]]
   else
@@ -224,7 +236,7 @@ You may view each assessment at the following links:
     • Supervisor: ]] .. j.metadata.supervisor_url .. "\n" .. [[
     • Moderator: ]] .. j.metadata.moderator_url .. "\n" .. [[
 
-If you wish to update your assessment, please make the changes directly in MyUni.
+If you wish to update your assessment, please make the changes directly in MyUni via the rubric.
 
 Thank you for your significant contributions towards the success of our capstone project courses.]]
   end
@@ -261,7 +273,7 @@ Thank you for your significant contributions towards the success of our capstone
       " ("..j.metadata.proj_id..")"   ,
     body      =
       "Dear " .. j.metadata.supervisor .. ", " .. j.metadata.moderator ..
-      body_text .. close_text .. body_end .. self.message.signoff   ,
+      body_text .. penalty_text .. close_text .. body_end .. self.message.signoff   ,
           })
 
 end
