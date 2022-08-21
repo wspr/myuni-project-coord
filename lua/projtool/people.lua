@@ -64,6 +64,9 @@ function proj:read_csv_data(csvfile)
       self.proj_data[nn].moderator     = fields[8] or ""
       self.proj_data[nn].moderator_id  = fields[9] or ""
       self.proj_data[nn].myuni_proj_id = fields[10] or ""
+      if self.proj_data[nn].myuni_proj_id == "" then
+        self.proj_data[nn].myuni_proj_id = self.proj_data[nn].proj_id
+      end
 
       local jj = self.proj_data[nn]
       self.projects[jj.proj_id] = self.projects[jj.proj_id] or {}
@@ -116,7 +119,7 @@ function proj:find_user(name,staff_uoa_id)
     print("Searching for name:  '"..search_term.."'")
   else
     search_term = staff_uoa_id
-    print("Searching for name:  '"..name.."' using ID: "..staff_uoa_id)
+    print("Searching for name:  '"..name.."' using ID: "..(staff_uoa_id or ""))
   end
   local tmp = canvas:find_user(search_term)
   local match_ind = 0
@@ -147,7 +150,9 @@ function proj:find_user(name,staff_uoa_id)
 end
 
 
-function proj:get_canvas_ids(opt_arg)
+function proj:get_canvas_ids(opt)
+
+  opt = opt or {download="ask"}
 
   print("Searching for supervisors/moderators in Canvas")
 
@@ -155,7 +160,6 @@ function proj:get_canvas_ids(opt_arg)
 
   local download_check
   if path.exists(cache_path) then
-    local opt = opt_arg or {download="ask"}
     download_check = self:dl_check(opt,"Look up all supervisor/moderator Canvas IDs?")
   else
     print "Staff Canvas IDs not found, downloading."
@@ -170,7 +174,7 @@ function proj:get_canvas_ids(opt_arg)
       if not(name == "") then
         local tbl = self:find_user(name,self.all_staff_ids[name])
         if tbl == nil then
-          not_found_canvas = not_found_canvas.."    "..name.."\n"
+          not_found_canvas = not_found_canvas.."    "..name.."   "..self.all_staff_ids[name].."\n"
         else
           self.all_staff[name] = tbl
           id_lookup[tbl.id] = name

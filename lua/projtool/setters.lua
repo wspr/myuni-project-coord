@@ -32,7 +32,7 @@ function proj:set_coordinators(tbl)
   if self.all_staff == nil then
     error("Load staff data before setting coordinators")
   end
-  for _,j in pairs(tbl) do
+  for k,j in pairs(tbl) do
     local name = j
     local id = ""
     if type(j) == "table" then

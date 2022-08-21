@@ -54,7 +54,7 @@ This is a semi-automated reminder. As a supervisor/moderator, you are now requir
 ]]
 
 proj.message.body_close = "\n" .. [[
-For traceability, the marks MUST be entered via the marking rubric in MyUni, with written feedback best provide through the rubric against each marking criterion. If you wish to annotate their report, please use the "SpeedGrader" interface to ensure blind assessment.
+For traceability, the marks MUST be entered via the marking rubric in MyUni, with written feedback best provided through the rubric comments against each marking criterion.
 
 Do NOT apply any kind of adjustment for late penalty or other non-compliance for the assessment unless it is explicitly addressed in the marking rubric. These penalties will be applied by the course coordinator.
 

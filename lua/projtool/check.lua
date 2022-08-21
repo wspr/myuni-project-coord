@@ -8,6 +8,8 @@ local proj = {}
 
 function proj:check_assignment(assign_data,check_bool,assgn_lbl)
 
+  assgn_lbl = assgn_lbl or self.deliverable -- argument to customise if needed to differentiate supervisor/moderator, say
+
   local loginfo
   loginfo = function(x) print(x) end
 

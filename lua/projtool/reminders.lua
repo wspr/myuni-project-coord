@@ -11,7 +11,7 @@ local proj = {}
 function proj:message_reminder_add(j,markers_msg,args)
 
   local sup_or_mod = args.whom
-  local assign_grouped = args.grouped or false
+  local assign_grouped = args.grouped or self.assign_grouped or false
 
   local acad_name = j.metadata[sup_or_mod]
 
@@ -289,7 +289,13 @@ end
 
 function proj:assessor_reminder(remind_check,subm1,subm2,args)
 
-  local assm = self.deliverable or "final"
+  args = args or {}
+  local only_them = args.only_them
+
+  local assm = self.deliverable
+  if assm == nil then
+    error('Missing deliverable; e.g.:\n\nproj:set_deliverable("final")')
+  end
 
   local additional_message
   if remind_check then
@@ -302,10 +308,6 @@ function proj:assessor_reminder(remind_check,subm1,subm2,args)
     additional_message = additional_message .. "\n\n"
   end
 
-  args = args or {}
-  local only_them = args.only_them
-  local grouped = args.grouped or false
-
   local sup_lede = "\n# Supervisor assessment\n"
   local mod_lede = "\n# Moderator assessment\n"
 
@@ -315,21 +317,21 @@ function proj:assessor_reminder(remind_check,subm1,subm2,args)
     for _,j in pairs(subm1) do
      if not(j.metadata==nil) then
        if not(j.metadata.supervisor_mark) then
-         markers_msg = self:message_reminder_add(j,markers_msg,{whom="supervisor",grouped=grouped})
+         markers_msg = self:message_reminder_add(j,markers_msg,{whom="supervisor"})
        end
      end
     end
     for _,j in pairs(subm2) do
      if not(j.metadata==nil) then
        if not(j.metadata.moderator_mark) then
-         markers_msg = self:message_reminder_add(j,markers_msg,{whom="moderator",grouped=grouped})
+         markers_msg = self:message_reminder_add(j,markers_msg,{whom="moderator"})
        end
      end
     end
   else
     for _,j in pairs(subm1) do
       if not(j.grade) then
-        markers_msg = self:message_reminder_add(j,markers_msg,{whom="supervisor",grouped=grouped})
+        markers_msg = self:message_reminder_add(j,markers_msg,{whom="supervisor"})
       end
     end
   end
@@ -359,6 +361,9 @@ function proj:assessor_reminder(remind_check,subm1,subm2,args)
       for i in pairs(j.school) do
         print("School: "..i)
         local coord = self.coordinators[i]
+        if type(coord) == "table" then
+          coord = coord[1]
+        end
         print("Coordinator: "..coord)
         if self.all_staff[coord].id ~= self.all_staff[acad_name].id then
           recip[#recip+1] = self.all_staff[coord].id
