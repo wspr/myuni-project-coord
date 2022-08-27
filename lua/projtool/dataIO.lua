@@ -1,7 +1,7 @@
 
 
 local csv     = require("csv")
---local pretty  = require("pl.pretty")
+local pretty  = require("pl.pretty")
 local path    = require("pl.path")
 local canvas  = require("canvas-lms")
 
@@ -89,27 +89,22 @@ function proj:add_assessment_metadata(canvas_subm,verbose)
 
   verbose = verbose or false
 
-  if self.assign_individual_submission==nil then
-    self.assign_individual_submission = true
-  end
-
   local resolve = {}
   local override = {}
   local comments = {}
   if path.exists(self.marks_csv) then
     print("Loading marks resolutions and comments from: "..self.marks_csv)
-    local f = csv.open(self.marks_csv)
-    -- TODO: use {header=true}
+    local f = csv.open(self.marks_csv,{header=true})
     for fields in f:lines() do
-      local ind
-      if self.assign_individual_submission then
-        ind = 2
-      else
-        ind = 5
+      local ind = 'USERID'
+      if self.assign_grouped then
+        ind = 'PROJID'
       end
-      resolve[fields[ind]]  = fields[9]
-      override[fields[ind]] = fields[10]
-      comments[fields[ind]] = fields[11]
+      if fields[ind] then
+        resolve[fields[ind]]  = fields['RESOLVED']
+        override[fields[ind]] = fields['OVERRIDE']
+        comments[fields[ind]] = fields['COMMENTS']
+      end
     end
   end
 
@@ -127,10 +122,10 @@ function proj:add_assessment_metadata(canvas_subm,verbose)
 
       local hash_index
       local group_id = self.proj_data[ind].proj_id
-      if self.assign_individual_submission then
-        hash_index = student_id
-      else
+      if self.assign_grouped then
         hash_index = group_id
+      else
+        hash_index = student_id
       end
 
       subm[hash_index] = subm_entry
@@ -143,6 +138,8 @@ function proj:add_assessment_metadata(canvas_subm,verbose)
       subm[hash_index].metadata.proj_title  = self.proj_data[ind].proj_title
       subm[hash_index].metadata.supervisor  = self.proj_data[ind].supervisor
       subm[hash_index].metadata.moderator   = self.proj_data[ind].moderator
+      subm[hash_index].metadata.supervisor_id  = self.proj_data[ind].supervisor_id
+      subm[hash_index].metadata.moderator_id   = self.proj_data[ind].moderator_id
       subm[hash_index].metadata.school      = self.proj_data[ind].school
       subm[hash_index].metadata.url         = url
       subm[hash_index].metadata.resolve     = resolve[hash_index]  or ""
@@ -182,7 +179,7 @@ function proj:export_csv_marks_moderated(subm,arg)
   local weightings = arg.weightings or {0.5,0.5}
 
   local ff = io.output(self.marks_csv)
-  io.write("INDEX,USERID,NAME,SCHOOL,PROJID,TITLE,MARK,DIFF,RESOLVED,OVERRIDE,COMMENTS,SUPERVISOR,SUPMARK,MODERATOR,MODMARK,SUPURL,MODURL,ASSESSOR1,SCORE1,ASSESSOR2,SCORE2,ASSESSOR3,SCORE3,ASSESSOR4,SCORE4,ASSESSOR5,SCORE5,\n")
+  io.write("INDEX,USERID,NAME,SCHOOL,PROJID,TITLE,MARK,DIFF,RESOLVED,OVERRIDE,COMMENTS,SUPERVISOR,SUPMARK,MODERATOR,MODMARK,SUPID,MODID,SUPURL,MODURL,ASSESSOR1,SCORE1,ASSESSOR2,SCORE2,ASSESSOR3,SCORE3,ASSESSOR4,SCORE4,ASSESSOR5,SCORE5,\n")
 
   local nameind = {}
   for i in pairs(subm) do
@@ -227,6 +224,8 @@ function proj:export_csv_marks_moderated(subm,arg)
       (j.metadata.supervisor_mark or "")..","..
       "\""..(j.metadata.moderator or "").."\""..","..
       (j.metadata.moderator_mark or "")..","..
+      (j.metadata.supervisor_id or "")..","..
+      (j.metadata.moderator_id or "")..","..
       (j.metadata.supervisor_url or "")..","..
       (j.metadata.moderator_url or "")..","
 

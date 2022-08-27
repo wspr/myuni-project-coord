@@ -21,9 +21,6 @@ end
 function proj:set_assign_grouped(bool)
   self.assign_grouped = bool
 end
-function proj:set_assign_individual_submission(bool)
-  self.assign_individual_submission = bool
-end
 function proj:set_assign_canvas_moderated(bool)
   self.assign_canvas_moderated = bool
 end

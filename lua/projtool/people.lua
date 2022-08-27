@@ -21,49 +21,25 @@ function proj:read_csv_data(csvfile)
   self.all_staff = self.all_staff or {}
   self.all_staff_ids = {}
 
-  local f = csv.open(csvfile)
+  local f = csv.open(csvfile,{header=true})
   if f == nil then
     error("CSV file '"..csvfile.."' not found.")
   end
-  local cc = 0
+
   local nn = 0
   for fields in f:lines() do
-    cc = cc+1
-    if cc == 1 then
-      local errorcount = {}
-      local function checkcol(ff,col,str)
-        if not(ff[col] == str) then
-          errorcount[#errorcount+1] = " - Column "..col..": expected '"..str.."', found '"..ff[col].."'"
-        end
-      end
-      checkcol(fields,1,"Name")
-      checkcol(fields,2,"ID")
-      checkcol(fields,3,"ProjID")
-      checkcol(fields,4,"ProjTitle")
-      checkcol(fields,5,"School")
-      checkcol(fields,6,"Supervisor")
-      checkcol(fields,7,"SupervisorID")
-      checkcol(fields,8,"Moderator")
-      checkcol(fields,9,"ModeratorID")
-      if #errorcount > 0 then
-        for _,j in ipairs(errorcount) do
-          print(j)
-        end
-        error("CSV first line check failed")
-      end
-    elseif ( cc > 1 ) and not( fields[1] == "" ) then
       nn = nn+1
       self.proj_data[nn] = {}
-      self.proj_data[nn].student_name  = fields[1] or ""
-      self.proj_data[nn].student_id    = fields[2] or ""
-      self.proj_data[nn].proj_id       = fields[3] or ""
-      self.proj_data[nn].proj_title    = fields[4] or ""
-      self.proj_data[nn].school        = fields[5] or ""
-      self.proj_data[nn].supervisor    = fields[6] or ""
-      self.proj_data[nn].supervisor_id = fields[7] or ""
-      self.proj_data[nn].moderator     = fields[8] or ""
-      self.proj_data[nn].moderator_id  = fields[9] or ""
-      self.proj_data[nn].myuni_proj_id = fields[10] or ""
+      self.proj_data[nn].student_name  = fields["Name"] or ""
+      self.proj_data[nn].student_id    = fields["ID"] or ""
+      self.proj_data[nn].proj_id       = fields["ProjID"] or ""
+      self.proj_data[nn].proj_title    = fields["ProjTitle"] or ""
+      self.proj_data[nn].school        = fields["School"] or ""
+      self.proj_data[nn].supervisor    = fields["Supervisor"] or ""
+      self.proj_data[nn].supervisor_id = fields["SupervisorID"] or ""
+      self.proj_data[nn].moderator     = fields["Moderator"] or ""
+      self.proj_data[nn].moderator_id  = fields["ModeratorID"] or ""
+      self.proj_data[nn].myuni_proj_id = fields["MyUniProjID"] or ""
       if self.proj_data[nn].myuni_proj_id == "" then
         self.proj_data[nn].myuni_proj_id = self.proj_data[nn].proj_id
       end
@@ -105,7 +81,6 @@ function proj:read_csv_data(csvfile)
       self.assessors[super][csvfile].supervisor[student_id] = nn
       self.assessors[moder][csvfile].moderator[student_id]  = nn
 
-    end
   end
 
 end

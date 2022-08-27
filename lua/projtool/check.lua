@@ -61,8 +61,8 @@ function proj:check_assignment(assign_data,check_bool,assgn_lbl)
       if j.late then
         marks_lost = j.points_deducted
         loginfo("LATE - points deducted: "..marks_lost.." - late by: "..(j.seconds_late/60).." min = "..(j.seconds_late/60/60).." hrs = "..(j.seconds_late/60/60/24).." days")
-        if j.seconds_late < 3600 then
-          error("Late penalty should be waived (<2hrs) -- correct manually")
+        if j.seconds_late < 60*60 then
+          error("Late penalty should be waived (<1hr) -- correct manually")
         end
       end
       if j.rubric_assessment then
