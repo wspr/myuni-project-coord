@@ -15,7 +15,7 @@ William Robertson, on behalf of the Project Coordination Team
 ]]
 
 proj.message.plan.body_opening = [[
-As an honours project supervisor, you are now required to assess the following Project Plans. This is a semi-automated reminder.
+The Project Plan(s) below need assessing by you, as the project supervisor. This is a semi-automated reminder.
 
 Follow the links below to take you straight to the reports for assessment in MyUni.
 ]]
