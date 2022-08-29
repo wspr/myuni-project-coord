@@ -34,11 +34,13 @@ function proj:check_assignment(assign_data,check_bool,assgn_lbl)
     local rubric_sum   = 0
     local rubric_fail  = false
 
+    local logmessage = ""
+
     if grade then
 
-      loginfo("\n"..i..". Student: "..j.user.name.."  ("..j.user.sis_user_id..")")
-      loginfo("Supervisor: "..j.metadata.supervisor.." | Moderator: "..j.metadata.moderator)
-      loginfo("URL: "..j.metadata.url)
+      logmessage = logmessage .. "\n" ..("\n"..i..". Student: "..j.user.name.."  ("..j.user.sis_user_id..")")
+      logmessage = logmessage .. "\n" ..("Supervisor: "..j.metadata.supervisor.." | Moderator: "..j.metadata.moderator)
+      logmessage = logmessage .. "\n" ..("URL: "..j.metadata.url)
 
       j.metadata.assessment_check = {}
       j.metadata.assessment_check.graded = false
@@ -57,11 +59,12 @@ function proj:check_assignment(assign_data,check_bool,assgn_lbl)
       end
 
       j.metadata.assessment_check.graded = true
-      loginfo("Grade: "..grade.." | Entered grade: "..j.entered_grade)
+      logmessage = logmessage .. "\n" ..("Grade: "..grade.." | Entered grade: "..j.entered_grade)
       if j.late then
         marks_lost = j.points_deducted
-        loginfo("LATE - points deducted: "..marks_lost.." - late by: "..(j.seconds_late/60).." min = "..(j.seconds_late/60/60).." hrs = "..(j.seconds_late/60/60/24).." days")
+        logmessage = logmessage .. "\n" ..("LATE - points deducted: "..marks_lost.." - late by: "..(j.seconds_late/60).." min = "..(j.seconds_late/60/60).." hrs = "..(j.seconds_late/60/60/24).." days")
         if j.seconds_late < 60*60 then
+          print(logmessage)
           error("Late penalty should be waived (<1hr) -- correct manually")
         end
       end
@@ -75,45 +78,47 @@ function proj:check_assignment(assign_data,check_bool,assgn_lbl)
           j.metadata.assessment_check.rubric_sum = rubric_sum
         end
         if rubric_count == Nrubric then
-          loginfo("Rubric complete: " .. rubric_count .. " of " .. Nrubric .. " entries.")
+          logmessage = logmessage .. "\n" ..("Rubric complete: " .. rubric_count .. " of " .. Nrubric .. " entries.")
           if math.abs(rubric_sum-grade-marks_lost)>=0.5 then
             j.metadata.assessment_check.rubric_error = true
-            loginfo("ERROR: rubric sum ("..rubric_sum..") does not match final mark awarded ("..grade..")")
+            logmessage = logmessage .. "\n" ..("ERROR: rubric sum ("..rubric_sum..") does not match final mark awarded ("..grade..")")
             rubric_fail = true
           end
         elseif rubric_count < Nrubric then
           j.metadata.assessment_check.rubric_incomplete = true
-          loginfo("ERROR: Only "..rubric_count.." of "..Nrubric.." rubric entries completed.")
+          logmessage = logmessage .. "\n" ..("ERROR: Only "..rubric_count.." of "..Nrubric.." rubric entries completed.")
           rubric_fail = true
         end
       else
-        loginfo("ERROR: Grade entered but no rubric information.")
+        logmessage = logmessage .. "\n" ..("ERROR: Grade entered but no rubric information.")
         rubric_fail = true
       end
 
       if rubric_fail then
         if check_bool then
-          loginfo("Rubric fail: send message? Type y to do so:")
+          logmessage = logmessage .. "\n" ..("Rubric fail: send message? Type y to do so:")
+          print(logmessage)
           self:message_rubric_fail( io.read()=="y" ,j,grade,rubric_sum,rubric_count,Nrubric)
         end
       end
     else
       if j.rubric_assessment then
 
-        loginfo("\n"..i..". Student: "..j.user.name.."  ("..j.user.sis_user_id..")")
-        loginfo("Supervisor: "..j.metadata.supervisor.." | Moderator: "..j.metadata.moderator)
-        loginfo("URL: "..j.metadata.url)
+        logmessage = logmessage .. "\n" ..("\n"..i..". Student: "..j.user.name.."  ("..j.user.sis_user_id..")")
+        logmessage = logmessage .. "\n" ..("Supervisor: "..j.metadata.supervisor.." | Moderator: "..j.metadata.moderator)
+        logmessage = logmessage .. "\n" ..("URL: "..j.metadata.url)
 
-        loginfo("Checking rubric:")
+        logmessage = logmessage .. "\n" ..("Checking rubric:")
         for _,jj in pairs(j.rubric_assessment) do
           if jj.points then
             rubric_count = rubric_count+1
           end
         end
         if rubric_count < Nrubric then
-          loginfo("Assessment started but not yet complete; no grade and only "..rubric_count.." of "..Nrubric.." rubric entries.")
+          logmessage = logmessage .. "\n" ..("Assessment started but not yet complete; no grade and only "..rubric_count.." of "..Nrubric.." rubric entries.")
         else
           if check_bool then
+            print(logmessage)
             print("Rubric complete but no grade: send message? Type y to do so:")
             self:message_rubric_no_grade( io.read()=="y" ,j)
           end
