@@ -3,6 +3,7 @@
 local csv     = require("csv")
 local pretty  = require("pl.pretty")
 local path    = require("pl.path")
+local file    = require("pl.file")
 local canvas  = require("canvas-lms")
 
 
@@ -159,27 +160,13 @@ end
 
 
 
---[[
-local ok, msg = pcall(function ()
---some code
-if unexpected_condition then error() end
---some code
-print(a[i])    -- potential error: 'a' may not be a table
---some code
-end)
-if ok then    -- no errors while running protected code
---regular code
-else   -- protected code raised an error: take appropriate action
---error-handling code
-end
---]]
-
 function proj:export_csv_marks_moderated(subm,arg)
 
   local weightings = arg.weightings or {0.5,0.5}
 
+  file.copy(self.marks_csv,(self.marks_csv..".backup"))
   local ff = io.output(self.marks_csv)
-  io.write("INDEX,USERID,NAME,SCHOOL,PROJID,TITLE,MARK,DIFF,RESOLVED,OVERRIDE,COMMENTS,SUPERVISOR,SUPMARK,MODERATOR,MODMARK,SUPID,MODID,SUPURL,MODURL,ASSESSOR1,SCORE1,ASSESSOR2,SCORE2,ASSESSOR3,SCORE3,ASSESSOR4,SCORE4,ASSESSOR5,SCORE5,\n")
+  io.write("INDEX,USERID,NAME,SCHOOL,PROJID,TITLE,MARK,DIFF,RESOLVED,OVERRIDE,COMMENTS,SIMILARITY,SUPERVISOR,SUPMARK,MODERATOR,MODMARK,SUPID,MODID,SUPURL,MODURL,ASSESSOR1,SCORE1,ASSESSOR2,SCORE2,ASSESSOR3,SCORE3,ASSESSOR4,SCORE4,ASSESSOR5,SCORE5,\n")
 
   local nameind = {}
   for i in pairs(subm) do
@@ -209,6 +196,19 @@ function proj:export_csv_marks_moderated(subm,arg)
       diff = j.metadata.supervisor_mark-j.metadata.moderator_mark
     end
 
+    local similarity_score = ""
+    if j.turnitin_data then
+      for k,v in pairs(j.turnitin_data) do
+        if v.similarity_score then
+          if similarity_score == "" then
+            similarity_score = v.similarity_score
+          else
+            similarity_score = similarity_score .. ", " .. v.similarity_score
+          end
+        end
+      end
+    end
+
     local writestr = cc..","..
       (j.user.sis_user_id or "")..","..
       (j.user.name or "")..","..
@@ -220,6 +220,7 @@ function proj:export_csv_marks_moderated(subm,arg)
       (j.metadata.resolve  or "")..","..
       (j.metadata.override or "")..","..
       (j.metadata.comments or "")..","..
+      (similarity_score)..","..
       "\""..(j.metadata.supervisor or "").."\""..","..
       (j.metadata.supervisor_mark or "")..","..
       "\""..(j.metadata.moderator or "").."\""..","..

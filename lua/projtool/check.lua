@@ -126,6 +126,7 @@ function proj:check_assignment(assign_data,check_bool,assgn_lbl)
       assign_data[i].metadata[assgn_lbl.."_mark_entered"] = (j.entered_grade or grade)
       assign_data[i].metadata[assgn_lbl.."_penalty"] = marks_lost
       assign_data[i].metadata[assgn_lbl.."_seconds_late"] = (j.seconds_late or 0)
+      assign_data[i].metadata[assgn_lbl.."_graded_at"] = (j.graded_at or "")
     end
 
     -- for debugging:
