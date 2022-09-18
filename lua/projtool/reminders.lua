@@ -8,18 +8,41 @@ local proj = {}
 
 
 
-function proj:message_reminder_add(j,markers_msg,args)
+function proj:message_reminder_add(j,args)
+
+  self:info("<================ Adding reminder:")
+  self:info("ID: " .. j.metadata.proj_id)
+  self:info(j.metadata.proj_title)
 
   local sup_or_mod = args.whom
   local assign_grouped = args.grouped or self.assign_grouped or false
+  local assm = self.deliverable
 
   local acad_name = j.metadata[sup_or_mod]
+  local staff_lookup = self:staff_lookup(acad_name)
 
-  if markers_msg[acad_name] == nil then
-    markers_msg[acad_name] = {}
-    markers_msg[acad_name].supervisor = ""
-    markers_msg[acad_name].moderator  = ""
-    markers_msg[acad_name].school = {}
+  self.reminders = self.reminders or {}
+  self.reminders[acad_name] = self.reminders[acad_name] or {}
+  self.reminders[acad_name].details = staff_lookup
+  self.reminders[acad_name].marking = self.reminders[acad_name].marking or {}
+
+  local school = j.metadata.school
+  self:info("School: "..school)
+  local coord = self.coordinators[school]
+  if type(coord) == "table" then
+    coord = coord[1]
+  end
+  local coord_str = self.all_staff[coord].name.." <"..self.all_staff[coord].login_id.."@adelaide.edu.au>"
+  self:info("Coordinator: "..coord_str)
+
+  if self.reminders[acad_name].marking[assm] == nil then
+    self.reminders[acad_name].marking[assm] = {}
+    self.reminders[acad_name].marking[assm].supervisor = ""
+    self.reminders[acad_name].marking[assm].moderator  = ""
+    self.reminders[acad_name].marking[assm].projects   = {}
+    self.reminders[acad_name].marking[assm].assessment  = self.assign_name_colloq
+    self.reminders[acad_name].marking[assm].school = school
+    self.reminders[acad_name].marking[assm].coordinator = coord_str
   end
 
   local assess_str
@@ -31,263 +54,64 @@ function proj:message_reminder_add(j,markers_msg,args)
       "   Project title: "
   end
 
-  markers_msg[acad_name].school[j.metadata.school] = true
-
   j.submitted_at = j.submitted_at or "NOT SUBMITTED YET"
-  markers_msg[acad_name][sup_or_mod] = markers_msg[acad_name][sup_or_mod] .. "\n" ..
+  self.reminders[acad_name].marking[assm][sup_or_mod] = self.reminders[acad_name].marking[assm][sup_or_mod] .. "\n" ..
     " • " .. assess_str ..
     j.metadata.proj_title .. " (ID: " .. j.metadata.proj_id .. ") \n" ..
     "   Submitted: " .. j.submitted_at .. "\n" ..
     "   SpeedGrader link: <" .. j.metadata.url .. ">\n"
 
-  return markers_msg
-end
+  local N = #self.reminders[acad_name].marking[assm].projects
+  self.reminders[acad_name].marking[assm].projects[N+1] = j.metadata
 
-
-
-
-function proj:assessor_reminder_interim(remind_check,subm,only_them)
-
-  local markers_msg = {}
-  for _,j in pairs(subm) do
-    if not(j.grade) then
-      markers_msg = self:message_reminder_add(j,markers_msg,{whom="supervisor",grouped=false})
-    end
-  end
-
-  for acad_name,j in pairs(markers_msg) do
-
-    local salutation = "Dear " .. acad_name .. ",\n\n"
-    local body = j.supervisor
-
-    local proceed = false
-    if only_them == nil then
-      proceed = true
-    else
-      if acad_name == only_them then
-        proceed = true
-      end
-    end
-    if proceed then
-      local recip = {}
-      for i in pairs(j.school) do
-        print("School: "..i)
-        local coord = self.coordinators[i]
-        print("Coordinator: "..coord)
-        recip[#recip+1] = self.all_staff[coord].id
-      end
-      if self.all_staff[acad_name].id == nil then
-        error("Assessor '"..acad_name.."' not found in staff list.")
-      end
-      recip[#recip+1] = self.all_staff[acad_name].id
-      canvas:message_user(remind_check,{
-        canvasid  = recip ,
-        subject   = self.assign_name_colloq.." marking",
-        body      = salutation .. self.message.interim.body_opening .. body .. self.message.body_close .. self.message.signoff
-      })
-    end
-
-  end
+  self:info(">================")
 
 end
 
 
 
-function proj:assessor_reminder_prelim(remind_check,subm,only_them)
-
-  local markers_msg = {}
-  for _,j in pairs(subm) do
-    if not(j.grade) then
-      markers_msg = self:message_reminder_add(j,markers_msg,{whom="supervisor",grouped=true})
-    end
-  end
-
-  for acad_name,j in pairs(markers_msg) do
-
-    local salutation = "Dear " .. acad_name .. ",\n\n"
-    local body = j.supervisor
-
-    local proceed = false
-    if only_them == nil then
-      proceed = true
-    else
-      if acad_name == only_them then
-        proceed = true
-      end
-    end
-    if proceed then
-      local recip = {}
-      for i in pairs(j.school) do
-        print("School: "..i)
-        pretty.dump(self.coordinators)
-        local coord = self.coordinators[i]
-        print("Coordinator: "..coord)
---        recip[#recip+1] = self.all_staff[coord].id
-      end
-      if self.all_staff[acad_name].id == nil then
-        error("Assessor '"..acad_name.."' not found in staff list.")
-      end
-      recip[#recip+1] = self.all_staff[acad_name].id
-      local this_body =
-        salutation ..
-        self.message.prelim.body_opening ..
-        body ..
-        self.message.body_close ..
-        self.message.signoff
-
-      canvas:message_user(remind_check,{
-        canvasid  = recip ,
-        subject   = self.assign_name_colloq.." marking",
-        body      = this_body
-      })
-    end
-
-  end
-
-end
-
-
-
-function proj:assessor_reminder_plan(remind_check,subm,only_them)
-
-  local markers_msg = {}
-  for _,j in pairs(subm) do
-    if not(j.grade) then
-      markers_msg = self:message_reminder_add(j,markers_msg,{whom="supervisor",grouped=true})
-    end
-  end
-
-  for acad_name,j in pairs(markers_msg) do
-
-    local salutation = "Dear " .. acad_name .. ",\n\n"
-    local body = j.supervisor
-
-    local proceed = false
-    if only_them == nil then
-      proceed = true
-    else
-      if acad_name == only_them then
-        proceed = true
-      end
-    end
-    if proceed then
-      local recip = {}
-      for i in pairs(j.school) do
-        print("School: "..i)
-        pretty.dump(self.coordinators)
-        local coord = self.coordinators[i]
-        print("Coordinator: "..coord)
-        recip[#recip+1] = self.all_staff[coord].id
-      end
-      if self.all_staff[acad_name].id == nil then
-        error("Assessor '"..acad_name.."' not found in staff list.")
-      end
-      recip[#recip+1] = self.all_staff[acad_name].id
-      local this_body =
-        salutation ..
-        self.message.plan.body_opening ..
-        body ..
-        self.message.body_close ..
-        self.message.signoff
-
-      canvas:message_user(remind_check,{
-        canvasid  = recip ,
-        subject   = self.assign_name_colloq.." marking" ,
-        body      = this_body ,
-      })
-    end
-
-  end
-
-end
-
-
-
-function proj:assessor_reminder_final(remind_check,subm1,subm2,args)
-
-  print("Add an intro message:")
-  local additional_message = io.read()
-  if not(additional_message == "") then
-    additional_message = additional_message .. "\n\n"
-  end
-
-  args = args or {}
-  local only_them = args.only_them
-  local grouped = args.grouped or false
-
-  local sup_lede = "\n# Supervisor assessment\n"
-  local mod_lede = "\n# Moderator assessment\n"
-
-  local markers_msg = {}
-
-  for _,j in pairs(subm1) do
-   if not(j.metadata==nil) then
-     if not(j.metadata.supervisor_mark) then
-       markers_msg = self:message_reminder_add(j,markers_msg,{whom="supervisor",grouped=grouped})
-     end
-   end
-  end
-  for _,j in pairs(subm2) do
-   if not(j.metadata==nil) then
-     if not(j.metadata.moderator_mark) then
-       markers_msg = self:message_reminder_add(j,markers_msg,{whom="moderator",grouped=grouped})
-     end
-   end
-  end
-
-  for acad_name,j in pairs(markers_msg) do
-
-    print("MESSAGE: "..acad_name)
-    local salutation = "Dear " .. acad_name .. ",\n\n"
-    local body = ""
-
-    if not(j.supervisor == "") then
-      body = body .. sup_lede .. j.supervisor
-    end
-    if not(j.supervisor == "") and not(j.moderator == "") then
-      body = body .. "\n"
-    end
-    if not(j.moderator == "") then
-      body = body .. mod_lede .. j.moderator
-    end
-
-    local recip = { self.all_staff[acad_name].id }
-    if self.coordinators then
-      for i in pairs(j.school) do
-        print("School: "..i)
-        local coord = self.coordinators[i]
-        print("Coordinator: "..coord)
-        recip[#recip+1] = self.all_staff[coord].id
-      end
-    end
-
-    local proceed = false
-    if only_them == nil then
-      proceed = true
-    else
-      if acad_name == only_them then
-        proceed = true
-      end
-    end
-    if proceed then
-      local this_body =
-        salutation .. additional_message .. self.message.final.body_opening .. body .. self.message.body_close .. self.message.signoff
-
-      canvas:message_user(remind_check,{
-        canvasid  = recip ,
-        subject   = self.assign_name_colloq.." marking",
-        body      = this_body
-      })
-    end
-
-
-  end
-
-end
 
 
 
 function proj:assessor_reminder(remind_check,subm1,subm2,args)
+
+  self:assessor_reminder_collect(remind_check,subm1,subm2)
+  self:assessor_reminder_send(remind_check,args)
+
+end
+
+
+function proj:assessor_reminder_collect(remind_check,subm1,subm2,args)
+
+  self.reminders = self.reminders or {}
+
+  if subm2 then
+    for _,j in pairs(subm1) do
+     if not(j.metadata==nil) then
+       if not(j.metadata.supervisor_mark) then
+         self:message_reminder_add(j,{whom="supervisor"})
+       end
+     end
+    end
+    for _,j in pairs(subm2) do
+     if not(j.metadata==nil) then
+       if not(j.metadata.moderator_mark) then
+         self:message_reminder_add(j,{whom="moderator"})
+       end
+     end
+    end
+  else
+    for _,j in pairs(subm1) do
+      if not(j.grade) then
+         self:message_reminder_add(j,{whom="supervisor"})
+      end
+    end
+  end
+
+end
+
+
+function proj:assessor_reminder_send(remind_check,args)
 
   args = args or {}
   local only_them = args.only_them
@@ -311,32 +135,7 @@ function proj:assessor_reminder(remind_check,subm1,subm2,args)
   local sup_lede = "\n# Supervisor assessment\n"
   local mod_lede = "\n# Moderator assessment\n"
 
-  local markers_msg = {}
-
-  if subm2 then
-    for _,j in pairs(subm1) do
-     if not(j.metadata==nil) then
-       if not(j.metadata.supervisor_mark) then
-         markers_msg = self:message_reminder_add(j,markers_msg,{whom="supervisor"})
-       end
-     end
-    end
-    for _,j in pairs(subm2) do
-     if not(j.metadata==nil) then
-       if not(j.metadata.moderator_mark) then
-         markers_msg = self:message_reminder_add(j,markers_msg,{whom="moderator"})
-       end
-     end
-    end
-  else
-    for _,j in pairs(subm1) do
-      if not(j.grade) then
-        markers_msg = self:message_reminder_add(j,markers_msg,{whom="supervisor"})
-      end
-    end
-  end
-
-  for acad_name,j in pairs(markers_msg) do
+  for acad_name,j in pairs(self.reminders) do
 
     print("MESSAGE: "..acad_name)
     local salutation = "Dear " .. acad_name .. ",\n\n"
@@ -371,15 +170,7 @@ function proj:assessor_reminder(remind_check,subm1,subm2,args)
       end
     end
 
-    local proceed = false
-    if only_them == nil then
-      proceed = true
-    else
-      if acad_name == only_them then
-        proceed = true
-      end
-    end
-    if proceed then
+    if (only_them == nil) or (only_them == acad_name) then
       local this_body =
         salutation .. additional_message .. self.message[assm].body_opening .. body .. self.message.body_close .. self.message.signoff
 

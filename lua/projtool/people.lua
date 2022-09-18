@@ -9,6 +9,18 @@ local proj = {}
 
 
 
+function proj:staff_lookup(acad_name)
+
+  local staff_lookup = self.all_staff[acad_name]
+  if staff_lookup == nil then
+    error("Staff member not found: "..acad_name)
+  end
+  if staff_lookup.email == nil then
+    staff_lookup.email = staff_lookup.login_id.."@adelaide.edu.au"
+  end
+  return staff_lookup
+
+end
 
 
 function proj:read_csv_data(csvfile)

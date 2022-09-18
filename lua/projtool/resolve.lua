@@ -102,9 +102,7 @@ If this is necessary, please advise ASAP to allow us to resolve the situation in
 }
 
 
-function proj:resolve_grades(canvas_subfin,canvas_submod)
-
-  local assm = self.deliverable or "final"
+function proj:copy_mod_grades(canvas_subfin,canvas_submod)
 
   for i in pairs(canvas_submod) do
     if (canvas_subfin[i] == nil) then
@@ -121,6 +119,16 @@ function proj:resolve_grades(canvas_subfin,canvas_submod)
       canvas_subfin[i].metadata.moder_marks    = canvas_submod[i].marks
     end
   end
+
+  return canvas_subfin
+
+end
+
+function proj:resolve_grades(canvas_subfin,canvas_submod)
+
+  local assm = self.deliverable or "final"
+
+  canvas_subfin = proj:copy_mod_grades(canvas_subfin,canvas_submod)
 
   for i,j in pairs(canvas_subfin) do
 

@@ -147,7 +147,7 @@ function proj:add_assessment_metadata(canvas_subm,verbose)
       subm[hash_index].metadata.override    = override[hash_index] or ""
       subm[hash_index].metadata.comments    = comments[hash_index] or ""
     else
-      error("No metadata found for submission by: "..student_name.." (ID: "..student_id..")")
+      print("WARNING!!! No metadata found for submission by: "..student_name.." (ID: "..student_id..")")
     end
 
   end
@@ -269,6 +269,7 @@ function proj:export_csv_marks(subm)
   end)
 
   print("Writing marks to file: '"..self.marks_csv.."'...")
+  file.copy(self.marks_csv,(self.marks_csv..".backup"))
   local ff = io.output(self.marks_csv)
   io.write("INDEX,USERID,NAME,SCHOOL,PROJID,TITLE,SUPERVISOR,MARK,URL\n")
 
