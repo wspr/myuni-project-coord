@@ -27,6 +27,11 @@ end
 function proj:set_assign_canvas_moderated(bool)
   self.assign_canvas_moderated = bool
 end
+function proj:set_assign_has_submission(bool)
+  self.assign_has_submission = bool
+end
+proj:set_assign_has_submission(true)
+
 function proj:set_coordinators(tbl)
 
   local cache_path = canvas.cache_dir.."Staff Details - Coordinators.lua"

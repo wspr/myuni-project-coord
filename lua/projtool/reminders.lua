@@ -1,10 +1,11 @@
 
 local pretty  = require("pl.pretty")
+local Date    = require("pl.Date")
+local file    = require("pl.file")
+local canvas  = require("canvas-lms")
 
-local canvas = require("canvas-lms")
+
 local proj = {}
-
-
 
 
 
@@ -21,11 +22,6 @@ function proj:message_reminder_add(j,args)
   local acad_name = j.metadata[sup_or_mod]
   local staff_lookup = self:staff_lookup(acad_name)
 
-  self.reminders = self.reminders or {}
-  self.reminders[acad_name] = self.reminders[acad_name] or {}
-  self.reminders[acad_name].details = staff_lookup
-  self.reminders[acad_name].marking = self.reminders[acad_name].marking or {}
-
   local school = j.metadata.school
   self:info("School: "..school)
   local coord = self.coordinators[school]
@@ -35,6 +31,12 @@ function proj:message_reminder_add(j,args)
   local coord_str = self.all_staff[coord].name.." <"..self.all_staff[coord].login_id.."@adelaide.edu.au>"
   self:info("Coordinator: "..coord_str)
 
+  self.reminders = self.reminders or {}
+  self.reminders[acad_name] = self.reminders[acad_name] or {}
+
+  self.reminders[acad_name].details = staff_lookup
+
+  self.reminders[acad_name].marking = self.reminders[acad_name].marking or {}
   if self.reminders[acad_name].marking[assm] == nil then
     self.reminders[acad_name].marking[assm] = {}
     self.reminders[acad_name].marking[assm].supervisor = ""
@@ -43,6 +45,7 @@ function proj:message_reminder_add(j,args)
     self.reminders[acad_name].marking[assm].assessment  = self.assign_name_colloq
     self.reminders[acad_name].marking[assm].school = school
     self.reminders[acad_name].marking[assm].coordinator = coord_str
+    self.reminders[acad_name].marking[assm].coord_id = self.all_staff[coord].id
   end
 
   local assess_str
@@ -54,12 +57,34 @@ function proj:message_reminder_add(j,args)
       "   Project title: "
   end
 
-  j.submitted_at = j.submitted_at or "NOT SUBMITTED YET"
+  local not_submitted_str = ""
+  local remind_submitted_str = ""
+  local remind_url_str = ""
+  if self.assign_has_submission then
+    not_submitted_str = "~~ NOT SUBMITTED YET ~~"
+  end
+  j.metadata.submitted_at = j.submitted_at or not_submitted_str
+  if j.metadata.submitted_at == not_submitted_str then
+    j.metadata.since = "N/A"
+    if self.assign_has_submission then
+      remind_url_str = "   SpeedGrader link: <NOT YET SUBMITTED>\n"
+    else
+      remind_url_str = "   SpeedGrader link: <" .. j.metadata.url .. ">\n"
+    end
+  else
+    local df = Date.Format()
+    j.metadata.since = Date{} - df:parse(j.metadata.submitted_at)
+    remind_submitted_str = "   Submitted: " .. j.metadata.submitted_at .. "\n"
+    if self.assign_has_submission then
+      remind_url_str = "   SpeedGrader link: <" .. j.metadata.url .. ">\n"
+    end
+  end
+
   self.reminders[acad_name].marking[assm][sup_or_mod] = self.reminders[acad_name].marking[assm][sup_or_mod] .. "\n" ..
     " • " .. assess_str ..
     j.metadata.proj_title .. " (ID: " .. j.metadata.proj_id .. ") \n" ..
-    "   Submitted: " .. j.submitted_at .. "\n" ..
-    "   SpeedGrader link: <" .. j.metadata.url .. ">\n"
+    remind_submitted_str ..
+    remind_url_str
 
   local N = #self.reminders[acad_name].marking[assm].projects
   self.reminders[acad_name].marking[assm].projects[N+1] = j.metadata
@@ -102,13 +127,17 @@ function proj:assessor_reminder_collect(remind_check,subm1,subm2,args)
     end
   else
     for _,j in pairs(subm1) do
-      if not(j.grade) then
-         self:message_reminder_add(j,{whom="supervisor"})
+      if not(next(j) == nil) then
+        if not(j.grade) then
+           self:message_reminder_add(j,{whom="supervisor"})
+        end
       end
     end
   end
 
 end
+
+
 
 
 function proj:assessor_reminder_send(remind_check,args)
@@ -132,52 +161,51 @@ function proj:assessor_reminder_send(remind_check,args)
     additional_message = additional_message .. "\n\n"
   end
 
-  local sup_lede = "\n# Supervisor assessment\n"
-  local mod_lede = "\n# Moderator assessment\n"
+  for acad_name,assr in pairs(self.reminders) do
 
-  for acad_name,j in pairs(self.reminders) do
+    self:info("ASSESSOR: "..acad_name)
 
-    print("MESSAGE: "..acad_name)
-    local salutation = "Dear " .. acad_name .. ",\n\n"
+    local salutation = "Dear " .. assr.details.short_name .. ",\n\n"
+    local body_opening = [[
+As an academic and/or supervisor involved with honours/masters research project teaching, the following items are due for assessment. This is a semi-automated reminder.
+
+Be careful to hit the "Save" after entering marks into the rubric, and save often to avoid data loss. If you need to come back later without finalising your mark, delete the auto-populated total mark after hitting "Save".
+]]
+
+    local recip_lookup = { }
+    recip_lookup[assr.details.id] = true
     local body = ""
 
-    if not(j.supervisor == "") then
-      body = body .. sup_lede .. j.supervisor
-    end
-    if not(j.supervisor == "") and not(j.moderator == "") then
-      body = body .. "\n"
-    end
-    if not(j.moderator == "") then
-      body = body .. mod_lede .. j.moderator
+    for stub,assm in pairs(assr.marking) do
+
+      self:info("ASSM: "..assm.assessment)
+      if not(assm.supervisor == "") then
+        body = body .. "\n# "..assm.assessment.." -- Supervisor assessment\n" .. assm.supervisor
+      end
+      if not(assm.supervisor == "") and not(assm.moderator == "") then
+        body = body .. "\n"
+      end
+      if not(assm.moderator == "") then
+        body = body .. "\n# "..assm.assessment.." -- Moderator assessment\n" .. assm.moderator
+      end
+      recip_lookup[assm.coord_id] = true
+
     end
 
-    local staff_lookup = self.all_staff[acad_name]
-    if staff_lookup == nil then
-      error("Staff member not found: "..acad_name)
+    local recip = {}
+    for i in pairs(recip_lookup) do
+      recip[#recip+1] = i
     end
-    local recip = { self.all_staff[acad_name].id }
-    if self.coordinators then
-      for i in pairs(j.school) do
-        print("School: "..i)
-        local coord = self.coordinators[i]
-        if type(coord) == "table" then
-          coord = coord[1]
-        end
-        print("Coordinator: "..coord)
-        if self.all_staff[coord].id ~= self.all_staff[acad_name].id then
-          recip[#recip+1] = self.all_staff[coord].id
-        end
-      end
-    end
+    pretty.dump(recip)
 
     if (only_them == nil) or (only_them == acad_name) then
       local this_body =
-        salutation .. additional_message .. self.message[assm].body_opening .. body .. self.message.body_close .. self.message.signoff
+        salutation .. additional_message .. body_opening .. body .. self.message.body_close .. self.message.signoff
 
       canvas:message_user(remind_check,{
-        canvasid  = recip ,
-        subject   = self.assign_name_colloq.." marking",
-        body      = this_body
+        canvasid = recip ,
+        subject  = "Capstone marking",
+        body     = this_body
       })
     end
 
@@ -185,6 +213,68 @@ function proj:assessor_reminder_send(remind_check,args)
   end
 
 end
+
+
+
+function proj:assessor_reminder_export(csvfile)
+
+  print("Constructing reminders list:  "..csvfile)
+  file.copy(csvfile,(csvfile..".backup"))
+  local ff = io.output(csvfile)
+
+  local function qq(str) return '"'..str..'"' end
+  local function csvrow(tbl)
+    local str = ""
+    local sep = ","
+    local count = 0
+    for _,v in ipairs(tbl) do
+      count = count + 1
+      if count > 1 then
+        str = str..sep
+      end
+      str = str..v
+    end
+    return str.."\n"
+  end
+
+  io.write(csvrow{
+    "Sortable name","Name","UoA ID","Email","School",
+    "Coordinator","Assessment","Role","Since submission","Project ID","Project title",
+    "Speedgrader URL"})
+
+  for k,v in pairs(self.reminders) do
+    for _,assn in pairs(v.marking) do
+      for _,prj in ipairs(assn.projects) do
+
+        local role = "Assessor"
+        if prj.supervisor_id == v.details.login_id then
+          role = "Supervisor"
+        elseif prj.moderator_id == v.details.login_id then
+          role = "Moderator"
+        end
+        io.write(
+          csvrow{qq(k),
+          v.details.short_name,
+          v.details.login_id,
+          (v.details.email) or "",
+          assn.school,
+          qq(assn.coordinator) or "",
+          assn.assessment,
+          role,
+          tostring(prj.since),
+          prj.proj_id,
+          qq(prj.proj_title),
+          prj.url
+        })
+      end
+    end
+  end
+
+  io.close(ff)
+  print("...done.")
+
+end
+
 
 
 return proj

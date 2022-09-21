@@ -1,6 +1,6 @@
 
 local csv     = require("csv")
--- local pretty  = require("pl.pretty")
+local pretty  = require("pl.pretty")
 local path    = require("pl.path")
 local binser  = require("binser")
 local canvas  = require("canvas-lms")
@@ -12,7 +12,12 @@ local proj = {}
 function proj:staff_lookup(acad_name)
 
   local staff_lookup = self.all_staff[acad_name]
+
   if staff_lookup == nil then
+    error("Staff member not found: "..acad_name)
+  end
+  if staff_lookup.login_id == nil then
+    pretty.dump(staff_lookup)
     error("Staff member not found: "..acad_name)
   end
   if staff_lookup.email == nil then
@@ -25,12 +30,12 @@ end
 
 function proj:read_csv_data(csvfile)
 
-  print("Reading CSV data of students/projects/supervisors/moderators")
+  print("Reading CSV data of students/projects/supervisors/moderators: "..csvfile)
 
   self.projects = {}
   self.proj_data = {}
   self.student_ind = {}
-  self.all_staff = self.all_staff or {}
+  self.all_staff = {}
   self.all_staff_ids = {}
 
   local f = csv.open(csvfile,{header=true})
@@ -102,11 +107,12 @@ function proj:find_user(name,staff_uoa_id)
 
   local search_term = name
 
+  staff_uoa_id = staff_uoa_id or ""
   if staff_uoa_id == "" then
     print("Searching for name:  '"..search_term.."'")
   else
     search_term = staff_uoa_id
-    print("Searching for name:  '"..name.."' using ID: "..(staff_uoa_id or ""))
+    print("Searching for name:  '"..name.."' using ID: "..staff_uoa_id)
   end
   local tmp = canvas:find_user(search_term)
   local match_ind = 0
@@ -141,9 +147,8 @@ function proj:get_canvas_ids(opt)
 
   opt = opt or {download="ask"}
 
-  print("Searching for supervisors/moderators in Canvas")
-
-  local cache_path = canvas.cache_dir.."AllStaff.lua"
+  local cache_path = canvas.cache_dir..canvas.courseid.."-staff.lua"
+  print("Searching for supervisors/moderators in Canvas: "..cache_path)
 
   local download_check
   if path.exists(cache_path) then

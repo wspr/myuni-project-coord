@@ -3,7 +3,6 @@ local proj = {}
 
 proj.message         = {}
 proj.message.interim = {}
-proj.message.prelim  = {}
 proj.message.progress= {}
 proj.message.final   = {}
 proj.message.plan    = {}
@@ -20,14 +19,6 @@ The Project Plan(s) below need assessing by you, as the project supervisor. This
 Follow the links below to take you straight to the reports for assessment in MyUni.
 ]]
 
-
-proj.message.prelim.body_opening = [[
-As an honours project supervisor, you are now required to assess the following reports. This is a semi-automated reminder.
-
-The Progress Report is a HURDLE requirement for the course. If the student/group receives a fail mark they will be eligible for an Additional Assessment to resubmit. Please contact your School's project coordinator to organise this. If the student/group ultimately fails this assessment they must repeat Part A of the course next semester before continuing with Part B.
-
-Follow the links below to take you straight to the reports for assessment in MyUni.
-]]
 
 proj.message.interim.body_opening = [[
 As a supervisor, you are now required to assess of the following deliverables. This is a semi-automated reminder.

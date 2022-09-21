@@ -37,17 +37,16 @@ end
 
 
 
-function proj:get_submissions(get_bool,cvs,verbose)
+function proj:get_submissions(get_bool,cvs,args)
 
-  verbose = verbose or false
 
   local subm
   if self.assign_grouped then
-    subm = canvas:get_assignment(get_bool,self.assign_name_canvas,{grouped=true,include={"group","user","rubric_assessment","submission_comments"}})
+    subm = canvas:get_assignment(get_bool,self.assign_name_canvas,{grouped=true,include={"group","user","rubric_assessment","submission_comments"}},args)
   else
-    subm = canvas:get_assignment(get_bool,self.assign_name_canvas,{include={"provisional_grades","user","rubric_assessment","submission_comments"}})
+    subm = canvas:get_assignment(get_bool,self.assign_name_canvas,{include={"provisional_grades","user","rubric_assessment","submission_comments"}},args)
   end
-  subm = self:subm_remove(subm,verbose)
+  subm = self:subm_remove(subm)
 
   if cvs then
     self.assignment_setup = cvs.assignments[self.assign_name_canvas]
@@ -57,13 +56,14 @@ function proj:get_submissions(get_bool,cvs,verbose)
 
 end
 
-function proj:subm_remove(subm,verbose)
-  verbose = verbose or false
+function proj:subm_remove(subm)
+  local verbose = canvas.verbose > 0
   local subout = {}
   local to_keep
   if verbose then print("Number of submissions: "..#subm) end
   for i,j in ipairs(subm) do
     to_keep = true
+    j.user.sis_user_id = j.user.sis_user_id or ""
     if string.sub(j.user.sis_user_id,1,2) == "sv" then
       if verbose then print(" - Academic student view (SV) user: "..subm[i].user.name) end
       to_keep = false
