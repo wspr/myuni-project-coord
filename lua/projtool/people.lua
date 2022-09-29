@@ -177,7 +177,7 @@ function proj:get_canvas_ids(opt)
       self.all_staff[kk] = vv
     end
     if not_found_canvas ~= "" then
-      error("## Canvas users not found, check their names and/or add them via Toolkit:\n\n"..not_found_canvas)
+      error("\n\n## Canvas users not found, check their names and/or add them via Toolkit:\n\n"..not_found_canvas)
     end
     binser.writeFile(cache_path,self.all_staff)
   end
@@ -186,6 +186,8 @@ function proj:get_canvas_ids(opt)
   self.all_staff = all_staff_from_file[1]
 
 end
+
+
 
 
 return proj
