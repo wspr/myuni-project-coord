@@ -19,8 +19,8 @@ function proj:message_reminder_add(j,args)
   local assign_grouped = args.grouped or self.assign_grouped or false
   local assm = self.deliverable
 
-  local acad_name = j.metadata[sup_or_mod]
-  local staff_lookup = self:staff_lookup(acad_name)
+  local acad_id   = j.metadata[sup_or_mod.."_id"]
+  local staff_lookup, acad_name = self:staff_lookup(acad_id)
 
   local school = j.metadata.school
   self:info("School: "..school)

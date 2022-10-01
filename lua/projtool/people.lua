@@ -9,13 +9,14 @@ local proj = {}
 
 
 
-function proj:staff_lookup(acad_name)
+function proj:staff_lookup(acad_id)
 
-  local staff_lookup = self.all_staff[acad_name]
-
-  if staff_lookup == nil then
-    error("Staff member not found: "..acad_name)
+  local acad_name = self.all_staff[acad_id]
+  if acad_name == nil then
+    pretty.dump(self.all_staff)
+    error("Staff member not found by ID: "..acad_id)
   end
+  local staff_lookup = self.all_staff[acad_name]
   if staff_lookup.login_id == nil then
     pretty.dump(staff_lookup)
     error("Staff member not found: "..acad_name)
@@ -23,7 +24,7 @@ function proj:staff_lookup(acad_name)
   if staff_lookup.email == nil then
     staff_lookup.email = staff_lookup.login_id.."@adelaide.edu.au"
   end
-  return staff_lookup
+  return staff_lookup, acad_name
 
 end
 
@@ -186,8 +187,6 @@ function proj:get_canvas_ids(opt)
   self.all_staff = all_staff_from_file[1]
 
 end
-
-
 
 
 return proj
