@@ -15,6 +15,11 @@ function proj:check_assignment(assign_data,check_bool,assgn_lbl)
 
   print("CHECKING ASSIGNMENT MARKING")
 
+  if canvas.assignments[self.assign_name_canvas].rubric == nil then
+    pretty.dump(canvas.assignments[self.assign_name_canvas])
+    error("No rubric data in this assignment?")
+  end
+
   local Nrubric = #canvas.assignments[self.assign_name_canvas].rubric
 
   for _,j in pairs(assign_data) do
@@ -207,7 +212,7 @@ function proj:check_moderated(assign_data,args)
 
         -- always take most recent assessment (in fact, not sure when there ever would be more than one but sometimes it seems to happen)
         local jj = jg.rubric_assessments[#jg.rubric_assessments]
-        
+
         assr = jj.assessor_name
 
         local rubric_count = 0
@@ -237,9 +242,9 @@ function proj:check_moderated(assign_data,args)
             scr  = jg.score
             print("      Score manually entered by assessor ("..scr..")")
           end
-          
+
         else
-        
+
           scr  = jj.score
 
           if rubric_count == Nrubric then

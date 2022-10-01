@@ -55,8 +55,6 @@ function proj:read_csv_data(csvfile)
       self.proj_data[nn].school        = fields["School"] or ""
       self.proj_data[nn].supervisor    = fields["Supervisor"] or ""
       self.proj_data[nn].supervisor_id = fields["SupervisorID"] or ""
-      self.proj_data[nn].moderator     = fields["Moderator"] or ""
-      self.proj_data[nn].moderator_id  = fields["ModeratorID"] or ""
       self.proj_data[nn].myuni_proj_id = fields["MyUniProjID"] or ""
       if self.proj_data[nn].myuni_proj_id == "" then
         self.proj_data[nn].myuni_proj_id = self.proj_data[nn].proj_id
@@ -76,31 +74,29 @@ function proj:read_csv_data(csvfile)
 
       local student_id = self.proj_data[nn].student_id
       local super = self.proj_data[nn].supervisor
-      local moder = self.proj_data[nn].moderator
 
       self.student_ind[student_id] = nn
 
       self.all_staff[super] = {}
-      self.all_staff[moder]  = {}
-
       self.all_staff_ids[super] = self.proj_data[nn].supervisor_id
-      self.all_staff_ids[moder] = self.proj_data[nn].moderator_id
-
       self.assessors = self.assessors or {}
       self.assessors[super] = self.assessors[super] or {}
-      self.assessors[moder] = self.assessors[moder] or {}
-
       self.assessors[super][csvfile] = self.assessors[super][csvfile] or {}
-      self.assessors[moder][csvfile] = self.assessors[moder][csvfile] or {}
-
       self.assessors[super][csvfile].supervisor = self.assessors[super][csvfile].supervisor or {}
-      self.assessors[moder][csvfile].moderator  = self.assessors[moder][csvfile].moderator  or {}
-
       self.assessors[super][csvfile].supervisor[student_id] = nn
-      self.assessors[moder][csvfile].moderator[student_id]  = nn
 
+      if self.assign_canvas_moderated then
+        self.proj_data[nn].moderator     = fields["Moderator"] or ""
+        self.proj_data[nn].moderator_id  = fields["ModeratorID"] or ""
+        local moder = self.proj_data[nn].moderator
+        self.all_staff[moder]  = {}
+        self.all_staff_ids[moder] = self.proj_data[nn].moderator_id
+        self.assessors[moder] = self.assessors[moder] or {}
+        self.assessors[moder][csvfile] = self.assessors[moder][csvfile] or {}
+        self.assessors[moder][csvfile].moderator  = self.assessors[moder][csvfile].moderator  or {}
+        self.assessors[moder][csvfile].moderator[student_id]  = nn
+      end
   end
-
 end
 
 
