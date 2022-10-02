@@ -105,13 +105,13 @@ end
 
 function proj:assessor_reminder(remind_check,subm1,subm2,args)
 
-  self:assessor_reminder_collect(remind_check,subm1,subm2)
+  self:assessor_reminder_collect(subm1,subm2)
   self:assessor_reminder_send(remind_check,args)
 
 end
 
 
-function proj:assessor_reminder_collect(remind_check,subm1,subm2)
+function proj:assessor_reminder_collect(subm1,subm2)
 
   self.reminders = self.reminders or {}
 
@@ -142,6 +142,38 @@ function proj:assessor_reminder_collect(remind_check,subm1,subm2)
 
 end
 
+
+
+
+function proj:assessor_reminder_summarise()
+
+  args = args or {}
+  local only_them = args.only_them
+
+
+  for acad_name,assr in pairs(self.reminders) do
+
+    print("ASSESSOR: "..acad_name)
+
+    local body = ""
+    for stub,assm in pairs(assr.marking) do
+
+      if not(assm.supervisor == "") then
+        body = body .. "\n# "..assm.assessment.." -- Supervisor assessment\n\n" .. assm.supervisor
+      end
+      if not(assm.supervisor == "") and not(assm.moderator == "") then
+        body = body .. "\n"
+      end
+      if not(assm.moderator == "") then
+        body = body .. "\n# "..assm.assessment.." -- Moderator assessment\n\n" .. assm.moderator
+      end
+
+    end
+    print(body)
+
+  end
+
+end
 
 
 
