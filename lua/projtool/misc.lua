@@ -14,7 +14,7 @@ local proj = {}
 
 function proj:info(s)
 
-  if canvas.verbose > 0 then
+  if self.verbose > 0 then
     print("INFO:  "..s)
   end
 
@@ -65,10 +65,10 @@ function proj:list_students(semnow,cohorts)
       print(cohort, UGPG)
       print("============")
 
-      canvas:set_cohort(cohort)
-      canvas:set_course_id(canvas_id[cohort][UGPG])
+      self:set_cohort(cohort)
+      self:set_course_id(canvas_id[cohort][UGPG])
 
-      myuni_groups = canvas:get_groups_by_cat(dl_bool == "y","Project Groups")
+      myuni_groups = self:get_groups_by_cat(dl_bool == "y","Project Groups")
       for grp,v in pairs(myuni_groups) do
         if grp:sub(-5,-1) == "00000" then
           myuni_groups[grp] = nil
@@ -79,7 +79,7 @@ function proj:list_students(semnow,cohorts)
       local sonia_groups  = {}
       for fields in f:lines() do
         if not(fields.Cohort==nil) then
-          if (fields.Cohort == canvas.cohort) and (fields.UGPG == UGPG) then
+          if (fields.Cohort == self.cohort) and (fields.UGPG == UGPG) then
             sonia_groups[#sonia_groups+1] = fields
           end
         end

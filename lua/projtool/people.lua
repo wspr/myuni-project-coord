@@ -11,20 +11,20 @@ local proj = {}
 
 function proj:staff_lookup(acad_id)
 
-  local acad_name = self.all_staff[acad_id]
-  if acad_name == nil then
+  local acad_lookup = self.all_staff[acad_id]
+  if acad_lookup == nil then
     pretty.dump(self.all_staff)
     error("Staff member not found by ID: "..acad_id)
   end
-  local staff_lookup = self.all_staff[acad_name]
-  if staff_lookup.login_id == nil then
-    pretty.dump(staff_lookup)
-    error("Staff member not found: "..acad_name)
+  local acad_name = acad_lookup.name
+  if acad_name == nil then
+    pretty.dump(acad_lookup)
+    error("Staff member missing name: "..acad_id)
   end
-  if staff_lookup.email == nil then
-    staff_lookup.email = staff_lookup.login_id.."@adelaide.edu.au"
+  if acad_lookup.email == nil then
+    acad_lookup.email = acad_lookup.login_id.."@adelaide.edu.au"
   end
-  return staff_lookup, acad_name
+  return acad_lookup, acad_name
 
 end
 
@@ -37,7 +37,8 @@ function proj:read_csv_data(csvfile)
   self.proj_data = {}
   self.student_ind = {}
   self.all_staff = {}
-  self.all_staff_ids = {}
+  self.all_staff_id_by_name = {}
+  self.all_staff_id_by_cid = {}
 
   local f = csv.open(csvfile,{header=true})
   if f == nil then
@@ -73,12 +74,13 @@ function proj:read_csv_data(csvfile)
       self.projects[jj.proj_id].student_names[#self.projects[jj.proj_id].student_names+1] = self.proj_data[nn].student_name
 
       local student_id = self.proj_data[nn].student_id
-      local super = self.proj_data[nn].supervisor
+      local super      = self.proj_data[nn].supervisor_id
+      local super_name = self.proj_data[nn].supervisor
 
       self.student_ind[student_id] = nn
 
       self.all_staff[super] = {}
-      self.all_staff_ids[super] = self.proj_data[nn].supervisor_id
+      self.all_staff_id_by_name[super_name] = super
       self.assessors = self.assessors or {}
       self.assessors[super] = self.assessors[super] or {}
       self.assessors[super][csvfile] = self.assessors[super][csvfile] or {}
@@ -88,9 +90,10 @@ function proj:read_csv_data(csvfile)
       if self.assign_canvas_moderated then
         self.proj_data[nn].moderator     = fields["Moderator"] or ""
         self.proj_data[nn].moderator_id  = fields["ModeratorID"] or ""
-        local moder = self.proj_data[nn].moderator
+        local moder      = self.proj_data[nn].moderator_id
+        local moder_name = self.proj_data[nn].moderator
         self.all_staff[moder]  = {}
-        self.all_staff_ids[moder] = self.proj_data[nn].moderator_id
+        self.all_staff_id_by_name[moder_name] = moder
         self.assessors[moder] = self.assessors[moder] or {}
         self.assessors[moder][csvfile] = self.assessors[moder][csvfile] or {}
         self.assessors[moder][csvfile].moderator  = self.assessors[moder][csvfile].moderator  or {}
@@ -100,21 +103,13 @@ function proj:read_csv_data(csvfile)
 end
 
 
-function proj:find_user(name,staff_uoa_id)
+function proj:find_staff(staff_uoa_id)
 
-  local search_term = name
-
-  staff_uoa_id = staff_uoa_id or ""
-  if staff_uoa_id == "" then
-    print("Searching for name:  '"..search_term.."'")
-  else
-    search_term = staff_uoa_id
-    print("Searching for name:  '"..name.."' using ID: "..staff_uoa_id)
-  end
-  local tmp = canvas:find_user(search_term)
+  print("Searching for user:  '"..staff_uoa_id.."'")
+  local tmp = self:find_user(staff_uoa_id)
   local match_ind = 0
   for _,j in ipairs(tmp) do
-    print("Found:  '"..j.name.."' ("..j.login_id..")")
+    print(" - found:  '"..j.name.."' ("..j.login_id..")")
   end
   if #tmp == 1 then
     match_ind = 1
@@ -127,14 +122,14 @@ function proj:find_user(name,staff_uoa_id)
       end
     end
     if count_exact > 1 then
-      error("Multiple exact matches for name found. This is a problem! New code needed to identify staff members by their ID number as well.")
+      error("Multiple exact matches for name found. This is a problem! New code needed to identify staff members.")
     end
   end
 
   if match_ind > 0 then
     return tmp[match_ind]
   else
-    print("No user found for name: "..name)
+    print("No user found for user: "..staff_uoa_id)
   end
 
 end
@@ -144,8 +139,8 @@ function proj:get_canvas_ids(opt)
 
   opt = opt or {download="ask"}
 
-  local cache_path = canvas.cache_dir..canvas.courseid.."-staff.lua"
-  print("Searching for supervisors/moderators in Canvas: "..cache_path)
+  local cache_path = self.cache_dir..self.courseid.."-staff.lua"
+  print("Searching for supervisors/moderators in self: "..cache_path)
 
   local download_check
   if path.exists(cache_path) then
@@ -159,28 +154,29 @@ function proj:get_canvas_ids(opt)
 
   if download_check then
     local not_found_canvas = ""
-    for name in pairs(self.all_staff) do
-      if not(name == "") then
-        local tbl = self:find_user(name,self.all_staff_ids[name])
+    for id,dat in pairs(self.all_staff) do
+      if not(id == "") then
+        local tbl = self:find_staff(id)
         if tbl == nil then
-          not_found_canvas = not_found_canvas.."    "..name.."   "..self.all_staff_ids[name].."\n"
+          not_found_canvas = not_found_self.."    "..id.."\n"
         else
-          self.all_staff[name] = tbl
-          id_lookup[tbl.id] = name
+          self.all_staff[id] = tbl
+          self.all_staff_id_by_cid[tbl.id] = id
+          self.all_staff_id_by_name[tbl.sortable_name] = id
         end
       end
-    end
-    for kk,vv in pairs(id_lookup) do
-      self.all_staff[kk] = vv
     end
     if not_found_canvas ~= "" then
       error("\n\n## Canvas users not found, check their names and/or add them via Toolkit:\n\n"..not_found_canvas)
     end
-    binser.writeFile(cache_path,self.all_staff)
+    binser.writeFile(cache_path,{self.all_staff,self.all_staff_id_by_cid,self.all_staff_id_by_name})
   end
 
   local all_staff_from_file = binser.readFile(cache_path)
-  self.all_staff = all_staff_from_file[1]
+  pretty.dump(all_staff_from_file)
+  self.all_staff = all_staff_from_file[1][1]
+  self.all_staff_id_by_cid = all_staff_from_file[1][2]
+  self.all_staff_id_by_name = all_staff_from_file[1][3]
 
 end
 

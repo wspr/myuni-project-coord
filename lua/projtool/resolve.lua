@@ -256,23 +256,22 @@ Thank you for your significant contributions towards the success of our capstone
     close_text = resolve_msg[assm][close_rank].body
   end
 
-  if self.all_staff[j.metadata.supervisor] == nil then
-    error("Assessor '"..j.metadata.supervisor.."' not found in staff list.")
+  if self.all_staff[j.metadata.supervisor_id] == nil then
+    error("Assessor '"..j.metadata.supervisor_id.."' not found in staff list.")
   end
-  if self.all_staff[j.metadata.moderator] == nil then
-    error("Assessor '"..j.metadata.moderator.."' not found in staff list.")
+  if self.all_staff[j.metadata.moderator_id] == nil then
+    error("Assessor '"..j.metadata.moderator_id.."' not found in staff list.")
   end
   local recip = {
-        self.all_staff[j.metadata.supervisor].id ,
-        self.all_staff[j.metadata.moderator].id  ,
+        self.all_staff[j.metadata.supervisor_id].id ,
+        self.all_staff[j.metadata.moderator_id].id  ,
   }
   if self.coordinators then
     local coord = self.coordinators[j.metadata.school]
-    local coord_id = self.all_staff[coord].id
-    recip[#recip+1] = coord_id
+    recip[#recip+1] = self.all_staff[coord[2]].id
   end
 
-  canvas:message_user(send_bool,{
+  self:message_user(send_bool,{
     canvasid  = recip ,
     subject   =
       self.assign_name_colloq ..

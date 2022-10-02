@@ -20,13 +20,17 @@ function proj:message_reminder_add(j,args)
   local assm = self.deliverable
 
   local acad_id   = j.metadata[sup_or_mod.."_id"]
+  if (acad_id == nil) or (acad_id == "") then
+    pretty.dump(j.metadata)
+    error("huh?")
+  end
   local staff_lookup, acad_name = self:staff_lookup(acad_id)
 
   local school = j.metadata.school
   self:info("School: "..school)
   local coord = self.coordinators[school]
   if type(coord) == "table" then
-    coord = coord[1]
+    coord = coord[2]
   end
   local coord_str = self.all_staff[coord].name.." <"..self.all_staff[coord].login_id.."@adelaide.edu.au>"
   self:info("Coordinator: "..coord_str)
@@ -43,10 +47,10 @@ function proj:message_reminder_add(j,args)
     self.reminders[acad_name].marking[assm].moderator  = ""
     self.reminders[acad_name].marking[assm].projects   = {}
     self.reminders[acad_name].marking[assm].assessment = self.assign_name_colloq
-    self.reminders[acad_name].marking[assm].courseid   = canvas.courseid
-    self.reminders[acad_name].marking[assm].school = school
+    self.reminders[acad_name].marking[assm].courseid   = self.courseid
+    self.reminders[acad_name].marking[assm].school     = school
     self.reminders[acad_name].marking[assm].coordinator = coord_str
-    self.reminders[acad_name].marking[assm].coord_id = self.all_staff[coord].id
+    self.reminders[acad_name].marking[assm].coord_id   = coord
   end
 
   local assess_student_str
@@ -107,7 +111,7 @@ function proj:assessor_reminder(remind_check,subm1,subm2,args)
 end
 
 
-function proj:assessor_reminder_collect(remind_check,subm1,subm2,args)
+function proj:assessor_reminder_collect(remind_check,subm1,subm2)
 
   self.reminders = self.reminders or {}
 
@@ -200,7 +204,7 @@ function proj:assessor_reminder_send(remind_check,args)
       local this_body =
         salutation .. additional_message .. self.message.body_opening .. body .. self.message.body_close .. self.message.signoff
 
-      canvas:message_user(remind_check,{
+      self:message_user(remind_check,{
         canvasid = recip ,
         subject  = "Capstone project marking",
         body     = this_body,

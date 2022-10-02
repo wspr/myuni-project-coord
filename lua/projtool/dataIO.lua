@@ -42,9 +42,9 @@ function proj:get_submissions(get_bool,cvs,args)
 
   local subm
   if self.assign_grouped then
-    subm = canvas:get_assignment(get_bool,self.assign_name_canvas,{grouped=true,include={"group","user","rubric_assessment","submission_comments"}},args)
+    subm = self:get_assignment(get_bool,self.assign_name_canvas,{grouped=true,include={"group","user","rubric_assessment","submission_comments"}},args)
   else
-    subm = canvas:get_assignment(get_bool,self.assign_name_canvas,{include={"provisional_grades","user","rubric_assessment","submission_comments"}},args)
+    subm = self:get_assignment(get_bool,self.assign_name_canvas,{include={"provisional_grades","user","rubric_assessment","submission_comments"}},args)
   end
   subm = self:subm_remove(subm)
 
@@ -57,7 +57,7 @@ function proj:get_submissions(get_bool,cvs,args)
 end
 
 function proj:subm_remove(subm)
-  local verbose = canvas.verbose > 0
+  local verbose = self.verbose > 0
   local subout = {}
   local to_keep
   if verbose then print("Number of submissions: "..#subm) end
@@ -131,7 +131,7 @@ function proj:add_assessment_metadata(canvas_subm,verbose)
 
       subm[hash_index] = subm_entry
 
-      local url = canvas.url .. canvas.course_prefix ..
+      local url = self.url .. self.course_prefix ..
                   "gradebook/speed_grader?assignment_id=" .. subm_entry.assignment_id ..
                   "&student_id=" .. subm_entry.user_id
       subm[hash_index].metadata = {}

@@ -28,10 +28,10 @@ The Project Plan is assessed by the project supervisor to provide initial guidan
 ]]
 
 proj.message.perfA.body_opening = [[
-The Student Performance mark is awarded by the supervisor at the end of each semester.
+The Student Performance mark is awarded by the supervisor at the end of each semester. You won't see a submission from the student -- just click "View Rubric" and enter your marks.
 ]]
 proj.message.perfB.body_opening = [[
-The Student Performance mark is awarded by the supervisor at the end of each semester.
+The Student Performance mark is awarded by the supervisor at the end of each semester. You won't see a submission from the student -- just click "View Rubric" and enter your marks.
 ]]
 
 proj.message.interim.body_opening = [[

@@ -6,6 +6,9 @@ local canvas  = require("canvas-lms")
 
 local proj = {}
 
+function proj:set_canvas(c)
+  self.canvas = c
+end
 function proj:set_deliverable(str)
   self.deliverable = str
 end
@@ -34,33 +37,38 @@ proj:set_assign_has_submission(true)
 
 function proj:set_coordinators(tbl)
 
-  local cache_path = canvas.cache_dir.."Staff Details - Coordinators.lua"
+  local cache_path = self.cache_dir.."Staff Details - Coordinators.lua"
   local coords = {}
 
   self.coordinators = tbl
-  if self.all_staff == nil then
-    error("Load staff data before setting coordinators")
-  end
+  self.all_staff = self.all_staff or {}
+  self.all_staff_id_by_name = self.all_staff_id_by_name or {}
 
   if path.exists(cache_path) then
     coords = binser.readFile(cache_path)
     coords = coords[1]
   end
   for k,j in pairs(tbl) do
-    local name = j
-    local id = ""
-    if type(j) == "table" then
-      name     = j[1]
-      id       = j[2]
-    end
-    coords[name] = coords[name] or self.all_staff[name] or self:find_user(name,id)
+    name = j[1]
+    id   = j[2]
+    coords[id] = coords[id] or self.all_staff[id] or self:find_staff(id)
   end
   binser.writeFile(cache_path,coords)
 
-  for _,v in pairs(coords) do
-    self.all_staff[v.sortable_name] = v
-    self.all_staff[v.login_id] = v.sortable_name
+  for id,v in pairs(coords) do
+    self.all_staff[id] = v
+    self.all_staff_id_by_name[v.sortable_name] = id
   end
 end
+
+--[[ OO --]]
+
+function proj:new(o)
+  o = o or {}
+  self.__index = self
+  setmetatable(o,self)
+  return o
+end
+
 
 return proj

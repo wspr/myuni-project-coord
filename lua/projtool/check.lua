@@ -13,14 +13,19 @@ function proj:check_assignment(assign_data,check_bool,assgn_lbl)
   local loginfo
   loginfo = function(x) print(x) end
 
-  print("CHECKING ASSIGNMENT MARKING")
+  print("\nCHECKING ASSIGNMENT MARKING: "..self.assign_name_canvas)
 
-  if canvas.assignments[self.assign_name_canvas].rubric == nil then
-    pretty.dump(canvas.assignments[self.assign_name_canvas])
+  if self.assignments[self.assign_name_canvas] == nil then
+    pretty.dump(self.assignments)
+    error("Something wrong! Can't find: "..self.assign_name_canvas)
+  end
+
+  if self.assignments[self.assign_name_canvas].rubric == nil then
+    pretty.dump(self.assignments[self.assign_name_canvas])
     error("No rubric data in this assignment?")
   end
 
-  local Nrubric = #canvas.assignments[self.assign_name_canvas].rubric
+  local Nrubric = #self.assignments[self.assign_name_canvas].rubric
 
   for _,j in pairs(assign_data) do
     if j.metadata == nil then
@@ -33,6 +38,7 @@ function proj:check_assignment(assign_data,check_bool,assgn_lbl)
 
     local assr
     local grade = j.grade
+    local grader_cid = j.grader_id
 
     local marks_lost   = 0
     local rubric_count = 0
@@ -44,7 +50,11 @@ function proj:check_assignment(assign_data,check_bool,assgn_lbl)
     if grade then
 
       logmessage = logmessage .. "\n" ..("\n"..i..". Student: "..j.user.name.."  ("..j.user.sis_user_id..")")
-      logmessage = logmessage .. "\n" ..("Supervisor: "..j.metadata.supervisor.." | Moderator: "..j.metadata.moderator)
+      if self.assign_canvas_moderated then
+        logmessage = logmessage .. "\n" ..("Supervisor: "..j.metadata.supervisor.." | Moderator: "..j.metadata.moderator)
+      else
+        logmessage = logmessage .. "\n" ..("Supervisor: "..j.metadata.supervisor)
+      end
       logmessage = logmessage .. "\n" ..("URL: "..j.metadata.url)
 
       j.metadata.assessment_check = {}
@@ -56,11 +66,17 @@ function proj:check_assignment(assign_data,check_bool,assgn_lbl)
 
       assign_data[i].marks = assign_data[i].marks or {}
 
-      assr = self.all_staff[j.grader_id]
-      if assr == nil then
-        local usr = canvas:get(canvas.course_prefix.."users/"..j.grader_id)
+      grader_uid = self.all_staff_id_by_cid[grader_cid]
+      if grader_uid == nil then
+        print("Assessor with Canvas ID "..grader_cid.." not found in staff list:")
+        local usr = self:get(self.course_prefix.."users/"..grader_cid)
+        print(" - found: "..usr.name)
+        self.all_staff[usr.login_id] = usr
+        self.all_staff_id_by_name[usr.name] = usr.login_id
+        self.all_staff_id_by_cid[grader_cid] = usr.login_id
         assr = usr.name
-        self.all_staff[j.grader_id] = usr.name
+      else
+        assr = self.all_staff[grader_uid].name
       end
 
       j.metadata.assessment_check.graded = true
@@ -110,7 +126,11 @@ function proj:check_assignment(assign_data,check_bool,assgn_lbl)
       if j.rubric_assessment then
 
         logmessage = logmessage .. "\n" ..("\n"..i..". Student: "..j.user.name.."  ("..j.user.sis_user_id..")")
-        logmessage = logmessage .. "\n" ..("Supervisor: "..j.metadata.supervisor.." | Moderator: "..j.metadata.moderator)
+        if self.assign_canvas_moderated then
+          logmessage = logmessage .. "\n" ..("Supervisor: "..j.metadata.supervisor.." | Moderator: "..j.metadata.moderator)
+        else
+          logmessage = logmessage .. "\n" ..("Supervisor: "..j.metadata.supervisor)
+        end
         logmessage = logmessage .. "\n" ..("URL: "..j.metadata.url)
 
         logmessage = logmessage .. "\n" ..("Checking rubric:")
@@ -163,7 +183,7 @@ function proj:check_moderated(assign_data,args)
     check_bool = false
   end
 
-  local Nrubric = #canvas.assignments[self.assign_name_canvas].rubric
+  local Nrubric = #self.assignments[self.assign_name_canvas].rubric
   local cc = 0
 
   for i,j in pairs(assign_data) do
@@ -197,7 +217,7 @@ function proj:check_moderated(assign_data,args)
 
         assr = (jg.assessor_name or self.all_staff[jg.scorer_id])
         if assr == nil then
-          local usr = canvas:get(canvas.course_prefix.."users/"..jg.scorer_id)
+          local usr = self:get(self.course_prefix.."users/"..jg.scorer_id)
           assr = usr.name
           self.all_staff[jg.scorer_id] = usr.name
         end
@@ -318,7 +338,7 @@ function proj:message_rubric_fail(remind_check,j,score,rubric_sum,rubric_count,N
   end
   local coord_id = self.all_staff[coord].id
 
-  canvas:message_user(remind_check,{
+  self:message_user(remind_check,{
     canvasid  = {self.all_staff[assr].id,coord_id} ,
     subject   = self.assign_name_colloq.." marking: " .. j.user.name ,
     body      = "Dear " .. assr .. ",\n\n" .. [[
@@ -339,7 +359,7 @@ function proj:message_rubric_no_grade(remind_check,j,assessor_name)
   local coord = self.coordinators[j.metadata.school]
   local coord_id = self.all_staff[coord].id
 
-  canvas:message_user(remind_check,{
+  self:message_user(remind_check,{
     canvasid  = {self.all_staff[assr].id,coord_id} ,
     subject   = self.assign_name_colloq.." marking: " .. j.user.name ,
     body      = "Dear " .. assr .. ",\n\n" .. [[
