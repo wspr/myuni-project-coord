@@ -37,8 +37,12 @@ end
 
 
 
-function proj:get_submissions(get_bool,cvs,args)
+function proj:get_submissions(get_bool,args)
 
+  args = args or {}
+  if args.only_submitted == nil then
+    args.only_submitted = false -- default
+  end
 
   local subm
   if self.assign_grouped then
@@ -47,10 +51,6 @@ function proj:get_submissions(get_bool,cvs,args)
     subm = self:get_assignment(get_bool,self.assign_name_canvas,{include={"provisional_grades","user","rubric_assessment","submission_comments"}},args)
   end
   subm = self:subm_remove(subm)
-
-  if cvs then
-    self.assignment_setup = cvs.assignments[self.assign_name_canvas]
-  end
 
   return subm
 

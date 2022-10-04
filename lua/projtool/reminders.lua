@@ -22,7 +22,7 @@ function proj:message_reminder_add(j,args)
   local acad_id   = j.metadata[sup_or_mod.."_id"]
   if (acad_id == nil) or (acad_id == "") then
     pretty.dump(j.metadata)
-    error("huh?")
+    error("Huh? Missing metadata: '"..sup_or_mod.."_id'")
   end
   local staff_lookup, acad_name = self:staff_lookup(acad_id)
 
@@ -181,6 +181,7 @@ function proj:assessor_reminder_send(remind_check,args)
 
   args = args or {}
   local only_them = args.only_them
+  local additional_message = args.lede
 
   local assm = self.deliverable
   if assm == nil then
@@ -189,8 +190,10 @@ function proj:assessor_reminder_send(remind_check,args)
 
   local additional_message
   if remind_check then
-    print("Add an intro message:")
-    additional_message = io.read()
+    if additional_message == nil then
+      print("Add an intro message:")
+      additional_message = io.read()
+    end
   else
     additional_message = "[[Additional message would go here.]]"
   end

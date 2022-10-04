@@ -158,7 +158,7 @@ function proj:get_canvas_ids(opt)
       if not(id == "") then
         local tbl = self:find_staff(id)
         if tbl == nil then
-          not_found_canvas = not_found_self.."    "..id.."\n"
+          not_found_canvas = not_found_canvas .. "    " .. id .. "\n"
         else
           self.all_staff[id] = tbl
           self.all_staff_id_by_cid[tbl.id] = id
@@ -167,13 +167,12 @@ function proj:get_canvas_ids(opt)
       end
     end
     if not_found_canvas ~= "" then
-      error("\n\n## Canvas users not found, check their names and/or add them via Toolkit:\n\n"..not_found_canvas)
+      error("\n\n## Canvas users not found, check their names and/or add them via Toolkit:\n\n" .. not_found_canvas)
     end
     binser.writeFile(cache_path,{self.all_staff,self.all_staff_id_by_cid,self.all_staff_id_by_name})
   end
 
   local all_staff_from_file = binser.readFile(cache_path)
-  pretty.dump(all_staff_from_file)
   self.all_staff = all_staff_from_file[1][1]
   self.all_staff_id_by_cid = all_staff_from_file[1][2]
   self.all_staff_id_by_name = all_staff_from_file[1][3]
