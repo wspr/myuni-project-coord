@@ -89,6 +89,7 @@ end
 function proj:add_assessment_metadata(canvas_subm,verbose)
 
   verbose = verbose or false
+  self.marks_csv = self.marks_csv or ("csv/"..proj.cohort.."-marks-"..proj.deliverable..".csv")
 
   local resolve = {}
   local override = {}
@@ -161,6 +162,8 @@ end
 
 
 function proj:export_csv_marks_moderated(subm,arg)
+
+  self.marks_csv = self.marks_csv or ("csv/"..proj.cohort.."-marks-"..proj.deliverable..".csv")
 
   local weightings = arg.weightings or {0.5,0.5}
 
@@ -251,6 +254,8 @@ end
 
 
 function proj:export_csv_marks(subm)
+
+  self.marks_csv = self.marks_csv or ("csv/"..proj.cohort.."-marks-"..proj.deliverable..".csv")
 
   local nameind = {}
   for i in pairs(subm) do

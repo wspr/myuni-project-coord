@@ -30,6 +30,10 @@ end
 
 function proj:read_csv_data(csvfile)
 
+  csvfile = csvfile or ("csv/"..proj.cohort.."-student-list.csv")
+
+  self:get_staff()
+
   print("Reading CSV data of students/projects/supervisors/moderators: "..csvfile)
 
   self.projects = {}
@@ -102,7 +106,6 @@ function proj:read_csv_data(csvfile)
 
 
 
-  self:get_staff()
   for uid,v in pairs(self.staff) do
     self.all_staff_id_by_cid[v.id] = uid
     self.all_staff_id_by_name[v.sortable_name] = uid
