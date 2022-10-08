@@ -105,39 +105,13 @@ end
 
 function proj:find_staff(staff_uoa_id)
 
-  print("Searching for user:  '"..staff_uoa_id.."'")
-  local tmp = self:find_user(staff_uoa_id)
-  local match_ind = 0
-  for _,j in ipairs(tmp) do
-    print(" - found:  '"..j.name.."' ("..j.login_id..")")
-  end
-  if #tmp == 1 then
-    match_ind = 1
-  elseif #tmp > 1 then
-    local count_exact = 0
-    for i,j in ipairs(tmp) do
-      if j.name == name then
-        count_exact = count_exact + 1
-        match_ind = i
-      end
-    end
-    if count_exact > 1 then
-      error("Multiple exact matches for name found. This is a problem! New code needed to identify staff members.")
-    end
-  end
-
-  if match_ind > 0 then
-    return tmp[match_ind]
-  else
-    print("No user found for user: "..staff_uoa_id)
-  end
-
 end
 
 
 function proj:get_canvas_ids(opt)
 
   opt = opt or {download="ask"}
+  self:get_staff()
 
   local cache_path = self.cache_dir..self.courseid.."-staff.lua"
   print("Searching for supervisors/moderators in self: "..cache_path)
@@ -156,10 +130,12 @@ function proj:get_canvas_ids(opt)
     local not_found_canvas = ""
     for id,dat in pairs(self.all_staff) do
       if not(id == "") then
-        local tbl = self:find_staff(id)
+        local tbl = self.staff[id]
         if tbl == nil then
+          print("No user found for user: "..id)
           not_found_canvas = not_found_canvas .. "    " .. id .. "\n"
         else
+          print("User found: '"..tbl.name.."' ("..tbl.login_id..")")
           self.all_staff[id] = tbl
           self.all_staff_id_by_cid[tbl.id] = id
           self.all_staff_id_by_name[tbl.sortable_name] = id

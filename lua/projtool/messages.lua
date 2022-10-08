@@ -4,6 +4,7 @@ local proj = {}
 proj.message         = {}
 proj.message.interim = {}
 proj.message.progress= {}
+proj.message.paper   = {}
 proj.message.final   = {}
 proj.message.plan    = {}
 proj.message.perfA   = {}
@@ -20,7 +21,9 @@ Reminders for ENG 4001/7001 are now consolidated into a single message. This is 
 
 As an academic and/or supervisor involved with honours/masters research project teaching, the following items are due for assessment; see links below to take your straight to each assessment item.
 
-Be careful to hit "Save" after entering marks into the rubric, and save often to avoid data loss. If you need to come back later without finalising your mark, delete the auto-populated total mark after hitting "Save".
+Your assessment must be entered via each criterion of the marking rubric in MyUni, with written feedback to be provided through the rubric comments against each one.
+
+Be careful to hit "Save" after entering marks into the rubric, and save often to avoid data loss. If you need to come back later without finalising your mark, delete the auto-populated total mark after hitting "Save". Avoid the "Submit" button -- it is not connected to the rubric!
 ]]
 
 proj.message.plan.body_opening = [[
@@ -45,15 +48,20 @@ The Progress Report is assessed by both supervisor and moderator with marks aver
 
 proj.message.final.body_opening =
 [[
-The Final Report is assessed by both supervisor and moderator with marks averaged to calculate the final grade. Additional moderation will occur if the marks are not well enough aligned.
+The Final Report is a group assessment that is marked by both supervisor and moderator, with marks averaged to calculate the final grade. Additional moderation will occur if the marks are not well enough aligned.
+
+Please complete this task as soon as possible to ensure there is time to compare the supervisor and moderator marks for this assessment. Late marking will result in a delay to release the results to the students.
+]]
+
+proj.message.paper.body_opening =
+[[
+The Final Paper is an individual assessment that is marked by both supervisor and moderator with marks combined (40%+60%, resp.) to calculate the final grade. Additional moderation will occur if the marks are not well enough aligned.
 
 Please complete this task as soon as possible to ensure there is time to compare the supervisor and moderator marks for this assessment. Late marking will result in a delay to release the results to the students.
 ]]
 
 proj.message.body_close = "\n" .. [[
 # Further information
-
-For traceability, the marks must be entered via the marking rubric in MyUni, with written feedback best provided through the rubric comments against each marking criterion.
 
 Do not apply any kind of adjustment for late penalty or other non-compliance for the assessment unless it is explicitly addressed in the marking rubric. These penalties will be applied by the course coordinator.
 

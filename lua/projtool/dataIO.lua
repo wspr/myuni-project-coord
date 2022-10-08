@@ -41,7 +41,7 @@ function proj:get_submissions(get_bool,args)
 
   args = args or {}
   if args.only_submitted == nil then
-    args.only_submitted = false -- default
+    args.only_submitted = true -- default
   end
 
   local subm

@@ -188,14 +188,13 @@ function proj:assessor_reminder_send(remind_check,args)
     error('Missing deliverable; e.g.:\n\nproj:set_deliverable("final")')
   end
 
-  local additional_message
-  if remind_check then
-    if additional_message == nil then
+  if additional_message == nil then
+    if remind_check then
       print("Add an intro message:")
       additional_message = io.read()
+    else
+      additional_message = "[[Additional message would go here.]]"
     end
-  else
-    additional_message = "[[Additional message would go here.]]"
   end
   if not(additional_message == "") then
     additional_message = additional_message .. "\n\n"
