@@ -51,7 +51,7 @@ function proj:set_coordinators(tbl)
   for k,j in pairs(tbl) do
     name = j[1]
     id   = j[2]
-    coords[id] = coords[id] or self.all_staff[id] or self:find_staff(id)
+    coords[id] = coords[id] or self.all_staff[id]
   end
   binser.writeFile(cache_path,coords)
 

@@ -67,17 +67,11 @@ function proj:check_assignment(assign_data,check_bool,assgn_lbl)
       assign_data[i].marks = assign_data[i].marks or {}
 
       grader_uid = self.all_staff_id_by_cid[grader_cid]
-      if grader_uid == nil then
-        print("Assessor with Canvas ID "..grader_cid.." not found in staff list:")
-        local usr = self:get(self.course_prefix.."users/"..grader_cid)
-        print(" - found: "..usr.name)
-        self.all_staff[usr.login_id] = usr
-        self.all_staff_id_by_name[usr.name] = usr.login_id
-        self.all_staff_id_by_cid[grader_cid] = usr.login_id
-        assr = usr.name
-      else
-        assr = self.all_staff[grader_uid].name
+      if self.all_staff[grader_uid] == nil then
+        print("Assessor with Canvas ID "..grader_cid.." not found in staff list.")
+        self.all_staff[self.staff[grader_uid].login_id] = self.staff[grader_uid]
       end
+      assr = self.all_staff[grader_uid].name
 
       j.metadata.assessment_check.graded = true
       logmessage = logmessage .. "\n" ..("Grade: "..grade.." | Entered grade: "..j.entered_grade)

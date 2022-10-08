@@ -2,7 +2,6 @@
 local csv     = require("csv")
 local pretty  = require("pl.pretty")
 local path    = require("pl.path")
-local binser  = require("binser")
 local canvas  = require("canvas-lms")
 
 local proj = {}
@@ -100,58 +99,31 @@ function proj:read_csv_data(csvfile)
         self.assessors[moder][csvfile].moderator[student_id]  = nn
       end
   end
-end
 
 
-function proj:find_staff(staff_uoa_id)
 
-end
-
-
-function proj:get_canvas_ids(opt)
-
-  opt = opt or {download="ask"}
   self:get_staff()
-
-  local cache_path = self.cache_dir..self.courseid.."-staff.lua"
-  print("Searching for supervisors/moderators in self: "..cache_path)
-
-  local download_check
-  if path.exists(cache_path) then
-    download_check = self:dl_check(opt,"Look up all supervisor/moderator Canvas IDs?")
-  else
-    print "Staff Canvas IDs not found, downloading."
-    download_check = true
+  for uid,v in pairs(self.staff) do
+    self.all_staff_id_by_cid[v.id] = uid
+    self.all_staff_id_by_name[v.sortable_name] = uid
   end
 
-  local id_lookup = {}
-
-  if download_check then
-    local not_found_canvas = ""
-    for id,dat in pairs(self.all_staff) do
-      if not(id == "") then
-        local tbl = self.staff[id]
-        if tbl == nil then
-          print("No user found for user: "..id)
-          not_found_canvas = not_found_canvas .. "    " .. id .. "\n"
-        else
-          print("User found: '"..tbl.name.."' ("..tbl.login_id..")")
-          self.all_staff[id] = tbl
-          self.all_staff_id_by_cid[tbl.id] = id
-          self.all_staff_id_by_name[tbl.sortable_name] = id
-        end
+  local not_found_canvas = ""
+  for id,dat in pairs(self.all_staff) do
+    if not(id == "") then
+      local tbl = self.staff[id]
+      if tbl == nil then
+        print("No user found for user: "..id)
+        not_found_canvas = not_found_canvas .. "    " .. id .. "\n"
+      else
+        print("User found: '"..tbl.name.."' ("..tbl.login_id..")")
+        self.all_staff[id] = tbl
       end
     end
-    if not_found_canvas ~= "" then
-      error("\n\n## Canvas users not found, check their names and/or add them via Toolkit:\n\n" .. not_found_canvas)
-    end
-    binser.writeFile(cache_path,{self.all_staff,self.all_staff_id_by_cid,self.all_staff_id_by_name})
   end
-
-  local all_staff_from_file = binser.readFile(cache_path)
-  self.all_staff = all_staff_from_file[1][1]
-  self.all_staff_id_by_cid = all_staff_from_file[1][2]
-  self.all_staff_id_by_name = all_staff_from_file[1][3]
+  if not_found_canvas ~= "" then
+    error("\n\n## Canvas users not found, check their names and/or add them via Toolkit:\n\n" .. not_found_canvas)
+  end
 
 end
 
