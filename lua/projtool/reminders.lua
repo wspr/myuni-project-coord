@@ -50,7 +50,7 @@ function proj:message_reminder_add(j,args)
     self.reminders[acad_name].marking[assm].courseid   = self.courseid
     self.reminders[acad_name].marking[assm].school     = school
     self.reminders[acad_name].marking[assm].coordinator = coord_str
-    self.reminders[acad_name].marking[assm].coord_id   = coord
+    self.reminders[acad_name].marking[assm].coord_cid   = self.all_staff[coord].id
   end
 
   local assess_student_str
@@ -225,7 +225,7 @@ function proj:assessor_reminder_send(remind_check,args)
       if not(assm.moderator == "") then
         body = body .. "\n# "..assm.assessment.." -- Moderator assessment\n\n" .. self.message[stub].body_opening .. assm.moderator
       end
-      recip_lookup[assm.coord_id] = true
+      recip_lookup[assm.coord_cid] = true
 
     end
 
