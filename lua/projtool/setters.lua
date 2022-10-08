@@ -63,11 +63,9 @@ end
 
 --[[ OO --]]
 
-function proj:new(o)
-  o = o or {}
-  self.__index = self
-  setmetatable(o,self)
-  return o
+function proj:new(newcourse)
+  setmetatable(self,{__index=newcourse}) -- PROJ inherits from COURSE INSTANCE
+  return setmetatable({},{__index = self}) -- PROJ INSTANCE inherits from PROJ
 end
 
 
