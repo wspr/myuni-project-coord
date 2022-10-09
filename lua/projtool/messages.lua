@@ -63,6 +63,8 @@ Please complete this task as soon as possible to ensure there is time to compare
 proj.message.body_close = "\n" .. [[
 # Further information
 
+If you need to change the name of your project, use the following form: https://forms.office.com/r/M3kept7nii
+
 Do not apply any kind of adjustment for late penalty or other non-compliance for the assessment unless it is explicitly addressed in the marking rubric. These penalties will be applied by the course coordinator.
 
 Please do highlight any substantial evidence of plagiarism with the course coordinator and they will escalate to Academic Integrity as required.

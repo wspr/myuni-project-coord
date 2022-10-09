@@ -37,6 +37,8 @@ proj:set_assign_has_submission(true)
 
 function proj:set_coordinators(tbl)
 
+-- TODO: shouldn't need cache any more
+
   local cache_path = self.cache_dir.."Staff Details - Coordinators.lua"
   local coords = {}
 
