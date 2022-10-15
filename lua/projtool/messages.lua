@@ -9,6 +9,7 @@ proj.message.final   = {}
 proj.message.plan    = {}
 proj.message.perfA   = {}
 proj.message.perfB   = {}
+proj.message.draft   = {}
 
 
 proj.message.signoff = "\n" .. [[
@@ -24,6 +25,14 @@ As an academic and/or supervisor involved with honours/masters research project 
 Your assessment must be entered via each criterion of the marking rubric in MyUni, with written feedback to be provided through the rubric comments against each one.
 
 Be careful to hit "Save" after entering marks into the rubric, and save often to avoid data loss. If you need to come back later without finalising your mark, delete the auto-populated total mark after hitting "Save". Avoid the "Submit" button -- it is not connected to the rubric!
+]]
+
+proj.message.draft.body_opening = [[
+The final/progress draft reports are not assessed but provided by the students for broad and general feedback by their supervisor.
+
+Feedback must be provided quickly as the due dates for these reports are Monday Week 12. 
+
+You should not provide extensive and detailed comments — the students' work is their own and you will be marking their submission, so guidance at this stage is all that is needed.
 ]]
 
 proj.message.plan.body_opening = [[
