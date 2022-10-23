@@ -31,8 +31,10 @@ function proj:message_reminder_add(j,args)
   local coord = self.coordinators[school]
   if type(coord) == "table" then
     coord = coord[2]
+  else
+    error("Coordinator table must list UoA ID as second entry")
   end
-  local coord_str = self.all_staff[coord].name.." <"..self.all_staff[coord].login_id.."@adelaide.edu.au>"
+  local coord_str = self.staff[coord].name.." <"..self.staff[coord].login_id.."@adelaide.edu.au>"
   self:info("Coordinator: "..coord_str)
 
   self.reminders = self.reminders or {}
@@ -50,7 +52,7 @@ function proj:message_reminder_add(j,args)
     self.reminders[acad_name].marking[assm].courseid   = self.courseid
     self.reminders[acad_name].marking[assm].school     = school
     self.reminders[acad_name].marking[assm].coordinator = coord_str
-    self.reminders[acad_name].marking[assm].coord_cid   = self.all_staff[coord].id
+    self.reminders[acad_name].marking[assm].coord_cid   = self.staff[coord].id
   end
 
   local assess_student_str
@@ -66,6 +68,10 @@ function proj:message_reminder_add(j,args)
   local not_submitted_str = ""
   local remind_submitted_str = ""
   local remind_url_str = ""
+  local remind_due_str = ""
+  local df = Date.Format()
+  local dfformat = "yyyy-mm-dd" -- "yyyy-mm-dd HH:MM"
+  local nicedate
   if self.assign_has_submission then
     not_submitted_str = "~~ NOT SUBMITTED YET ~~"
   end
@@ -78,18 +84,23 @@ function proj:message_reminder_add(j,args)
       remind_url_str = "   SpeedGrader link: <" .. j.metadata.url .. ">\n"
     end
   else
-    local df = Date.Format()
     j.metadata.since = tostring(Date{} - df:parse(j.metadata.submitted_at))
-    local nicedate = Date.Format("yyyy-mm-dd HH:MM"):tostring(df:parse(j.metadata.submitted_at))
+    local nicedate = Date.Format(dfformat):tostring(df:parse(j.metadata.submitted_at))
     remind_submitted_str = "   Submitted: " .. nicedate .. " (".. j.metadata.since .."ago)\n"
     if self.assign_has_submission then
       remind_url_str = "   SpeedGrader link: <" .. j.metadata.url .. ">\n"
     end
   end
+  if j.cached_due_date then
+    nicedate = Date.Format(dfformat):tostring(df:parse(j.cached_due_date))
+  else
+    nicedate = "<unknown>"
+  end
+  remind_due_str = "         Due: " .. nicedate .. "\n"
 
   self.reminders[acad_name].marking[assm][sup_or_mod] =
     self.reminders[acad_name].marking[assm][sup_or_mod] .. "\n" ..
-    " • " .. assess_student_str .. assess_proj_str .. remind_submitted_str .. remind_url_str
+    " • " .. assess_student_str .. assess_proj_str .. remind_due_str .. remind_submitted_str .. remind_url_str
 
   local N = #self.reminders[acad_name].marking[assm].projects
   self.reminders[acad_name].marking[assm].projects[N+1] = j.metadata

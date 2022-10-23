@@ -256,19 +256,19 @@ Thank you for your significant contributions towards the success of our capstone
     close_text = resolve_msg[assm][close_rank].body
   end
 
-  if self.all_staff[j.metadata.supervisor_id] == nil then
+  if self.staff[j.metadata.supervisor_id] == nil then
     error("Assessor '"..j.metadata.supervisor_id.."' not found in staff list.")
   end
-  if self.all_staff[j.metadata.moderator_id] == nil then
+  if self.staff[j.metadata.moderator_id] == nil then
     error("Assessor '"..j.metadata.moderator_id.."' not found in staff list.")
   end
   local recip = {
-        self.all_staff[j.metadata.supervisor_id].id ,
-        self.all_staff[j.metadata.moderator_id].id  ,
+        self.staff[j.metadata.supervisor_id].id ,
+        self.staff[j.metadata.moderator_id].id  ,
   }
   if self.coordinators then
     local coord = self.coordinators[j.metadata.school]
-    recip[#recip+1] = self.all_staff[coord[2]].id
+    recip[#recip+1] = self.staff[coord[2]].id
   end
 
   self:message_user(send_bool,{

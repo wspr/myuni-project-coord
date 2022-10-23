@@ -66,12 +66,7 @@ function proj:check_assignment(assign_data,check_bool,assgn_lbl)
 
       assign_data[i].marks = assign_data[i].marks or {}
 
-      grader_uid = self.all_staff_id_by_cid[grader_cid]
-      if self.all_staff[grader_uid] == nil then
-        print("Assessor with Canvas ID "..grader_cid.." not found in staff list.")
-        self.all_staff[self.staff[grader_uid].login_id] = self.staff[grader_uid]
-      end
-      assr = self.all_staff[grader_uid].name
+      _,assr = self:staff_lookup_cid(grader_cid)
 
       j.metadata.assessment_check.graded = true
       logmessage = logmessage .. "\n" ..("Grade: "..grade.." | Entered grade: "..j.entered_grade)
@@ -209,11 +204,9 @@ function proj:check_moderated(assign_data,args)
 
       if #jg.rubric_assessments == 0 and not(jg.score==nil) then
 
-        assr = (jg.assessor_name or self.all_staff[jg.scorer_id])
+        assr = jg.assessor_name
         if assr == nil then
-          local usr = self:get(self.course_prefix.."users/"..jg.scorer_id)
-          assr = usr.name
-          self.all_staff[jg.scorer_id] = usr.name
+          _,assr = self:staff_lookup_cid(jg.scorer_id)
         end
         scr  = jg.score
         print("      Assessor: "..assr.." ("..scr..") - score but no rubric.")

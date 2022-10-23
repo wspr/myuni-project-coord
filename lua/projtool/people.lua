@@ -10,9 +10,9 @@ local proj = {}
 
 function proj:staff_lookup(acad_id)
 
-  local acad_lookup = self.all_staff[acad_id]
+  local acad_lookup = self.staff[acad_id]
   if acad_lookup == nil then
-    pretty.dump(self.all_staff)
+    pretty.dump(self.staff)
     error("Staff member not found by ID: "..acad_id)
   end
   local acad_name = acad_lookup.name
@@ -23,6 +23,20 @@ function proj:staff_lookup(acad_id)
   if acad_lookup.email == nil then
     acad_lookup.email = acad_lookup.login_id.."@adelaide.edu.au"
   end
+  return acad_lookup, acad_name
+
+end
+
+function proj:staff_lookup_cid(acad_cid)
+
+  acad_uid = self.all_staff_id_by_cid[acad_cid]
+  if acad_uid == nil then
+    pretty.dump(self.staff)
+    pretty.dump(self.all_staff_id_by_cid)
+    error("Assessor with Canvas ID "..acad_cid.." not found in staff list.")
+  end
+
+  acad_lookup, acad_name = self:staff_lookup(acad_uid)
   return acad_lookup, acad_name
 
 end

@@ -36,31 +36,7 @@ end
 proj:set_assign_has_submission(true)
 
 function proj:set_coordinators(tbl)
-
--- TODO: shouldn't need cache any more
-
-  local cache_path = self.cache_dir.."Staff Details - Coordinators.lua"
-  local coords = {}
-
   self.coordinators = tbl
-  self.all_staff = self.all_staff or {}
-  self.all_staff_id_by_name = self.all_staff_id_by_name or {}
-
-  if path.exists(cache_path) then
-    coords = binser.readFile(cache_path)
-    coords = coords[1]
-  end
-  for k,j in pairs(tbl) do
-    name = j[1]
-    id   = j[2]
-    coords[id] = coords[id] or self.all_staff[id]
-  end
-  binser.writeFile(cache_path,coords)
-
-  for id,v in pairs(coords) do
-    self.all_staff[id] = v
-    self.all_staff_id_by_name[v.sortable_name] = id
-  end
 end
 
 --[[ OO --]]
