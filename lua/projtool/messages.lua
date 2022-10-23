@@ -24,7 +24,9 @@ As an academic and/or supervisor involved with honours/masters research project 
 
 Your assessment must be entered via each criterion of the marking rubric in MyUni, with written feedback to be provided through the rubric comments against each one.
 
-Be careful to hit "Save" after entering marks into the rubric, and save often to avoid data loss. If you need to come back later without finalising your mark, delete the auto-populated total mark after hitting "Save". Avoid the "Submit" button -- it is not connected to the rubric!
+Be careful to hit "Save" after entering marks into the rubric, and save often to avoid data loss. If you need to come back later without finalising your mark, delete the auto-populated total mark after hitting "Save".
+
+Note the "Submit" button is only connected to the comment box BELOW the rubric -- it is unrelated to the rubric itself!
 ]]
 
 proj.message.draft.body_opening = [[
@@ -52,7 +54,11 @@ The Interim Paper is a hurdle requirement for the course. If the student receive
 
 proj.message.progress.body_opening =
 [[
-The Progress Report is assessed by both supervisor and moderator with marks averaged to calculate the total. Passing this assessment is a hurdle requirement for the course. If the student/group receives a fail mark they may be eligible for an Additional Assessment to resubmit. If the student/group ultimately fails this assessment they must repeat Part A of the course next semester before continuing with Part B.
+The Progress Report is assessed by both supervisor and moderator with marks averaged to calculate the total. Passing this assessment is a hurdle requirement for the course.
+
+The page limit of the report scales with number of students in the group. Quantity and extent of achievement are expected to scale similarly. Rubric criteria should be interpreted to take the size of the group into account.
+
+If the student/group receives a fail mark they may be eligible for an Additional Assessment to resubmit. If the student/group ultimately fails this assessment they must repeat Part A of the course next semester before continuing with Part B.
 ]]
 
 proj.message.final.body_opening =
