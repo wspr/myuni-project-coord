@@ -59,6 +59,8 @@ proj.message.final.body_opening =
 [[
 The Final Report is a group assessment that is marked by both supervisor and moderator, with marks averaged to calculate the final grade. Additional moderation will occur if the marks are not well enough aligned.
 
+The page limit of the report scales with number of students in the group. Quantity and extent of achievement are expected to scale similarly. Rubric criteria should be interpreted to take the size of the group into account.
+
 Please complete this task as soon as possible to ensure there is time to compare the supervisor and moderator marks for this assessment. Late marking will result in a delay to release the results to the students.
 ]]
 
