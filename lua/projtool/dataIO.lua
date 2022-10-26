@@ -45,10 +45,14 @@ function proj:get_submissions(get_bool,args)
   end
 
   local subm
-  if self.assign_grouped then
-    subm = self:get_assignment(get_bool,self.assign_name_canvas,{grouped=true,include={"group","user","rubric_assessment","submission_comments"}},args)
+  if self.set_assign_canvas_moderated then
+    subm = self:get_assignment(get_bool,self.assign_name_canvas,{include={"provisional_grades","group","user","rubric_assessment","submission_comments"}},args)
   else
-    subm = self:get_assignment(get_bool,self.assign_name_canvas,{include={"provisional_grades","user","rubric_assessment","submission_comments"}},args)
+    if self.assign_grouped then
+      subm = self:get_assignment(get_bool,self.assign_name_canvas,{grouped=true,include={"group","user","rubric_assessment","submission_comments"}},args)
+    else
+      subm = self:get_assignment(get_bool,self.assign_name_canvas,{grouped=true,include={"user","rubric_assessment","submission_comments"}},args)
+    end
   end
   subm = self:subm_remove(subm)
 
@@ -169,7 +173,7 @@ function proj:export_csv_marks_moderated(subm,arg)
 
   file.copy(self.marks_csv,(self.marks_csv..".backup"))
   local ff = io.output(self.marks_csv)
-  io.write("INDEX,USERID,NAME,SCHOOL,PROJID,TITLE,MARK,DIFF,RESOLVED,OVERRIDE,COMMENTS,SIMILARITY,SUPERVISOR,SUPMARK,MODERATOR,MODMARK,SUPID,MODID,SUPURL,MODURL,ASSESSOR1,SCORE1,ASSESSOR2,SCORE2,ASSESSOR3,SCORE3,ASSESSOR4,SCORE4,ASSESSOR5,SCORE5,\n")
+  io.write("INDEX,USERID,NAME,SCHOOL,PROJID,TITLE,MARK,DIFF,RESOLVED,OVERRIDE,COMMENTS,SIMILARITY,SUPERVISOR,SUPMARK,MODERATOR,MODMARK,SUPID,MODID,SUPURL,MODURL,UID1,ASSESSOR1,SCORE1,UID2,ASSESSOR2,SCORE2,UID3,ASSESSOR3,SCORE3,UID4,ASSESSOR4,SCORE4,UID5,ASSESSOR5,SCORE5,\n")
 
   local nameind = {}
   for i in pairs(subm) do
@@ -203,11 +207,7 @@ function proj:export_csv_marks_moderated(subm,arg)
     if j.turnitin_data then
       for k,v in pairs(j.turnitin_data) do
         if v.similarity_score then
-          if similarity_score == "" then
-            similarity_score = v.similarity_score
-          else
-            similarity_score = similarity_score .. ", " .. v.similarity_score
-          end
+          similarity_score = v.similarity_score
         end
       end
     end
@@ -235,12 +235,12 @@ function proj:export_csv_marks_moderated(subm,arg)
 
     if j.metadata.super_marks then
       for kk,vv in pairs(j.metadata.super_marks) do
-        writestr = writestr.."\""..kk.."\","..vv..","
+        writestr = writestr..'"'..kk..'","'..vv[1]..'","'..vv[2]..'",'
       end
     end
     if j.metadata.moder_marks then
       for kk,vv in pairs(j.metadata.moder_marks) do
-        writestr = writestr.."\""..kk.."\","..vv..","
+        writestr = writestr..'"'..kk..'","'..vv[1]..'","'..vv[2]..'",'
       end
     end
 

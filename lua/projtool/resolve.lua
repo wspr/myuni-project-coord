@@ -126,7 +126,10 @@ end
 
 function proj:resolve_grades(canvas_subfin,canvas_submod)
 
-  local assm = self.deliverable or "final"
+  local assm = self.deliverable
+  if assm == nil then
+    error("Must define assessment deliverable")
+  end
 
   canvas_subfin = proj:copy_mod_grades(canvas_subfin,canvas_submod)
 

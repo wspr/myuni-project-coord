@@ -56,21 +56,23 @@ function proj:message_reminder_add(j,args)
   end
 
   local assess_student_str
+  local assess_proj_str
   if assign_grouped then
     assess_student_str = ""
+    assess_proj_str = string.upper(j.metadata.proj_title) .. "\n            Project ID: " .. j.metadata.proj_id .. "\n"
   else
     assess_student_str =
-      j.user.name .. " (student ID: "..j.user.login_id..")\n" ..
-      "   Project title: "
+      string.upper(j.user.name) .. " (student ID: "..j.user.login_id..")\n" ..
+      "         Project title: "
+    assess_proj_str = j.metadata.proj_title .. "\n            Project ID: " .. j.metadata.proj_id .. "\n"
   end
-  local assess_proj_str = j.metadata.proj_title .. " (project ID: " .. j.metadata.proj_id .. ") \n"
 
   local not_submitted_str = ""
   local remind_submitted_str = ""
   local remind_url_str = ""
   local remind_due_str = ""
   local df = Date.Format()
-  local dfformat = "yyyy-mm-dd" -- "yyyy-mm-dd HH:MM"
+  local dfformat = "yyyy-mm-dd HH:MM"
   local nicedate
   if self.assign_has_submission then
     not_submitted_str = "~~ NOT SUBMITTED YET ~~"
@@ -79,24 +81,25 @@ function proj:message_reminder_add(j,args)
   if j.metadata.submitted_at == not_submitted_str then
     j.metadata.since = "N/A"
     if self.assign_has_submission then
-      remind_url_str = "   SpeedGrader link: <NOT YET SUBMITTED>\n"
+      remind_url_str = "      SpeedGrader link: <NOT YET SUBMITTED>\n"
     else
-      remind_url_str = "   SpeedGrader link: <" .. j.metadata.url .. ">\n"
+      remind_url_str = "      SpeedGrader link: <" .. j.metadata.url .. ">\n"
     end
   else
     j.metadata.since = tostring(Date{} - df:parse(j.metadata.submitted_at))
     local nicedate = Date.Format(dfformat):tostring(df:parse(j.metadata.submitted_at))
-    remind_submitted_str = "   Submitted: " .. nicedate .. " (".. j.metadata.since .."ago)\n"
+    remind_submitted_str = "             Submitted: " .. j.metadata.submitted_at .. " (".. j.metadata.since .."ago)\n"
     if self.assign_has_submission then
-      remind_url_str = "   SpeedGrader link: <" .. j.metadata.url .. ">\n"
+      remind_url_str = "      SpeedGrader link: <" .. j.metadata.url .. ">\n"
     end
   end
   if j.cached_due_date then
-    nicedate = Date.Format(dfformat):tostring(df:parse(j.cached_due_date))
+    nicedate = Date.Format(dfformat):tostring(Date.toLocal(df:parse(j.cached_due_date)))
+    remind_due_str = "                   Due: " .. j.cached_due_date .. "\n"
   else
-    nicedate = "<unknown>"
+    nicedate = nil
+    remind_due_str = ""
   end
-  remind_due_str = "         Due: " .. nicedate .. "\n"
 
   self.reminders[acad_name].marking[assm][sup_or_mod] =
     self.reminders[acad_name].marking[assm][sup_or_mod] .. "\n" ..

@@ -29,6 +29,9 @@ end
 
 function proj:staff_lookup_cid(acad_cid)
 
+  if acad_cid == nil then
+    error("'acad_cid' argument is nil.")
+  end
   acad_uid = self.all_staff_id_by_cid[acad_cid]
   if acad_uid == nil then
     pretty.dump(self.staff)

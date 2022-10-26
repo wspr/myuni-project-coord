@@ -6,14 +6,9 @@ local canvas  = require("canvas-lms")
 local proj = {}
 
 
-function proj:check_assignment(assign_data,check_bool,assgn_lbl)
+function proj:check_marking(assign_data,check_bool,assgn_lbl)
 
   assgn_lbl = assgn_lbl or self.deliverable -- argument to customise if needed to differentiate supervisor/moderator, say
-
-  local loginfo
-  loginfo = function(x) print(x) end
-
-  print("\nCHECKING ASSIGNMENT MARKING: "..self.assign_name_canvas)
 
   if self.assignments[self.assign_name_canvas] == nil then
     pretty.dump(self.assignments)
@@ -25,14 +20,29 @@ function proj:check_assignment(assign_data,check_bool,assgn_lbl)
     error("No rubric data in this assignment?")
   end
 
-  local Nrubric = #self.assignments[self.assign_name_canvas].rubric
-
   for _,j in pairs(assign_data) do
     if j.metadata == nil then
       pretty.dump(j)
       error("No CSV metadata for student '"..j.user.name.."'  ("..j.user.sis_user_id..")")
     end
   end
+
+  if self.assignments[self.assign_name_canvas].moderated_grading then
+    print("CHECKING ASSIGNMENT MARKING (MODERATED)")
+    assign_data = self:check_moderated(assign_data,check_bool)
+  else
+    print("\nCHECKING ASSIGNMENT MARKING: "..self.assign_name_canvas)
+    assign_data = self:check_assignment(assign_data,check_bool,assgn_lbl)
+  end
+
+  return assign_data
+end
+
+
+function proj:check_assignment(assign_data,check_bool,assgn_lbl)
+
+  assgn_lbl = assgn_lbl or self.deliverable -- argument to customise if needed to differentiate supervisor/moderator, say
+  local Nrubric = #self.assignments[self.assign_name_canvas].rubric
 
   for i,j in pairs(assign_data) do
 
@@ -163,28 +173,15 @@ end
 
 
 
-function proj:check_moderated(assign_data,args)
-  print("CHECKING MODERATED ASSIGNMENT MARKING")
-
-  args = args or {}
-  local check_bool = args.check
-  if check_bool == nil then
-    check_bool = false
-  end
+function proj:check_moderated(assign_data,check_bool)
 
   local Nrubric = #self.assignments[self.assign_name_canvas].rubric
-  local cc = 0
 
   for i,j in pairs(assign_data) do
-    cc = cc+1
-
-    if j.provisional_grades == nil then
-      error("No provisional grades? This shouldn't happen.")
-    end
 
     assign_data[i].marks = assign_data[i].marks or {}
 
-    print("\n"..cc..". Student: "..j.user.name)
+    print("\n"..i..". Student: "..j.user.name)
     if j.metadata == nil then
       pretty.dump(j)
       pretty.dump(self.student_ind)
@@ -198,22 +195,24 @@ function proj:check_moderated(assign_data,args)
     print("Moderator: "..j.metadata.moderator)
     print("URL: "..j.metadata.url)
 
+    j.provisional_grades = j.provisional_grades or {}
     for _,jg in ipairs(j.provisional_grades) do
       local assr
+      local assr_uid
       local scr
+      local rubric_fail  = false
+      local rubric_count = 0
+      local rubric_sum   = 0
 
       if #jg.rubric_assessments == 0 and not(jg.score==nil) then
 
         assr = jg.assessor_name
-        if assr == nil then
-          _,assr = self:staff_lookup_cid(jg.scorer_id)
-        end
         scr  = jg.score
+
+        assessor_lookup = self:staff_lookup_cid(jg.assessor_id)
+        assr_uid = assessor_lookup.login_id
+
         print("      Assessor: "..assr.." ("..scr..") - score but no rubric.")
-        if check_bool then
-          print("Rubric fail: send message? Type y to do so:")
-          self:message_rubric_fail(io.read()=="y",j,scr,0,0,Nrubric,assr)
-        end
 
       elseif #jg.rubric_assessments > 0 then
 
@@ -221,10 +220,8 @@ function proj:check_moderated(assign_data,args)
         local jj = jg.rubric_assessments[#jg.rubric_assessments]
 
         assr = jj.assessor_name
-
-        local rubric_count = 0
-        local rubric_sum   = 0
-        local rubric_fail  = false
+        assessor_lookup = self:staff_lookup_cid(jj.assessor_id)
+        assr_uid = assessor_lookup.login_id
 
         for _,jjj in pairs(jj.data) do
           if jjj.points then
@@ -234,26 +231,22 @@ function proj:check_moderated(assign_data,args)
         end
 
         if jj.score==nil then
-
           if rubric_count == Nrubric then
             print("      Assessor: "..assr.." ("..rubric_sum..") - rubric complete but no score.")
             if check_bool then
-              print("Rubric fail: send message? Type y to do so:")
+              print("Rubric complete but no score: send message? Type y to do so:")
               self:message_rubric_no_grade(io.read()=="y",j,assr)
             end
           else
             print("      Assessor: "..assr.." - "..rubric_count.." of "..Nrubric.." rubric entries and no score.")
           end
-
           if jg.score then
             scr  = jg.score
             print("      Score manually entered by assessor ("..scr..")")
+            rubric_fail = true
           end
-
         else
-
           scr  = jj.score
-
           if rubric_count == Nrubric then
             print("      Assessor: "..assr.." ("..scr..") - rubric complete.")
             if rubric_sum-jj.score>0.5 or rubric_sum-scr<-0.5 then
@@ -265,22 +258,22 @@ function proj:check_moderated(assign_data,args)
             rubric_fail = true
           end
 
-          if rubric_fail and check_bool then
-              print("Rubric fail: send message? Type y to do so:")
-              self:message_rubric_fail(io.read()=="y",j,scr,rubric_sum,rubric_count,Nrubric,assr)
-          end
-
         end
 
       end
 
-      if assr and scr then
-        assign_data[i].marks[assr] = scr
+      if rubric_fail and check_bool then
+        print("Rubric fail: send message? Type y to do so:")
+        self:message_rubric_fail(io.read()=="y",j,scr,rubric_sum,rubric_count,Nrubric,assr)
+      end
+
+      if assr and scr and not(rubric_fail) then
+        assign_data[i].marks[assr_uid] = {assr,scr}
         if not(assign_data[i].metadata==nil) then
-          if assign_data[i].metadata.supervisor == assr then
+          if assign_data[i].metadata.supervisor_id == assr_uid then
             assign_data[i].metadata.supervisor_mark = scr
           end
-          if assign_data[i].metadata.moderator == assr then
+          if assign_data[i].metadata.moderator_id == assr_uid then
             assign_data[i].metadata.moderator_mark = scr
           end
         end
@@ -310,7 +303,7 @@ function proj:message_rubric_fail(remind_check,j,score,rubric_sum,rubric_count,N
   if rubric_count == 0 then
     rubric_fail_str = "no rubric entries have been completed. For traceability we require all assessors to use the rubric explicitly."
   elseif rubric_count < Nrubric then
-    rubric_fail_str = "only " .. rubric_count .. " of " .. Nrubric .. " rubric entries have been completed. This indicates you may have overlooked an aspect of their assessment."
+    rubric_fail_str = "only " .. rubric_count .. " of " .. Nrubric .. " rubric entries have been completed."
   elseif rubric_count == Nrubric then
     rubric_fail_str = "the sum of your rubric entries is " .. rubric_sum .. ". Please correct the total and/or the rubric to ensure these are consistent."
   else
