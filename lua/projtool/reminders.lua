@@ -9,7 +9,7 @@ local proj = {}
 
 
 
-function proj:message_reminder_add(j,args)
+function proj:message_reminder_add(j,rem_table,args)
 
   self:info("<================ Adding reminder:")
   self:info("ID: " .. j.metadata.proj_id)
@@ -37,22 +37,20 @@ function proj:message_reminder_add(j,args)
   local coord_str = self.staff[coord].name.." <"..self.staff[coord].login_id.."@adelaide.edu.au>"
   self:info("Coordinator: "..coord_str)
 
-  self.reminders = self.reminders or {}
-  self.reminders[acad_name] = self.reminders[acad_name] or {}
+  rem_table[acad_name]         = rem_table[acad_name] or {}
+  rem_table[acad_name].details = staff_lookup
+  rem_table[acad_name].marking = rem_table[acad_name].marking or {}
 
-  self.reminders[acad_name].details = staff_lookup
-
-  self.reminders[acad_name].marking = self.reminders[acad_name].marking or {}
-  if self.reminders[acad_name].marking[assm] == nil then
-    self.reminders[acad_name].marking[assm] = {}
-    self.reminders[acad_name].marking[assm].supervisor = ""
-    self.reminders[acad_name].marking[assm].moderator  = ""
-    self.reminders[acad_name].marking[assm].projects   = {}
-    self.reminders[acad_name].marking[assm].assessment = self.assign_name_colloq
-    self.reminders[acad_name].marking[assm].courseid   = self.courseid
-    self.reminders[acad_name].marking[assm].school     = school
-    self.reminders[acad_name].marking[assm].coordinator = coord_str
-    self.reminders[acad_name].marking[assm].coord_cid   = self.staff[coord].id
+  if rem_table[acad_name].marking[assm] == nil then
+    rem_table[acad_name].marking[assm] = {}
+    rem_table[acad_name].marking[assm].supervisor = ""
+    rem_table[acad_name].marking[assm].moderator  = ""
+    rem_table[acad_name].marking[assm].projects   = {}
+    rem_table[acad_name].marking[assm].assessment = self.assign_name_colloq
+    rem_table[acad_name].marking[assm].courseid   = self.courseid
+    rem_table[acad_name].marking[assm].school     = school
+    rem_table[acad_name].marking[assm].coordinator = coord_str
+    rem_table[acad_name].marking[assm].coord_cid   = self.staff[coord].id
   end
 
   local assess_student_str
@@ -101,14 +99,16 @@ function proj:message_reminder_add(j,args)
     remind_due_str = ""
   end
 
-  self.reminders[acad_name].marking[assm][sup_or_mod] =
-    self.reminders[acad_name].marking[assm][sup_or_mod] .. "\n" ..
+  rem_table[acad_name].marking[assm][sup_or_mod] =
+    rem_table[acad_name].marking[assm][sup_or_mod] .. "\n" ..
     " • " .. assess_student_str .. assess_proj_str .. remind_due_str .. remind_submitted_str .. remind_url_str
 
-  local N = #self.reminders[acad_name].marking[assm].projects
-  self.reminders[acad_name].marking[assm].projects[N+1] = j.metadata
+  local N = #rem_table[acad_name].marking[assm].projects
+  rem_table[acad_name].marking[assm].projects[N+1] = j.metadata
 
   self:info(">================")
+
+  return rem_table
 
 end
 
@@ -119,53 +119,62 @@ end
 
 function proj:assessor_reminder(remind_check,subm1,subm2,args)
 
-  self:assessor_reminder_collect(subm1,subm2)
-  self:assessor_reminder_send(remind_check,args)
+  self.reminders = self.reminders or {}
+  self:assessor_reminder_collect(self.reminders,subm1,subm2)
+  self:assessor_reminder_send(remind_check,self.reminders,args)
 
 end
 
 
-function proj:assessor_reminder_collect(subm1,subm2)
+function proj:assessor_reminder_collect(rem_table,subm1,subm2)
 
-  self.reminders = self.reminders or {}
+  rem_table = rem_table or {}
 
   if subm2 then
-    for _,j in pairs(subm1) do
-     if not(j.metadata==nil) then
-       if not(j.metadata.supervisor_mark) then
-         self:message_reminder_add(j,{whom="supervisor"})
-       end
-     end
-    end
-    for _,j in pairs(subm2) do
-     if not(j.metadata==nil) then
-       if not(j.metadata.moderator_mark) then
-         self:message_reminder_add(j,{whom="moderator"})
-       end
-     end
-    end
+    rem_table = self:assessor_reminder_collect_moderated(rem_table,subm1,subm2)
   else
-    for _,j in pairs(subm1) do
-      if not(next(j) == nil) then
-        if not(j.grade) then
-           self:message_reminder_add(j,{whom="supervisor"})
-        end
-      end
+    rem_table = self:assessor_reminder_collect_single(rem_table,subm1)
+  end
+  return rem_table
+
+end
+
+function proj:assessor_reminder_collect_single(rem_table,subm1)
+
+  for _,j in pairs(subm1) do
+    if not(next(j) == nil) and not(j.grade) then
+      rem_table = self:message_reminder_add(j,rem_table,{whom="supervisor"})
     end
   end
+  return rem_table
+
+end
+
+function proj:assessor_reminder_collect_moderated(rem_table,subm1,subm2)
+
+  for _,j in pairs(subm1) do
+    if not(j.metadata==nil) and not(j.metadata.supervisor_mark) then
+      rem_table = self:message_reminder_add(j,rem_table,{whom="supervisor"})
+    end
+  end
+  for _,j in pairs(subm2) do
+    if not(j.metadata==nil) and not(j.metadata.moderator_mark) then
+      rem_table = self:message_reminder_add(j,rem_table,{whom="moderator"})
+    end
+  end
+  return rem_table
 
 end
 
 
 
 
-function proj:assessor_reminder_summarise()
+function proj:assessor_reminder_summarise(rem_table)
 
   args = args or {}
   local only_them = args.only_them
 
-
-  for acad_name,assr in pairs(self.reminders) do
+  for acad_name,assr in pairs(rem_table) do
 
     print("ASSESSOR: "..acad_name)
 
@@ -191,7 +200,7 @@ end
 
 
 
-function proj:assessor_reminder_send(remind_check,args)
+function proj:assessor_reminder_send(remind_check,rem_table,args)
 
   args = args or {}
   local only_them = args.only_them
@@ -214,7 +223,7 @@ function proj:assessor_reminder_send(remind_check,args)
     additional_message = additional_message .. "\n\n"
   end
 
-  for acad_name,assr in pairs(self.reminders) do
+  for acad_name,assr in pairs(rem_table) do
 
     self:info("ASSESSOR: "..acad_name)
 
@@ -267,7 +276,7 @@ end
 
 
 
-function proj:assessor_reminder_export(csvfile)
+function proj:assessor_reminder_export(csvfile,rem_table)
 
   print("Constructing reminders list:  "..csvfile)
   file.copy(csvfile,(csvfile..".backup"))
@@ -293,7 +302,7 @@ function proj:assessor_reminder_export(csvfile)
     "Coordinator","Assessment","Role","Since submission","Project ID","Project title",
     "Speedgrader URL"})
 
-  for k,v in pairs(self.reminders) do
+  for k,v in pairs(rem_table) do
     for _,assn in pairs(v.marking) do
       for _,prj in ipairs(assn.projects) do
 

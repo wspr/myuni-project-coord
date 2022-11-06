@@ -85,7 +85,7 @@ function proj:check_assignment(assign_data,check_bool,assgn_lbl)
         logmessage = logmessage .. "\n" ..("LATE - points deducted: "..marks_lost.." - late by: "..(j.seconds_late/60).." min = "..(j.seconds_late/60/60).." hrs = "..(j.seconds_late/60/60/24).." days")
         if j.seconds_late < 60*60 then
           print(logmessage)
-          error("Late penalty should be waived (<1hr) -- correct manually")
+          print("Late penalty should be waived (<1hr) -- correct manually")
         end
       end
       if j.rubric_assessment then
@@ -179,6 +179,11 @@ function proj:check_moderated(assign_data,check_bool)
 
   for i,j in pairs(assign_data) do
 
+    local marks_lost   = 0
+    local rubric_count = 0
+    local rubric_sum   = 0
+    local rubric_fail  = false
+
     assign_data[i].marks = assign_data[i].marks or {}
 
     print("\n"..i..". Student: "..j.user.name)
@@ -190,103 +195,113 @@ function proj:check_moderated(assign_data,check_bool)
         error("You aborted")
       end
     else
-    print("Project: "..j.metadata.proj_title)
-    print("Supervisor: "..j.metadata.supervisor)
-    print("Moderator: "..j.metadata.moderator)
-    print("URL: "..j.metadata.url)
+      print("Project: "..j.metadata.proj_title)
+      print("Supervisor: "..j.metadata.supervisor)
+      print("Moderator: "..j.metadata.moderator)
+      print("URL: "..j.metadata.url)
 
-    j.provisional_grades = j.provisional_grades or {}
-    for _,jg in ipairs(j.provisional_grades) do
-      local assr
-      local assr_uid
-      local scr
-      local rubric_fail  = false
-      local rubric_count = 0
-      local rubric_sum   = 0
-
-      if #jg.rubric_assessments == 0 and not(jg.score==nil) then
-
-        assr = jg.assessor_name
-        scr  = jg.score
-
-        assessor_lookup = self:staff_lookup_cid(jg.assessor_id)
-        assr_uid = assessor_lookup.login_id
-
-        print("      Assessor: "..assr.." ("..scr..") - score but no rubric.")
-
-      elseif #jg.rubric_assessments > 0 then
-
-        -- always take most recent assessment (in fact, not sure when there ever would be more than one but sometimes it seems to happen)
-        local jj = jg.rubric_assessments[#jg.rubric_assessments]
-
-        assr = jj.assessor_name
-        assessor_lookup = self:staff_lookup_cid(jj.assessor_id)
-        assr_uid = assessor_lookup.login_id
-
-        for _,jjj in pairs(jj.data) do
-          if jjj.points then
-            rubric_sum   = rubric_sum + jjj.points
-            rubric_count = rubric_count + 1
-          end
+      if j.late then
+        marks_lost = j.points_deducted
+        print("LATE - points deducted: "..marks_lost.." - late by: "..(j.seconds_late/60).." min = "..(j.seconds_late/60/60).." hrs = "..(j.seconds_late/60/60/24).." days")
+        if j.seconds_late < 60*60 then
+          print(logmessage)
+          print("Late penalty should be waived (<1hr) -- correct manually")
         end
+      end
 
-        if jj.score==nil then
-          if rubric_count == Nrubric then
-            print("      Assessor: "..assr.." ("..rubric_sum..") - rubric complete but no score.")
-            if check_bool then
-              print("Rubric complete but no score: send message? Type y to do so:")
-              self:message_rubric_no_grade(io.read()=="y",j,assr)
+  -- for debugging:
+  -- if j.user.name == "Flynn Pisani" then pretty.dump(j) error() end
+
+      j.provisional_grades = j.provisional_grades or {}
+      for _,jg in ipairs(j.provisional_grades) do
+        local assr
+        local assr_uid
+        local scr
+
+        if #jg.rubric_assessments == 0 and not(jg.score==nil) then
+
+          assr = jg.assessor_name
+          scr  = jg.score
+
+          assessor_lookup = self:staff_lookup_cid(jg.assessor_id)
+          assr_uid = assessor_lookup.login_id
+
+          print("      Assessor: "..assr.." ("..scr..") - score but no rubric.")
+
+        elseif #jg.rubric_assessments > 0 then
+
+          -- always take most recent assessment (in fact, not sure when there ever would be more than one but sometimes it seems to happen)
+          local jj = jg.rubric_assessments[#jg.rubric_assessments]
+
+          assr = jj.assessor_name
+          assessor_lookup = self:staff_lookup_cid(jj.assessor_id)
+          assr_uid = assessor_lookup.login_id
+
+          for _,jjj in pairs(jj.data) do
+            if jjj.points then
+              rubric_sum   = rubric_sum + jjj.points
+              rubric_count = rubric_count + 1
             end
-          else
-            print("      Assessor: "..assr.." - "..rubric_count.." of "..Nrubric.." rubric entries and no score.")
           end
-          if jg.score then
-            scr  = jg.score
-            print("      Score manually entered by assessor ("..scr..")")
-            rubric_fail = true
-          end
-        else
-          scr  = jj.score
-          if rubric_count == Nrubric then
-            print("      Assessor: "..assr.." ("..scr..") - rubric complete.")
-            if rubric_sum-jj.score>0.5 or rubric_sum-scr<-0.5 then
-              print("      Assessor: "..assr.." ("..scr..") - ERROR: rubric sum ("..rubric_sum..") does not match final mark awarded ("..jj.score..")")
+
+          if jj.score==nil then
+            if rubric_count == Nrubric then
+              print("      Assessor: "..assr.." ("..rubric_sum..") - rubric complete but no score.")
+              if check_bool then
+                print("Rubric complete but no score: send message? Type y to do so:")
+                self:message_rubric_no_grade(io.read()=="y",j,assr)
+              end
+            else
+              print("      Assessor: "..assr.." - "..rubric_count.." of "..Nrubric.." rubric entries and no score.")
+            end
+            if jg.score then
+              scr  = jg.score
+              print("      Score manually entered by assessor ("..scr..")")
               rubric_fail = true
             end
-          elseif rubric_count < Nrubric then
-            print("      Assessor: "..assr.." ("..scr..") - ERROR: Only "..rubric_count.." of "..Nrubric.." rubric entries completed.")
-            rubric_fail = true
+          else
+            scr  = jj.score
+            if rubric_count == Nrubric then
+              print("      Assessor: "..assr.." ("..scr..") - rubric complete.")
+              if rubric_sum-jj.score>0.5 or rubric_sum-scr<-0.5 then
+                print("      Assessor: "..assr.." ("..scr..") - ERROR: rubric sum ("..rubric_sum..") does not match final mark awarded ("..jj.score..")")
+                rubric_fail = true
+              end
+            elseif rubric_count < Nrubric then
+              print("      Assessor: "..assr.." ("..scr..") - ERROR: Only "..rubric_count.." of "..Nrubric.." rubric entries completed.")
+              rubric_fail = true
+            end
+
           end
 
         end
 
-      end
+        if rubric_fail and check_bool then
+          print("Rubric fail: send message? Type y to do so:")
+          self:message_rubric_fail(io.read()=="y",j,scr,rubric_sum,rubric_count,Nrubric,assr)
+        end
 
-      if rubric_fail and check_bool then
-        print("Rubric fail: send message? Type y to do so:")
-        self:message_rubric_fail(io.read()=="y",j,scr,rubric_sum,rubric_count,Nrubric,assr)
-      end
-
-      if assr and scr and not(rubric_fail) then
-        assign_data[i].marks[assr_uid] = {assr,scr}
-        if not(assign_data[i].metadata==nil) then
-          if assign_data[i].metadata.supervisor_id == assr_uid then
-            assign_data[i].metadata.supervisor_mark = scr
-          end
-          if assign_data[i].metadata.moderator_id == assr_uid then
-            assign_data[i].metadata.moderator_mark = scr
+        local assgn_lbl
+        if assr and scr and not(rubric_fail) then
+          assign_data[i].marks[assr_uid] = {assr,scr}
+          if not(assign_data[i].metadata==nil) then
+            if assign_data[i].metadata.supervisor_id == assr_uid then
+              assgn_lbl = "supervisor"
+            elseif assign_data[i].metadata.moderator_id == assr_uid then
+              assgn_lbl = "moderator"
+            end
           end
         end
+        if assgn_lbl then
+          assign_data[i].metadata[assgn_lbl.."_mark"] = scr
+          assign_data[i].metadata[assgn_lbl.."_mark_entered"] = scr
+          assign_data[i].metadata[assgn_lbl.."_penalty"] = marks_lost
+          assign_data[i].metadata[assgn_lbl.."_seconds_late"] = (j.seconds_late or 0)
+          assign_data[i].metadata[assgn_lbl.."_graded_at"] = (graded_at or "")
+        end
+
       end
     end
-    end
-
-    -- for debugging:
---    if j.user.name == "Flynn Pisani" then
---      pretty.dump(assign_data[i])
---      error()
---    end
-
   end
 
   return assign_data
