@@ -136,7 +136,9 @@ function proj:read_csv_data(csvfile)
         print("No user found for user: "..id)
         not_found_canvas = not_found_canvas .. "    " .. id .. "\n"
       else
-        print("User found: '"..tbl.name.."' ("..tbl.login_id..")")
+        if self.verbose > 0 then
+          print("User found: '"..tbl.name.."' ("..tbl.login_id..")")
+        end
         self.all_staff[id] = tbl
       end
     end

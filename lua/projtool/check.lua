@@ -209,9 +209,6 @@ function proj:check_moderated(assign_data,check_bool)
         end
       end
 
-  -- for debugging:
-  -- if j.user.name == "Flynn Pisani" then pretty.dump(j) error() end
-
       j.provisional_grades = j.provisional_grades or {}
       for _,jg in ipairs(j.provisional_grades) do
         local assr
@@ -281,7 +278,7 @@ function proj:check_moderated(assign_data,check_bool)
           self:message_rubric_fail(io.read()=="y",j,scr,rubric_sum,rubric_count,Nrubric,assr)
         end
 
-        local assgn_lbl
+        local assgn_lbl = nil
         if assr and scr and not(rubric_fail) then
           assign_data[i].marks[assr_uid] = {assr,scr}
           if not(assign_data[i].metadata==nil) then
@@ -301,6 +298,14 @@ function proj:check_moderated(assign_data,check_bool)
         end
 
       end
+
+
+  -- for debugging:
+   if j.user.id == 110381 then
+     --pretty.dump(j)
+     --error()
+    end
+
     end
   end
 

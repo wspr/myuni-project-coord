@@ -169,7 +169,9 @@ end
 
 
 
-function proj:assessor_reminder_summarise(rem_table)
+function proj:assessor_reminder_summarise(rem_table,args)
+
+  rem_table = rem_table or self.reminders
 
   args = args or {}
   local only_them = args.only_them
@@ -205,11 +207,6 @@ function proj:assessor_reminder_send(remind_check,rem_table,args)
   args = args or {}
   local only_them = args.only_them
   local additional_message = args.lede
-
-  local assm = self.deliverable
-  if assm == nil then
-    error('Missing deliverable; e.g.:\n\nproj:set_deliverable("final")')
-  end
 
   if additional_message == nil then
     if remind_check then
@@ -279,7 +276,7 @@ end
 function proj:assessor_reminder_export(csvfile,rem_table)
 
   print("Constructing reminders list:  "..csvfile)
-  file.copy(csvfile,(csvfile..".backup"))
+  file.copy(csvfile,("backup-"..csvfile))
   local ff = io.output(csvfile)
 
   local function qq(str) return '"'..str..'"' end

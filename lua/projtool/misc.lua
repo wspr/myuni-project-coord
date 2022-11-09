@@ -121,7 +121,7 @@ function proj:list_students(semnow,cohorts)
 
       csvfile = "csv/"..UGPG.."-"..cohort.."-student-list.csv"
 
-      file.copy(csvfile,(csvfile..".backup"))
+      file.copy(csvfile,("backup-"..csvfile))
       local ff = io.output(csvfile)
 
       local function qq(str) return '"'..str..'"' end

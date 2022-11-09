@@ -140,13 +140,9 @@ function proj:add_assessment_metadata(canvas_subm,verbose)
                   "gradebook/speed_grader?assignment_id=" .. subm_entry.assignment_id ..
                   "&student_id=" .. subm_entry.user_id
       subm[hash_index].metadata = {}
-      subm[hash_index].metadata.proj_id     = self.proj_data[ind].proj_id
-      subm[hash_index].metadata.proj_title  = self.proj_data[ind].proj_title
-      subm[hash_index].metadata.supervisor  = self.proj_data[ind].supervisor
-      subm[hash_index].metadata.moderator   = self.proj_data[ind].moderator
-      subm[hash_index].metadata.supervisor_id  = self.proj_data[ind].supervisor_id
-      subm[hash_index].metadata.moderator_id   = self.proj_data[ind].moderator_id
-      subm[hash_index].metadata.school      = self.proj_data[ind].school
+      for kk,vv in pairs(self.proj_data[ind]) do
+        subm[hash_index].metadata[kk] = vv
+      end
       subm[hash_index].metadata.url         = url
       subm[hash_index].metadata.resolve     = resolve[hash_index]  or ""
       subm[hash_index].metadata.override    = override[hash_index] or ""
@@ -171,7 +167,7 @@ function proj:export_csv_marks_moderated(subm,arg)
 
   local weightings = arg.weightings or {0.5,0.5}
 
-  file.copy(self.marks_csv,(self.marks_csv..".backup"))
+  file.copy(self.marks_csv,("backup-"..self.marks_csv))
   local ff = io.output(self.marks_csv)
   io.write("INDEX,USERID,NAME,SCHOOL,PROJID,TITLE,MARK,DIFF,RESOLVED,OVERRIDE,COMMENTS,SIMILARITY,SUPERVISOR,SUPMARK,MODERATOR,MODMARK,SUPID,MODID,SUPURL,MODURL,UID1,ASSESSOR1,SCORE1,UID2,ASSESSOR2,SCORE2,UID3,ASSESSOR3,SCORE3,UID4,ASSESSOR4,SCORE4,UID5,ASSESSOR5,SCORE5,\n")
 
@@ -274,7 +270,7 @@ function proj:export_csv_marks(subm)
   end)
 
   print("Writing marks to file: '"..self.marks_csv.."'...")
-  file.copy(self.marks_csv,(self.marks_csv..".backup"))
+  file.copy(self.marks_csv,("backup-"..self.marks_csv))
   local ff = io.output(self.marks_csv)
   io.write("INDEX,USERID,NAME,SCHOOL,PROJID,TITLE,SUPERVISOR,MARK,URL\n")
 
