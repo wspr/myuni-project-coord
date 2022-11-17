@@ -6,7 +6,7 @@ local canvas  = require("canvas-lms")
 local proj = {}
 
 
-function proj:check_marking(assign_data,check_bool,assgn_lbl)
+function proj:check_marking(assign_data,check_bool,assgn_lbl,debug_user)
 
   assgn_lbl = assgn_lbl or self.deliverable -- argument to customise if needed to differentiate supervisor/moderator, say
 
@@ -29,17 +29,17 @@ function proj:check_marking(assign_data,check_bool,assgn_lbl)
 
   if self.assignments[self.assign_name_canvas].moderated_grading then
     print("CHECKING ASSIGNMENT MARKING (MODERATED)")
-    assign_data = self:check_moderated(assign_data,check_bool)
+    assign_data = self:check_moderated(assign_data,check_bool,assgn_lbl,debug_user)
   else
     print("\nCHECKING ASSIGNMENT MARKING: "..self.assign_name_canvas)
-    assign_data = self:check_assignment(assign_data,check_bool,assgn_lbl)
+    assign_data = self:check_assignment(assign_data,check_bool,assgn_lbl,debug_user)
   end
 
   return assign_data
 end
 
 
-function proj:check_assignment(assign_data,check_bool,assgn_lbl)
+function proj:check_assignment(assign_data,check_bool,assgn_lbl,debug_user)
 
   assgn_lbl = assgn_lbl or self.deliverable -- argument to customise if needed to differentiate supervisor/moderator, say
   local Nrubric = #self.assignments[self.assign_name_canvas].rubric
@@ -158,11 +158,10 @@ function proj:check_assignment(assign_data,check_bool,assgn_lbl)
       assign_data[i].metadata[assgn_lbl.."_graded_at"] = (j.graded_at or "")
     end
 
-    -- for debugging:
---  if j.user.name == "Nhu Nguyen" then
---    pretty.dump(j)
---    error()
---  end
+    if j.user.name == debug_user then
+      pretty.dump(j)
+      error()
+    end
 
   end
 
@@ -173,7 +172,7 @@ end
 
 
 
-function proj:check_moderated(assign_data,check_bool)
+function proj:check_moderated(assign_data,check_bool,assgn_lbl,debug_user)
 
   local Nrubric = #self.assignments[self.assign_name_canvas].rubric
 
@@ -210,22 +209,13 @@ function proj:check_moderated(assign_data,check_bool)
       end
 
       j.provisional_grades = j.provisional_grades or {}
+      print("Number of assessments: "..#j.provisional_grades)
       for _,jg in ipairs(j.provisional_grades) do
         local assr
         local assr_uid
         local scr
 
-        if #jg.rubric_assessments == 0 and not(jg.score==nil) then
-
-          assr = jg.assessor_name
-          scr  = jg.score
-
-          assessor_lookup = self:staff_lookup_cid(jg.assessor_id)
-          assr_uid = assessor_lookup.login_id
-
-          print("      Assessor: "..assr.." ("..scr..") - score but no rubric.")
-
-        elseif #jg.rubric_assessments > 0 then
+        if #jg.rubric_assessments > 0 then
 
           -- always take most recent assessment (in fact, not sure when there ever would be more than one but sometimes it seems to happen)
           local jj = jg.rubric_assessments[#jg.rubric_assessments]
@@ -271,6 +261,16 @@ function proj:check_moderated(assign_data,check_bool)
 
           end
 
+        elseif #jg.rubric_assessments == 0 and not(jg.score==nil) then
+
+          assr = jg.assessor_name
+          scr  = jg.score
+
+          assessor_lookup = self:staff_lookup_cid(jg.assessor_id)
+          assr_uid = assessor_lookup.login_id
+
+          print("      Assessor: "..assr.." ("..scr..") - score but no rubric.")
+
         end
 
         if rubric_fail and check_bool then
@@ -299,12 +299,10 @@ function proj:check_moderated(assign_data,check_bool)
 
       end
 
-
-  -- for debugging:
-   if j.user.id == 110381 then
-     --pretty.dump(j)
-     --error()
-    end
+      if j.user.name == debug_user then
+        pretty.dump(j)
+        error()
+      end
 
     end
   end
