@@ -178,14 +178,9 @@ function proj:check_moderated(assign_data,check_bool,assgn_lbl,debug_user)
 
   for i,j in pairs(assign_data) do
 
-    local marks_lost   = 0
-    local rubric_count = 0
-    local rubric_sum   = 0
-    local rubric_fail  = false
-
     assign_data[i].marks = assign_data[i].marks or {}
 
-    print("\n"..i..". Student: "..j.user.name)
+    print("\n"..i.."\nStudent: "..j.user.name)
     if j.metadata == nil then
       pretty.dump(j)
       pretty.dump(self.student_ind)
@@ -195,8 +190,7 @@ function proj:check_moderated(assign_data,check_bool,assgn_lbl,debug_user)
       end
     else
       print("Project: "..j.metadata.proj_title)
-      print("Supervisor: "..j.metadata.supervisor)
-      print("Moderator: "..j.metadata.moderator)
+      print("Supervisor: "..j.metadata.supervisor .. " | Moderator: "..j.metadata.moderator)
       print("URL: "..j.metadata.url)
 
       if j.late then
@@ -209,11 +203,14 @@ function proj:check_moderated(assign_data,check_bool,assgn_lbl,debug_user)
       end
 
       j.provisional_grades = j.provisional_grades or {}
-      print("Number of assessments: "..#j.provisional_grades)
-      for _,jg in ipairs(j.provisional_grades) do
+      for ig,jg in ipairs(j.provisional_grades) do
         local assr
         local assr_uid
         local scr
+        local marks_lost   = 0
+        local rubric_count = 0
+        local rubric_sum   = 0
+        local rubric_fail  = false
 
         if #jg.rubric_assessments > 0 then
 
@@ -223,6 +220,8 @@ function proj:check_moderated(assign_data,check_bool,assgn_lbl,debug_user)
           assr = jj.assessor_name
           assessor_lookup = self:staff_lookup_cid(jj.assessor_id)
           assr_uid = assessor_lookup.login_id
+
+          print("Assessor "..ig..": "..assr.." ("..assr_uid..")")
 
           for _,jjj in pairs(jj.data) do
             if jjj.points then
@@ -271,6 +270,10 @@ function proj:check_moderated(assign_data,check_bool,assgn_lbl,debug_user)
 
           print("      Assessor: "..assr.." ("..scr..") - score but no rubric.")
 
+        else
+
+          print("      Assessment started (?) but not yet complete.")
+
         end
 
         if rubric_fail and check_bool then
@@ -279,6 +282,7 @@ function proj:check_moderated(assign_data,check_bool,assgn_lbl,debug_user)
         end
 
         local assgn_lbl = nil
+        if self.verbose > 0 then print("Assessor: "..(assr or "").." | Score: "..(scr or "").." | rubric_fail: "..(rubric_fail and "TRUE" or "FALSE")) end
         if assr and scr and not(rubric_fail) then
           assign_data[i].marks[assr_uid] = {assr,scr}
           if not(assign_data[i].metadata==nil) then
@@ -300,7 +304,7 @@ function proj:check_moderated(assign_data,check_bool,assgn_lbl,debug_user)
       end
 
       if j.user.name == debug_user then
-        pretty.dump(j)
+        pretty.dump(j.metadata)
         error()
       end
 
