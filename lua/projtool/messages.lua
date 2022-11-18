@@ -18,8 +18,6 @@ William Robertson, on behalf of the Project Coordination Team
 ]]
 
 proj.message.body_opening = [[
-Reminders for ENG 4001/7001 are now consolidated into a single message. This is a semi-automated reminder.
-
 As an academic and/or supervisor involved with honours/masters research project teaching, the following items are due for assessment; see links below to take your straight to each assessment item.
 
 Your assessment must be entered via each criterion of the marking rubric in MyUni, with written feedback to be provided through the rubric comments against each one.
@@ -32,7 +30,7 @@ Note the "Submit" button is only connected to the comment box BELOW the rubric -
 proj.message.draft.body_opening = [[
 The final/progress draft reports are not assessed but provided by the students for broad and general feedback by their supervisor.
 
-Feedback must be provided quickly as the due dates for these reports are Monday Week 12. 
+Feedback must be provided quickly as the due dates for the students to submit these reports are Monday Week 12. 
 
 You should not provide extensive and detailed comments — the students' work is their own and you will be marking their submission, so guidance at this stage is all that is needed.
 ]]
