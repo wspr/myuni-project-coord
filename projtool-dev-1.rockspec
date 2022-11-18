@@ -11,5 +11,5 @@ dependencies = {
   "csv",
   "binser",
   "penlight",
-  "luadiffer",
+--  "luadiffer",
 }
