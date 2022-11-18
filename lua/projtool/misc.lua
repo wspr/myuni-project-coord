@@ -139,7 +139,7 @@ function proj:list_students(semnow,cohorts)
         return str.."\n"
       end
 
-      io.write(csvrow{"Name","ID","ProjID","ProjTitle","School","Supervisor","SupervisorID","Moderator","ModeratorID"})
+      io.write(csvrow{"Name","ID","ProjID","ShortID","ProjTitle","School","Supervisor","SupervisorID","Moderator","ModeratorID"})
       for k,v in pairs(myuni_groups) do
         for _,u in ipairs(v.users) do
           lookup_mods[k] = lookup_mods[k] or {}
@@ -147,6 +147,7 @@ function proj:list_students(semnow,cohorts)
             qq(u.sortable_name),
             u.sis_user_id,
             k,
+            lookup_groups[k]["Short Project ID"],
             qq(lookup_groups[k]["Project title"]),
             lookup_groups[k]["Project School"],
             qq(lookup_groups[k]["Project supervisor"]),
