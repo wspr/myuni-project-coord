@@ -262,10 +262,8 @@ function proj:check_moderated(assign_data,check_bool,assgn_lbl,debug_user)
 
         elseif #jg.rubric_assessments == 0 and not(jg.score==nil) then
 
-          assr = jg.assessor_name
           scr  = jg.score
-
-          assessor_lookup = self:staff_lookup_cid(jg.assessor_id)
+          assessor_lookup, assr = self:staff_lookup_cid(jg.scorer_id)
           assr_uid = assessor_lookup.login_id
 
           print("      Assessor: "..assr.." ("..scr..") - score but no rubric.")

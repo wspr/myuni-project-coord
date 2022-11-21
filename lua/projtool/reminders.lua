@@ -141,27 +141,45 @@ end
 
 function proj:assessor_reminder_collect_single(rem_table,subm1)
 
+  local count = 0
   for _,j in pairs(subm1) do
     if not(next(j) == nil) and not(j.grade) then
+      count = count + 1
       rem_table = self:message_reminder_add(j,rem_table,{whom="supervisor"})
     end
   end
+
+  if count == 0 then
+    print("All assessments graded. Hit Enter/Return to continue.")
+    io.read()
+  end
+
   return rem_table
 
 end
 
 function proj:assessor_reminder_collect_moderated(rem_table,subm1,subm2)
 
+  local count = 0
   for _,j in pairs(subm1) do
     if not(j.metadata==nil) and not(j.metadata.supervisor_mark) then
+      count = count + 1
       rem_table = self:message_reminder_add(j,rem_table,{whom="supervisor"})
     end
   end
+
   for _,j in pairs(subm2) do
     if not(j.metadata==nil) and not(j.metadata.moderator_mark) then
+      count = count + 1
       rem_table = self:message_reminder_add(j,rem_table,{whom="moderator"})
     end
   end
+
+  if count == 0 then
+    print("All supervisor + moderator assessments graded. Hit Enter/Return to continue.")
+    io.read()
+  end
+
   return rem_table
 
 end
@@ -177,25 +195,25 @@ function proj:assessor_reminder_summarise(rem_table,args)
   local only_them = args.only_them
 
   for acad_name,assr in pairs(rem_table) do
+    if (only_them == nil) or (only_them == acad_name) then
+      print("ASSESSOR: "..acad_name)
 
-    print("ASSESSOR: "..acad_name)
+      local body = ""
+      for stub,assm in pairs(assr.marking) do
 
-    local body = ""
-    for stub,assm in pairs(assr.marking) do
+        if not(assm.supervisor == "") then
+          body = body .. "\n# "..assm.assessment.." -- Supervisor assessment\n\n" .. assm.supervisor
+        end
+        if not(assm.supervisor == "") and not(assm.moderator == "") then
+          body = body .. "\n"
+        end
+        if not(assm.moderator == "") then
+          body = body .. "\n# "..assm.assessment.." -- Moderator assessment\n\n" .. assm.moderator
+        end
 
-      if not(assm.supervisor == "") then
-        body = body .. "\n# "..assm.assessment.." -- Supervisor assessment\n\n" .. assm.supervisor
       end
-      if not(assm.supervisor == "") and not(assm.moderator == "") then
-        body = body .. "\n"
-      end
-      if not(assm.moderator == "") then
-        body = body .. "\n# "..assm.assessment.." -- Moderator assessment\n\n" .. assm.moderator
-      end
-
+      print(body)
     end
-    print(body)
-
   end
 
 end
