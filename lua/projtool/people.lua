@@ -50,7 +50,8 @@ function proj:read_supervisors(opt)
 
   local projects = {}
   for fields in f:lines() do
-    if fields["Cohort"] == cohort then
+    if (fields["Cohort"] == cohort) and (fields["UGPG"] == ugpg) then
+      print(fields["Project title"],fields["Project supervisor"])
       projects[#projects+1] = fields
     end
   end
@@ -63,21 +64,45 @@ function proj:read_supervisors(opt)
     ids[jj["Co ID 3"]] = true
   end
   ids[""] = nil
- 
+
   for kk,vv in pairs(ids) do
     if kk:len() ~= 8 then
       print(kk,"- ID looks wrong")
       ids[kk] = nil
     else
-      if proj.staff_csv[kk] then
-        print(kk,proj.staff_csv[kk]["Lastname, Firstname"])
+      if self.staff_csv[kk] then
+        ids[kk] = self.staff_csv[kk]["Lastname, Firstname"]
       else
-        print(kk,"- CSV entry missing")      
+        ids[kk] = "MISSING"
       end
+      print(kk,ids[kk])
     end
   end
-  
+
   self.supervisors_ids = ids
+end
+
+function proj:read_extra_staff(opt)
+
+  self:read_staff()
+
+  opt = opt or {}
+  csvfile = opt.csvfile or ("../csv/erp-extra-staff-myuni.csv")
+
+  print("Reading CSV data of professional staff: "..csvfile)
+  local f = csv.open(csvfile,{header=true})
+  if f == nil then
+    error("CSV file '"..csvfile.."' not found.")
+  end
+
+  local staff = {}
+  for fields in f:lines() do
+    if fields.UID then
+      staff[fields.UID] = fields
+    end
+  end
+
+  self.prof_staff_ids = staff
 end
 
 
