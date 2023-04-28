@@ -1,5 +1,6 @@
 
-local path   = require("pl.path")
+local path     = require("pl.path")
+local pretty   = require("pl.pretty")
 
 local proj = {}
 
@@ -14,10 +15,24 @@ local proj = {}
     return str
   end
 
-function proj:summarise_marks(assign_data,assign_data2,args)
+proj.summarise_marks = function(self,assign_data,assign_data2,args)
+
+  self:get_assignments()
+
+  local assm_rubric
+  local entr, tabl = next(assign_data)
+  aid = tabl.assignment_id
+  for i,v in pairs(self.assignments) do
+    if v.id == aid then
+      assm_rubric = v.rubric
+      break
+    end
+  end
 
   args = args or {}
   local who = args.who
+  local group = args.group
+  local prefix = args.prefix or "marks-"
   local runs = args.runs or 2
   local subpath = args.path or "assessments"
   if not (subpath:sub(-1,-1) == "/") then
@@ -36,9 +51,10 @@ function proj:summarise_marks(assign_data,assign_data2,args)
   for i,j in pairs(assign_data) do
     cc = cc+1
 
-    if j.user.name == (who or j.user.name) then
+    if (j.user.name == (who or j.user.name)) and
+       (j.metadata.proj_id == (group or j.metadata.proj_id)) then
 
-      local filename = j.metadata.proj_id.."-"..j.user.login_id.."-rubrics"
+      local filename = prefix..j.metadata.proj_id
 
       if j.provisional_grades == nil then
         error("No provisional grades? This shouldn't happen.")
@@ -55,11 +71,25 @@ function proj:summarise_marks(assign_data,assign_data2,args)
 
       local ff = io.output(buildpath..filename..".tex")
       io.write [[
-\documentclass{article}
-\usepackage{longtable,booktabs,needspace}
-\usepackage[margin=2.5cm,landscape]{geometry}
+\def\NOBIB{}
+\documentclass{willarticle}
+\usepackage{longtable,booktabs,needspace,xcolor,colortbl}
+\usepackage[margin=2cm,landscape]{geometry}
 \usepackage{siunitx}
+\def\SPLIT#1 #2 {%
+  \textsc{\MakeLowercase{#1}} & \itshape
+  \raggedright\arraybackslash\hangindent=0.8em\relax
+}
 \begin{document}
+\begingroup
+\parindent=0pt\relax
+\Large
+Faculty of Science, Engineering, and Technology
+\par
+\Huge\fontspec{palatino-nova-titling}
+ENG 4001 Honours Research Project
+\par
+\endgroup
 \section*{%
 ]]
       io.write(self.assign_name_colloq .. " assessment summary")
@@ -68,78 +98,80 @@ function proj:summarise_marks(assign_data,assign_data2,args)
 ]]
       io.write(string.format([[
 \begin{description}
-\item[School] %s
-\item[Project ID] %s
 \item[Project title] %s
+\item[Project ID] %s
 \item[Submitting student] %s
 \item[Supervisor] %s
 \item[Moderator] %s
 \end{description}
 \newpage
 ]]
-  , j.metadata.school
-  , j.metadata.proj_id
   , texencode(j.metadata.proj_title)
+  , j.metadata.proj_id
   , j.user.name
   , j.metadata.supervisor
   , j.metadata.moderator
 ))
 
       for _,prov_grade in ipairs(assign_data[i].provisional_grades) do
-        self:assessor_print(prov_grade)
+        self:assessor_print(assm_rubric,prov_grade)
       end
       for _,prov_grade in ipairs(assign_data2[i].provisional_grades) do
-        self:assessor_print(prov_grade)
+        self:assessor_print(assm_rubric,prov_grade)
       end
       io.write [[
 \end{document}
 ]]
       io.close(ff)
       for _ = 1,runs do
-        os.execute("cd "..buildpath.."; /Library/TeX/texbin/pdflatex "..filename.." ;")
+        os.execute("cd "..buildpath.."; /Library/TeX/texbin/xelatex -interaction=batchmode "..filename.." ;")
       end
       os.execute("cp "..buildpath.."/"..filename..".pdf "..subpath.." ;")
     end
   end
 end
 
-function proj:assessor_print(prov_grade)
+proj.assessor_print = function(self,assm_rubric,prov_grade)
 
       local jd = prov_grade.rubric_assessments[#prov_grade.rubric_assessments]
       -- only take the last entry from an assessor
 
-      if jd then
+      if jd and (jd.score > 1) then
 
         io.write [[
-\Needspace{0.4\textheight}
-\subsection*{Assessor ---
-]]
+\Needspace{0.6\textheight}
+\subsection*{Assessor --- ]]
         io.write(jd.assessor_name)
         io.write [[
 }
 ]]
         io.write [[
-\begin{longtable}{lllSp{9cm}}
+\begin{longtable}{llp{3.5cm}cp{16cm}}
 \toprule
-\# & Rubric entry & Band awarded & Points & Comments \\
+   &                   &       & {Points}  &  \\
+\# & Category & Criterion   & {awarded} & Comments \\
 \midrule
 \endhead
 ]]
         for iid,jjd in ipairs(jd.data) do
+
           local descr = jjd.description
-          if descr == "No description" then
+          if descr == "No Details" then
             descr = "---"
           end
           local comments = (jjd.comments or "")
           if comments == "" then
-            comments = "[none]"
+            comments = "---"
+          end
+          if iid > 1 then
+            io.write("\\arrayrulecolor{lightgray}\\midrule\\arrayrulecolor{black}\n")
           end
           io.write(
               iid.."&"..
-              texencode(self.assignment_setup.rubric[iid].description).."&"..
-              texencode(descr).."&"..
-              (jjd.points or "").."&"..
-              texencode(comments)..
+              "\\SPLIT "..texencode(assm_rubric[iid].description).."&"..
+--              texencode(descr).."&"..
+              (jjd.points or "").." / "..assm_rubric[iid].points.." &"..
+              "\\raggedright\\arraybackslash\\parindent=1.8em\\relax "..texencode(comments)..
               "\\\\\n")
         end
         io.write("\\midrule\n"..
@@ -155,10 +187,10 @@ function proj:assessor_print(prov_grade)
 ]]
         for _,jjd in ipairs(prov_grade.submission_comments) do
           if jd.assessor_name == jjd.author_name then
-            io.write("\\subsubsection*{Comments}\\begingroup\\parskip=5pt\\parindent=0pt")
+            io.write("\\subsubsection*{Comments}\n\\begin{minipage}{0.6\\textwidth}\n\\parskip=5pt\\parindent=0pt\\relax\n")
             local comment = (jjd.comment or "")
             io.write(texencode(comment))
-            io.write("\\subsubsection*{Comments}\\endgroup")
+            io.write("\\end{minipage}\n")
           end
         end
       end

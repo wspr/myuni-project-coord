@@ -209,6 +209,7 @@ function proj:resolve_grades(resolve_bool,canvas_subfin,canvas_submod)
     end
   end
 
+  print("DONE.")
   return canvas_subfin
 
 end
