@@ -29,9 +29,14 @@ function proj:message_reminder_add(j,rem_table,args)
   local school = j.metadata.school
   self:info("School: "..school)
   local coord = self.coordinators[school]
+  if coord == nil then
+    pretty.dump(self.coordinators)
+    error("No coordinator entry for school '"..school.."'")
+  end
   if type(coord) == "table" then
     coord = coord[2]
   else
+    print("Coordinator data/name: "..coord)
     error("Coordinator table must list UoA ID as second entry")
   end
   local coord_str = self.staff[coord].name.." <"..self.staff[coord].login_id.."@adelaide.edu.au>"
