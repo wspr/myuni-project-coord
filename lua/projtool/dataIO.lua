@@ -45,7 +45,7 @@ function proj:get_submissions(get_bool,args)
   end
 
   local subm
-  if self.set_assign_canvas_moderated then
+  if self.assign_canvas_moderated then
     subm = self:get_assignment(get_bool,self.assign_name_canvas,{include={"provisional_grades","group","user","rubric_assessment","submission_comments"}},args)
   else
     if self.assign_grouped then
