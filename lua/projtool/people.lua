@@ -205,7 +205,7 @@ function proj:read_csv_data(csvfile)
       self.assessors[super][csvfile].supervisor = self.assessors[super][csvfile].supervisor or {}
       self.assessors[super][csvfile].supervisor[student_id] = nn
 
-      if self.assign_canvas_moderated then
+      if self.assign_moderated then
         self.proj_data[nn].moderator     = fields["Moderator"] or ""
         self.proj_data[nn].moderator_id  = fields["ModeratorID"] or ""
         local moder      = self.proj_data[nn].moderator_id

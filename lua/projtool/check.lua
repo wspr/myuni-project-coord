@@ -60,7 +60,7 @@ function proj:check_assignment(assign_data,check_bool,assgn_lbl,debug_user)
     if grade then
 
       logmessage = logmessage .. "\n" ..("\n"..i..". Student: "..j.user.name.."  ("..j.user.sis_user_id..")")
-      if self.assign_canvas_moderated then
+      if self.assign_moderated then
         logmessage = logmessage .. "\n" ..("Supervisor: "..j.metadata.supervisor.." | Moderator: "..j.metadata.moderator)
       else
         logmessage = logmessage .. "\n" ..("Supervisor: "..j.metadata.supervisor)
@@ -125,7 +125,7 @@ function proj:check_assignment(assign_data,check_bool,assgn_lbl,debug_user)
       if j.rubric_assessment then
 
         logmessage = logmessage .. "\n" ..("\n"..i..". Student: "..j.user.name.."  ("..j.user.sis_user_id..")")
-        if self.assign_canvas_moderated then
+        if self.assign_moderated then
           logmessage = logmessage .. "\n" ..("Supervisor: "..j.metadata.supervisor.." | Moderator: "..j.metadata.moderator)
         else
           logmessage = logmessage .. "\n" ..("Supervisor: "..j.metadata.supervisor)

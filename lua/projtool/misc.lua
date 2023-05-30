@@ -27,7 +27,7 @@ function proj:list_students(dl_bool,semnow,cohort,UGPG)
 
   local sonia_path = "../"
   local sonia_csv = sonia_path .. "csv/erp-projects-export.csv"
-  local moderators_csv = sonia_path .. "csv/erp-"..semnow.."-moderators.csv"
+  local moderators_csv = "csv/erp-"..semnow.."-moderators.csv"
 
   local function checkpath(s,p)
     if not(path.exists(p)) then
@@ -47,12 +47,14 @@ function proj:list_students(dl_bool,semnow,cohort,UGPG)
   end
 
   local lookup_mods = {}
---  local f = csv.open(moderators_csv,{header=true})
---  for fields in f:lines() do
---    if not(fields["MyUni Project ID"]==nil) then
---      lookup_mods[fields["MyUni Project ID"]] = fields
---    end
---  end
+  local f = csv.open(moderators_csv,{header=true})
+  if f then
+    for fields in f:lines() do
+      if not(fields["MyUni Project ID"]==nil) then
+        lookup_mods[fields["MyUni Project ID"]] = fields
+      end
+    end
+  end
 
 
   myuni_groups = self:get_groups_by_cat(dl_bool,"Project Groups")
@@ -72,7 +74,7 @@ function proj:list_students(dl_bool,semnow,cohort,UGPG)
     end
   end
 
-  print("Consistency check of data\n___________________________\n")
+  print("# Consistency check of data\n")
 
   local count = 0
   local sonia_names = {}
@@ -98,8 +100,8 @@ function proj:list_students(dl_bool,semnow,cohort,UGPG)
     end
   end
 
-  print("# Total number of  CSV  groups: "..count)
-  print("# Total number of MyUni groups: "..count2)
+  print("• Total number of  CSV  groups: "..count)
+  print("• Total number of MyUni groups: "..count2)
   if count == count2 then
     print("Good!")
   end
@@ -120,23 +122,23 @@ function proj:list_students(dl_bool,semnow,cohort,UGPG)
   io.write(csvrow{"Name","ID","ProjID","ShortID","ProjTitle","School","Supervisor","SupervisorID","Moderator","ModeratorID"})
   for k,v in pairs(myuni_groups) do
     for _,u in ipairs(v.users) do
-     if u.sortable_name == "Zhu, Zexin" then
-       pretty.dump(u)
-     end
       local id = u.sis_user_id or string.sub(u.login_id,2,-1) or ""
       lookup_mods[k] = lookup_mods[k] or {}
-      io.write(csvrow{
-        qq(u.sortable_name),
-        id,
-        k,
-        lookup_groups[k]["Short Project ID"],
-        qq(lookup_groups[k]["Project title"]),
-        lookup_groups[k]["Project School"],
-        qq(lookup_groups[k]["Project supervisor"]),
-        lookup_groups[k]["Supervisor ID"],
-        qq(lookup_mods[k]["Moderator"] or ""),
-        lookup_mods[k]["Moderator ID"] or ""
-      })
+      local this_group = lookup_groups[k]
+      if this_group then
+        io.write(csvrow{
+          qq(u.sortable_name),
+          id,
+          k,
+          this_group["Short Project ID"],
+          qq(this_group["Project title"]),
+          this_group["Project School"],
+          qq(this_group["Project supervisor"]),
+          this_group["Supervisor ID"],
+          qq(lookup_mods[k]["Moderator"] or ""),
+          lookup_mods[k]["Mod ID"] or ""
+        })
+      end
     end
   end
 

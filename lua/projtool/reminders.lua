@@ -39,6 +39,7 @@ function proj:message_reminder_add(j,rem_table,args)
     print("Coordinator data/name: "..coord)
     error("Coordinator table must list UoA ID as second entry")
   end
+
   local coord_str = self.staff[coord].name.." <"..self.staff[coord].login_id.."@adelaide.edu.au>"
   self:info("Coordinator: "..coord_str)
 
@@ -182,7 +183,7 @@ function proj:assessor_reminder_collect_moderated(rem_table,subm1,subm2)
 
   if count == 0 then
     print("All supervisor + moderator assessments graded. Hit Enter/Return to continue.")
---    io.read()
+    io.read()
   end
 
   return rem_table
@@ -319,7 +320,7 @@ function proj:assessor_reminder_export(csvfile,rem_table)
 
   io.write(csvrow{
     "Sortable name","Name","UoA ID","Email","School",
-    "Coordinator","Assessment","Role","Since submission","Project ID","Project title",
+    "Coordinator","Assessment","Role","Since submission","Student ID","Student name","Project ID","Project title",
     "Speedgrader URL"})
 
   for k,v in pairs(rem_table) do
@@ -342,6 +343,8 @@ function proj:assessor_reminder_export(csvfile,rem_table)
           assn.assessment,
           role,
           prj.since,
+          "a"..prj.student_id,
+          qq(prj.student_name),
           prj.proj_id,
           qq(prj.proj_title),
           prj.url

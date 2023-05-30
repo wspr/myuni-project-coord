@@ -239,7 +239,7 @@ You have assessed the following student/group:]] .. "\n\n" ..
   end
 
   local body_end
-  if self.assign_canvas_moderated then
+  if self.assign_moderated then
     body_end = "\n\n" .. [[
 You may view your own assessment at the following links: (note you will not be able to see the rubric of the other assessor)
 
