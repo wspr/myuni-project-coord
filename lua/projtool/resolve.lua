@@ -120,7 +120,7 @@ function proj:copy_mod_grades(canvas_subfin,canvas_submod)
       canvas_subfin[i].metadata.super_marks    = canvas_subfin[i].marks
       canvas_subfin[i].metadata.moder_marks    = canvas_submod[i].marks
     else
-      error("Should not happen -- check?")
+      error("No metadata for moderator assessment: should not happen?")
     end
   end
 

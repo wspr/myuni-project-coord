@@ -81,7 +81,7 @@ function proj:check_assignment(assign_data,check_bool,assgn_lbl,debug_user)
       j.metadata.assessment_check.graded = true
       logmessage = logmessage .. "\n" ..("Grade: "..grade.." | Entered grade: "..j.entered_grade)
       if j.late then
-        marks_lost = j.points_deducted
+        marks_lost = j.points_deducted or marks_lost
         logmessage = logmessage .. "\n" ..("LATE - points deducted: "..marks_lost.." - late by: "..(j.seconds_late/60).." min = "..(j.seconds_late/60/60).." hrs = "..(j.seconds_late/60/60/24).." days")
         if j.seconds_late < 60*60 then
           print(logmessage)
