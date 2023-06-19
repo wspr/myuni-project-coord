@@ -102,6 +102,8 @@ If this is necessary, please advise ASAP to allow us to resolve the situation in
   } ,
 }
 
+resolve_msg.interim = resolve_msg.progress
+
 
 function proj:copy_mod_grades(canvas_subfin,canvas_submod)
 
@@ -130,12 +132,12 @@ end
 
 function proj:resolve_grades(resolve_bool,canvas_subfin,canvas_submod)
 
-  print("\n\nRESOLVING MARKS BETWEEN SUPERVISOR & MODERATOR")
-
   local assm = self.deliverable
   if assm == nil then
     error("Must define assessment deliverable")
   end
+
+  print("\n\nRESOLVING MARKS BETWEEN SUPERVISOR & MODERATOR: "..assm)
 
   canvas_subfin = self:copy_mod_grades(canvas_subfin,canvas_submod)
 
