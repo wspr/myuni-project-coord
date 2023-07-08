@@ -178,29 +178,32 @@ function proj:check_moderated(assign_data,check_bool,assgn_lbl,debug_user)
 
   for i,j in pairs(assign_data) do
 
+    local logmessage = ""
+
     assign_data[i].marks = assign_data[i].marks or {}
 
-    print("\n"..i.."\nStudent: "..j.user.name)
+    logmessage = logmessage .. ("\n"..i.."\nStudent: "..j.user.name)
     if j.metadata == nil then
       pretty.dump(j)
       pretty.dump(self.student_ind)
+      print(logmessage)
       print("Student information not included in CSV file. Type y to abort, anything else to continue:")
       if io.read()=="y" then
         error("You aborted")
       end
     else
-      print("Project: "..j.metadata.proj_title)
-      print("Supervisor: "..j.metadata.supervisor .. " | Moderator: "..j.metadata.moderator)
-      print("URL: "..j.metadata.url)
+    logmessage = logmessage .. "\n" .. ("Project: "..j.metadata.proj_title)
+    logmessage = logmessage .. "\n" .. ("Supervisor: "..j.metadata.supervisor .. " | Moderator: "..j.metadata.moderator)
+    logmessage = logmessage .. "\n" .. ("URL: "..j.metadata.url)
 
-      if j.late then
-        marks_lost = j.points_deducted
-        print("LATE - points deducted: "..marks_lost.." - late by: "..(j.seconds_late/60).." min = "..(j.seconds_late/60/60).." hrs = "..(j.seconds_late/60/60/24).." days")
-        if j.seconds_late < 60*60 then
-          print(logmessage)
-          print("Late penalty should be waived (<1hr) -- correct manually")
-        end
+    if j.late then
+      marks_lost = j.points_deducted
+      logmessage = logmessage .. "\n" .. ("LATE - points deducted: "..marks_lost.." - late by: "..(j.seconds_late/60).." min = "..(j.seconds_late/60/60).." hrs = "..(j.seconds_late/60/60/24).." days")
+      if j.seconds_late < 60*60 then
+        print(logmessage)
+        print("Late penalty should be waived (<1hr) -- correct manually")
       end
+    end
 
       j.provisional_grades = j.provisional_grades or {}
       for ig,jg in ipairs(j.provisional_grades) do
@@ -221,7 +224,7 @@ function proj:check_moderated(assign_data,check_bool,assgn_lbl,debug_user)
           assessor_lookup = self:staff_lookup_cid(jj.assessor_id)
           assr_uid = assessor_lookup.login_id
 
-          print("Assessor "..ig..": "..assr.." ("..assr_uid..")")
+          logmessage = logmessage .. "\n" .. ("Assessor "..ig..": "..assr.." ("..assr_uid..")")
 
           for _,jjj in pairs(jj.data) do
             if jjj.points then
@@ -232,29 +235,30 @@ function proj:check_moderated(assign_data,check_bool,assgn_lbl,debug_user)
 
           if jj.score==nil then
             if rubric_count == Nrubric then
-              print("      Assessor: "..assr.." ("..rubric_sum..") - rubric complete but no score.")
+              logmessage = logmessage .. "\n" .. ("      Assessor: "..assr.." ("..rubric_sum..") - rubric complete but no score.")
               if check_bool then
+                print(logmessage)
                 print("Rubric complete but no score: send message? Type y to do so:")
                 self:message_rubric_no_grade(io.read()=="y",j,assr)
               end
             else
-              print("      Assessor: "..assr.." - "..rubric_count.." of "..Nrubric.." rubric entries and no score.")
+              logmessage = logmessage .. "\n" .. ("      Assessor: "..assr.." - "..rubric_count.." of "..Nrubric.." rubric entries and no score.")
             end
             if jg.score then
               scr  = jg.score
-              print("      Score manually entered by assessor ("..scr..")")
+              logmessage = logmessage .. "\n" .. ("      Score manually entered by assessor ("..scr..")")
               rubric_fail = true
             end
           else
             scr  = jj.score
             if rubric_count == Nrubric then
-              print("      Assessor: "..assr.." ("..scr..") - rubric complete.")
+              logmessage = logmessage .. "\n" .. ("      Assessor: "..assr.." ("..scr..") - rubric complete.")
               if rubric_sum-jj.score>0.5 or rubric_sum-scr<-0.5 then
-                print("      Assessor: "..assr.." ("..scr..") - ERROR: rubric sum ("..rubric_sum..") does not match final mark awarded ("..jj.score..")")
+                logmessage = logmessage .. "\n" .. ("      Assessor: "..assr.." ("..scr..") - ERROR: rubric sum ("..rubric_sum..") does not match final mark awarded ("..jj.score..")")
                 rubric_fail = true
               end
             elseif rubric_count < Nrubric then
-              print("      Assessor: "..assr.." ("..scr..") - ERROR: Only "..rubric_count.." of "..Nrubric.." rubric entries completed.")
+              logmessage = logmessage .. "\n" .. ("      Assessor: "..assr.." ("..scr..") - ERROR: Only "..rubric_count.." of "..Nrubric.." rubric entries completed.")
               rubric_fail = true
             end
 
@@ -266,15 +270,14 @@ function proj:check_moderated(assign_data,check_bool,assgn_lbl,debug_user)
           assessor_lookup, assr = self:staff_lookup_cid(jg.scorer_id)
           assr_uid = assessor_lookup.login_id
 
-          print("      Assessor: "..assr.." ("..scr..") - score but no rubric.")
+          logmessage = logmessage .. "\n" .. ("      Assessor: "..assr.." ("..scr..") - score but no rubric.")
 
         else
-
-          print("      Assessment started (?) but not yet complete.")
-
+          logmessage = logmessage .. "\n" .. ("      Assessment started (?) but not yet complete.")
         end
 
         if rubric_fail and check_bool then
+          print(logmessage)
           print("Rubric fail: send message? Type y to do so:")
           self:message_rubric_fail(io.read()=="y",j,scr,rubric_sum,rubric_count,Nrubric,assr)
         end
