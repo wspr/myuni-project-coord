@@ -109,6 +109,8 @@ function proj:copy_mod_grades(canvas_subfin,canvas_submod)
 
   for i in pairs(canvas_submod) do
     if (canvas_subfin[i] == nil) then
+      print("Student/group: "..i)
+      pretty.dump(canvas_submod[i])
       pretty.dump(canvas_subfin)
       error("Processing moderating submission: no matching supervisor assessment found?\nStudent/Project: "..i)
     end
@@ -168,11 +170,15 @@ function proj:resolve_grades(resolve_bool,canvas_subfin,canvas_submod)
             print("Difference - "..grade_diff.." - "..resolve_msg[assm][close_rank].rank)
             print("Resolve flag - "..j.metadata.resolve)
 
-            print("## Send resolution? Type y to do so:")
-            local resolve_check = io.read()=="y"
+            print("## Confirm resolution? Type y to do so and send response, q to do so without a response ('quiet'), and anything else to move on:")
+            local resolve_str = io.read()
 
-            self:message_resolution(resolve_check,j,close_rank,false)
-            if not(resolve_check) then
+            if resolve_str=="y" then
+              self:message_resolution(resolve_check,j,close_rank,false)
+            elseif resolve_str=="q" then
+              -- nothing
+            else
+              -- reset the flag
               canvas_subfin[i].metadata.resolve = ""
             end
           end
@@ -196,13 +202,18 @@ function proj:resolve_grades(resolve_bool,canvas_subfin,canvas_submod)
             print("Moderator  - "..j.metadata.moderator_mark.." - "..j.metadata.moderator)
             print("Difference - "..grade_diff.." - "..resolve_msg[assm][close_rank].rank)
 
-            print("## Send updated resolution? Type y to do so:")
-            local resolve_check = io.read()=="y"
+            print("## Confirm updated resolution? Type y to do so and send response, q to do so without a response ('quiet'), and anything else to move on:")
+            local resolve_str = io.read()
 
-            self:message_resolution(resolve_check,j,close_rank,true)
-            if not(resolve_check) then
+            if resolve_str=="y" then
+              self:message_resolution(resolve_check,j,close_rank,true)
+            elseif resolve_str=="q" then
+              -- nothing
+            else
+              -- reset the flag
               canvas_subfin[i].metadata.resolve = csv_resolve
             end
+
           end
 
         end
