@@ -11,6 +11,7 @@ end
 copy_functions("projtool.setters")
 copy_functions("projtool.people")
 copy_functions("projtool.messages")
+copy_functions("projtool.assess")
 copy_functions("projtool.check")
 copy_functions("projtool.resolve")
 copy_functions("projtool.reminders")

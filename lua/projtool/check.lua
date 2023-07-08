@@ -28,7 +28,7 @@ function proj:check_marking(assign_data,check_bool,assgn_lbl,debug_user)
   end
 
   if self.assignments[self.assign_name_canvas].moderated_grading then
-    print("CHECKING ASSIGNMENT MARKING (MODERATED)")
+    print("\nCHECKING ASSIGNMENT MARKING (MODERATED): "..self.assign_name_canvas)
     assign_data = self:check_moderated(assign_data,check_bool,assgn_lbl,debug_user)
   else
     print("\nCHECKING ASSIGNMENT MARKING: "..self.assign_name_canvas)

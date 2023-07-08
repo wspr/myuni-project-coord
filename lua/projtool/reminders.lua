@@ -181,11 +181,6 @@ function proj:assessor_reminder_collect_moderated(rem_table,subm1,subm2)
     end
   end
 
-  if count == 0 then
-    print("All supervisor + moderator assessments graded. Hit Enter/Return to continue.")
-    io.read()
-  end
-
   return rem_table
 
 end
