@@ -243,7 +243,7 @@ You have assessed the following student/group:]] .. "\n\n" ..
   local penalty_text = ""
   if j.late then
     if j.metadata.supervisor_penalty ~= j.metadata.moderator_penalty then
-      error("Late penalties not equal. Manual fix needed.")
+      print("Late penalties not equal. Manual fix needed.")
     end
     penalty_text =
       "This report was submitted late with the following penalty (not included in the marks shown above):\n\n"..
