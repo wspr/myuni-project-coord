@@ -174,11 +174,12 @@ function proj:resolve_grades(resolve_bool,canvas_subfin,canvas_submod)
             local resolve_str = io.read()
 
             if resolve_str=="y" then
-              self:message_resolution(resolve_check,j,close_rank,false)
+              self:message_resolution(true,j,close_rank,false)
             elseif resolve_str=="q" then
               -- nothing
             else
               -- reset the flag
+              self:message_resolution(false,j,close_rank,false)
               canvas_subfin[i].metadata.resolve = ""
             end
           end
@@ -206,11 +207,12 @@ function proj:resolve_grades(resolve_bool,canvas_subfin,canvas_submod)
             local resolve_str = io.read()
 
             if resolve_str=="y" then
-              self:message_resolution(resolve_check,j,close_rank,true)
+              self:message_resolution(true,j,close_rank,true)
             elseif resolve_str=="q" then
               -- nothing
             else
               -- reset the flag
+              self:message_resolution(false,j,close_rank,false)
               canvas_subfin[i].metadata.resolve = csv_resolve
             end
 

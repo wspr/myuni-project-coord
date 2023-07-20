@@ -42,6 +42,7 @@ function proj:check_assessment_flags(canvas_subm,verbose)
   verbose = verbose or false
   self.marks_csv = self.marks_csv or ("csv/"..self.cohort.."-marks-"..self.deliverable..".csv")
 
+  local some_missing = true
   local resolve = {}
   local override = {}
   local comments = {}
@@ -61,15 +62,18 @@ function proj:check_assessment_flags(canvas_subm,verbose)
         end
       end
     end
+
+    some_missing = false
+    for k,v in pairs(resolve) do
+      if not(v=="Y") then
+        some_missing = true
+        break
+      end
+    end
+  else
+    print("Marks not found: "..self.marks_csv)
   end
 
-  local some_missing = false
-  for k,v in pairs(resolve) do
-    if not(v=="Y") then
-      some_missing = true
-      break
-    end
-  end
 
   return some_missing
 
