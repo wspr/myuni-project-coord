@@ -106,9 +106,10 @@ function proj:list_students(dl_bool,semnow,cohort,UGPG)
     print("Good!")
   end
 
-  print("Constructing student list:")
 
-  csvfile = "csv/"..UGPG.."-"..cohort.."-student-list.csv"
+  csvfile = "../csv/"..UGPG.."-"..cohort.."-student-list.csv"
+
+  print("Constructing student list: "..csvfile)
 
   file.copy(csvfile,("backup-"..csvfile))
   local ff = io.output(csvfile)

@@ -145,10 +145,9 @@ end
 
 function proj:read_csv_data(csvfile)
 
-  csvfile = csvfile or ("csv/"..self.cohort.."-student-list.csv")
-
   self:get_staff()
 
+  csvfile = csvfile or ("../csv/"..self.cohort.."-student-list.csv")
   print("Reading CSV data of students/projects/supervisors/moderators: "..csvfile)
 
   self.projects = {}
