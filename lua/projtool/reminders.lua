@@ -20,11 +20,15 @@ function proj:message_reminder_add(j,rem_table,args)
   local assm = self.deliverable
 
   local acad_id   = j.metadata[sup_or_mod.."_id"]
+  local staff_lookup, acad_name
   if (acad_id == nil) or (acad_id == "") then
     pretty.dump(j.metadata)
-    error("Huh? Missing metadata: '"..sup_or_mod.."_id'")
+    print("!!!!!!!!!!!! Huh? Missing metadata: '"..sup_or_mod.."_id'")
+    staff_lookup = {}
+    acad_name = "MISSING"
+  else
+    staff_lookup, acad_name = self:staff_lookup(acad_id)
   end
-  local staff_lookup, acad_name = self:staff_lookup(acad_id)
 
   local school = j.metadata.school
   self:info("School: "..school)

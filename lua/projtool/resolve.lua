@@ -167,6 +167,8 @@ function proj:resolve_grades(resolve_bool,canvas_subfin,canvas_submod)
             print("# Assessment resolution: "..j.user.name..", "..j.metadata.proj_title.." ("..j.metadata.proj_id..")")
             print("Supervisor - "..j.metadata.supervisor_mark.." - "..j.metadata.supervisor)
             print("Moderator  - "..j.metadata.moderator_mark.." - "..j.metadata.moderator)
+            print("Supervisor - "..j.metadata.supervisor_url)
+            print("Moderator  - "..j.metadata.moderator_url)
             print("Difference - "..grade_diff.." - "..resolve_msg[assm][close_rank].rank)
             print("Resolve flag - "..j.metadata.resolve)
 
@@ -201,6 +203,8 @@ function proj:resolve_grades(resolve_bool,canvas_subfin,canvas_submod)
             print("INCONSISTENCY RESOLVED")
             print("Supervisor - "..j.metadata.supervisor_mark.." - "..j.metadata.supervisor)
             print("Moderator  - "..j.metadata.moderator_mark.." - "..j.metadata.moderator)
+            print("Supervisor - "..j.metadata.supervisor_url)
+            print("Moderator  - "..j.metadata.moderator_url)
             print("Difference - "..grade_diff.." - "..resolve_msg[assm][close_rank].rank)
 
             print("## Confirm updated resolution? Type y to do so and send response, q to do so without a response ('quiet'), and anything else to move on:")
@@ -283,16 +287,17 @@ Thank you for your significant contributions towards the success of our capstone
     close_text = resolve_msg[assm][close_rank].body
   end
 
+  local recip = {}
   if self.staff[j.metadata.supervisor_id] == nil then
-    error("Assessor '"..j.metadata.supervisor_id.."' not found in staff list.")
+    print("Assessor '"..j.metadata.supervisor_id.."' not found in staff list.")
+  else
+    recip[#recip+1] = self.staff[j.metadata.supervisor_id].id
   end
   if self.staff[j.metadata.moderator_id] == nil then
-    error("Assessor '"..j.metadata.moderator_id.."' not found in staff list.")
+    print("Assessor '"..j.metadata.moderator_id.."' not found in staff list.")
+  else
+    recip[#recip+1] = self.staff[j.metadata.moderator_id].id
   end
-  local recip = {
-        self.staff[j.metadata.supervisor_id].id ,
-        self.staff[j.metadata.moderator_id].id  ,
-  }
   if self.coordinators then
     local coord = self.coordinators[j.metadata.school]
     recip[#recip+1] = self.staff[coord[2]].id
