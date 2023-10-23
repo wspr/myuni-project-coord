@@ -94,9 +94,10 @@ function proj:message_reminder_add(j,rem_table,args)
       remind_url_str = "      SpeedGrader link: <" .. j.metadata.url .. ">\n"
     end
   else
-    j.metadata.since = tostring(Date{} - df:parse(j.metadata.submitted_at))
-    local nicedate = Date.Format(dfformat):tostring(df:parse(j.metadata.submitted_at))
-    remind_submitted_str = "             Submitted: " .. j.metadata.submitted_at .. " (".. j.metadata.since .."ago)\n"
+--    j.metadata.since = tostring(Date{} - df:parse(j.metadata.submitted_at))
+--    local nicedate = Date.Format(dfformat):tostring(df:parse(j.metadata.submitted_at))
+--    remind_submitted_str = "             Submitted: " .. j.metadata.submitted_at .. " (".. j.metadata.since .."ago)\n"
+    remind_submitted_str = "             Submitted: " .. j.metadata.submitted_at .. "\n"
     if self.assign_has_submission then
       remind_url_str = "      SpeedGrader link: <" .. j.metadata.url .. ">\n"
     end
