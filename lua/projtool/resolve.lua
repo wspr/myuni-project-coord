@@ -139,7 +139,7 @@ function proj:resolve_grades(resolve_bool,canvas_subfin,canvas_submod)
     error("Must define assessment deliverable")
   end
 
-  print("\n\nRESOLVING MARKS BETWEEN SUPERVISOR & MODERATOR: "..assm)
+  print("\n\n## RESOLVING MARKS BETWEEN SUPERVISOR & MODERATOR: "..assm)
 
   canvas_subfin = self:copy_mod_grades(canvas_subfin,canvas_submod)
 

@@ -28,10 +28,10 @@ function proj:check_marking(assign_data,check_bool,assgn_lbl,debug_user)
   end
 
   if self.assignments[self.assign_name_canvas].moderated_grading then
-    print("\n## CHECKING ASSIGNMENT MARKING (MODERATED): "..self.assign_name_canvas)
+    self:print("\n## CHECKING ASSIGNMENT MARKING (MODERATED): "..self.assign_name_canvas)
     assign_data = self:check_moderated(assign_data,check_bool,assgn_lbl,debug_user)
   else
-    print("\n## CHECKING ASSIGNMENT MARKING: "..self.assign_name_canvas)
+    self:print("\n## CHECKING ASSIGNMENT MARKING (NOT MODERATED): "..self.assign_name_canvas)
     assign_data = self:check_assignment(assign_data,check_bool,assgn_lbl,debug_user)
   end
 
@@ -186,24 +186,24 @@ function proj:check_moderated(assign_data,check_bool,assgn_lbl,debug_user)
     if j.metadata == nil then
       pretty.dump(j)
       pretty.dump(self.student_ind)
-      print(logmessage)
-      print("Student information not included in CSV file. Type y to abort, anything else to continue:")
+      self:print(logmessage)
+      self:print("Student information not included in CSV file. Type y to abort, anything else to continue:")
       if io.read()=="y" then
         error("You aborted")
       end
     else
-    logmessage = logmessage .. "\n" .. ("Project: "..j.metadata.proj_title)
-    logmessage = logmessage .. "\n" .. ("Supervisor: "..j.metadata.supervisor .. " | Moderator: "..j.metadata.moderator)
-    logmessage = logmessage .. "\n" .. ("URL: "..j.metadata.url)
+      logmessage = logmessage .. "\n" .. ("Project: "..j.metadata.proj_title)
+      logmessage = logmessage .. "\n" .. ("Supervisor: "..j.metadata.supervisor .. " | Moderator: "..j.metadata.moderator)
+      logmessage = logmessage .. "\n" .. ("URL: "..j.metadata.url)
 
-    if j.late then
-      marks_lost = j.points_deducted
-      logmessage = logmessage .. "\n" .. ("LATE - points deducted: "..marks_lost.." - late by: "..(j.seconds_late/60).." min = "..(j.seconds_late/60/60).." hrs = "..(j.seconds_late/60/60/24).." days")
-      if j.seconds_late < 60*60 then
-        print(logmessage)
-        print("Late penalty should be waived (<1hr) -- correct manually")
+      if j.late then
+        marks_lost = j.points_deducted
+        logmessage = logmessage .. "\n" .. ("LATE - points deducted: "..marks_lost.." - late by: "..(j.seconds_late/60).." min = "..(j.seconds_late/60/60).." hrs = "..(j.seconds_late/60/60/24).." days")
+        if j.seconds_late < 60*60 then
+          print(logmessage)
+          print("Late penalty should be waived (<1hr) -- correct manually")
+        end
       end
-    end
 
       j.provisional_grades = j.provisional_grades or {}
       for ig,jg in ipairs(j.provisional_grades) do
@@ -237,8 +237,8 @@ function proj:check_moderated(assign_data,check_bool,assgn_lbl,debug_user)
             if rubric_count == Nrubric then
               logmessage = logmessage .. "\n" .. ("      Assessor: "..assr.." ("..rubric_sum..") - rubric complete but no score.")
               if check_bool then
-                print(logmessage)
-                print("Rubric complete but no score: send message? Type y to do so:")
+                self:print(logmessage)
+                self:print("Rubric complete but no score: send message? Type y to do so:")
                 self:message_rubric_no_grade(io.read()=="y",j,assr)
               end
             else
@@ -277,9 +277,13 @@ function proj:check_moderated(assign_data,check_bool,assgn_lbl,debug_user)
         end
 
         if rubric_fail and check_bool then
-          print(logmessage)
-          print("Rubric fail: send message? Type y to do so:")
+          self:print(logmessage)
+          self:print("Rubric fail: send message? Type y to do so:")
           self:message_rubric_fail(io.read()=="y",j,scr,rubric_sum,rubric_count,Nrubric,assr)
+        else
+          if self.verbose > 1 then
+            self:print(logmessage)
+          end
         end
 
         local assgn_lbl = nil
