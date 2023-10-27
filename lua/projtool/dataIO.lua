@@ -49,7 +49,10 @@ function proj:check_assessment_flags(canvas_subm,verbose)
   if path.exists(self.marks_csv) then
     print("Loading marks resolutions and comments from: "..self.marks_csv)
     local f = csv.open(self.marks_csv,{header=true})
+
+    local count_lines = 0
     for fields in f:lines() do
+      count_lines = count_lines + 1
       local ind = 'USERID'
       if self.assign_grouped then
         ind = 'PROJID'
@@ -62,8 +65,13 @@ function proj:check_assessment_flags(canvas_subm,verbose)
         end
       end
     end
+    print("Lines: ",count)
 
     some_missing = false
+    if count_lines == 1 then
+      print("Zero lines in marks file")
+      some_missing = true
+    end
     for k,v in pairs(resolve) do
       if not(v=="Y") then
         some_missing = true
