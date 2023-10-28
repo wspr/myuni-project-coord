@@ -65,10 +65,10 @@ function proj:check_assessment_flags(canvas_subm,verbose)
         end
       end
     end
-    print("Lines: ",count)
+    print("Lines: ",count_lines)
 
     some_missing = false
-    if count_lines == 1 then
+    if (count_lines == 1) then
       print("Zero lines in marks file")
       some_missing = true
     end
