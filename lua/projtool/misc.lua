@@ -25,18 +25,18 @@ end
 function proj:list_students(dl_bool,semnow,cohort,UGPG)
 
 
-  local sonia_path = "../"
-  local sonia_csv = sonia_path .. "csv/erp-projects-export.csv"
-  local moderators_csv = "csv/erp-"..semnow.."-moderators.csv"
+  local csv_path       = "../csv/"
+  local sonia_csv      = csv_path .. "erp-projects-export.csv"
+  local moderators_csv = csv_path .. "erp-"..semnow.."-moderators.csv"
 
   local function checkpath(s,p)
     if not(path.exists(p)) then
       error("Path to "..s.." not found: \n\n    ".. p .."\n")
     end
   end
-  checkpath("SONIA OneDrive folder",sonia_path)
-  checkpath("SONIA CSV file",sonia_csv)
---  checkpath("moderators CSV file",moderators_csv)
+  checkpath("OneDrive folder",csv_path)
+  checkpath("CSV file",sonia_csv)
+  checkpath("Moderators CSV file",moderators_csv)
 
   local f = csv.open(sonia_csv,{header=true})
   local lookup_groups = {}
@@ -55,7 +55,6 @@ function proj:list_students(dl_bool,semnow,cohort,UGPG)
       end
     end
   end
-
 
   myuni_groups = self:get_groups_by_cat(dl_bool,"Project Groups")
   for grp,v in pairs(myuni_groups) do
@@ -107,12 +106,13 @@ function proj:list_students(dl_bool,semnow,cohort,UGPG)
   end
 
 
-  csvfile = "../csv/"..UGPG.."-"..cohort.."-student-list.csv"
+  local student_list_filename = UGPG.."-"..cohort.."-student-list.csv"
+  local student_list_filepath = csv_path .. student_list_filename
 
-  print("Constructing student list: "..csvfile)
+  print("Constructing student list: "..student_list_filepath)
 
-  file.copy(csvfile,("backup-"..csvfile))
-  local ff = io.output(csvfile)
+  file.copy(student_list_filepath,("backup-"..student_list_filepath))
+  local ff = io.output(student_list_filepath)
 
   local function qq(str) return '"'..str..'"' end
   local function csvrow(tbl)
