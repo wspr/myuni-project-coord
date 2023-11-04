@@ -297,11 +297,12 @@ end
 
 
 
-function proj:assessor_reminder_export(csvfile,rem_table)
+function proj:assessor_reminder_export(rem_table)
 
-  print("Constructing reminders list:  "..csvfile)
-  file.copy(csvfile,("backup-"..csvfile))
-  local ff = io.output(csvfile)
+  self:print("===================\nREMINDERS\n")
+
+  local csvfile = "csv/assessment-reminders.csv"
+  local mailmergefile = "csv/assessment-reminders-mailmerge.csv"
 
   local function qq(str) return '"'..str..'"' end
   local function csvrow(tbl)
@@ -317,6 +318,12 @@ function proj:assessor_reminder_export(csvfile,rem_table)
     end
     return str.."\n"
   end
+
+
+
+  print("Constructing reminders list:  "..csvfile)
+  file.copy(csvfile,("backup-"..csvfile))
+  local ff = io.output(csvfile)
 
   io.write(csvrow{
     "Sortable name","Name","UoA ID","Email","School",
@@ -351,6 +358,61 @@ function proj:assessor_reminder_export(csvfile,rem_table)
         })
       end
     end
+  end
+
+  io.close(ff)
+  print("...done.")
+
+
+
+  merge_tbl = {}
+  for k,v in pairs(rem_table) do
+    for _,assn in pairs(v.marking) do
+      for _,prj in ipairs(assn.projects) do
+
+        local role = "Assessor"
+        if prj.supervisor_id == v.details.login_id then
+          role = "Supervisor"
+        elseif prj.moderator_id == v.details.login_id then
+          role = "Moderator"
+        end
+
+        local uid = v.details.login_id
+        if uid then
+          local rem_text =
+            "Project ID: "..prj.proj_id.."  ("..assn.assessment..")\n"..
+            "Project title: "..prj.proj_title.."\n"..
+            "Speedgrader URL: "..prj.url.."\n"
+
+          merge_tbl[uid] = merge_tbl[uid] or {}
+          merge_tbl[uid].assessor = v.details.short_name
+          merge_tbl[uid].email    = v.details.email or (v.details.login_id.."@adelaide.edu.au")
+          if merge_tbl[uid][role] == nil then
+            merge_tbl[uid][role] = rem_text
+          else
+            merge_tbl[uid][role] = merge_tbl[uid][role] .. "\n\n" .. rem_text
+          end
+        end
+      end
+    end
+  end
+
+
+  print("Constructing mailmerge csv:  "..mailmergefile)
+  file.copy(mailmergefile,("backup-"..mailmergefile))
+  local ff = io.output(mailmergefile)
+
+  io.write(csvrow{
+    "UID","ASSESSOR","EMAIL","SUPERVISED","MODERATED"})
+
+  for k,v in pairs(merge_tbl) do
+        io.write(
+          csvrow{k,
+          v.assessor,
+          v.email,
+          qq(v.Supervisor or "[none]"),
+          qq(v.Moderator or "[none]")
+        })
   end
 
   io.close(ff)
