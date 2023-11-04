@@ -12,7 +12,7 @@ local resolve_msg = {}
 
 resolve_msg.final = {
   {
-    threshold = 5 ,
+    threshold = 4 ,
     subject = "Marking thanks" ,
     rank = "Close",
     flag = "Y",
@@ -20,7 +20,7 @@ resolve_msg.final = {
 These grades are very close and will be taken to calculate the final grade for the group.]]
   } ,
   {
-    threshold = 10 ,
+    threshold = 8 ,
     subject = "Marking thanks" ,
     rank = "Near",
     flag = "Y",
@@ -28,7 +28,7 @@ These grades are very close and will be taken to calculate the final grade for t
 These grades are quite consistent and will be taken to calculate the final grade for the group.]]
   } ,
   {
-    threshold = 15 ,
+    threshold = 12 ,
     subject = "Marking concern" ,
     rank = "Far",
     flag = "Y",

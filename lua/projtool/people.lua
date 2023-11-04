@@ -132,9 +132,8 @@ function proj:staff_lookup_cid(acad_cid)
   end
   acad_uid = self.all_staff_id_by_cid[acad_cid]
   if acad_uid == nil then
-    pretty.dump(self.staff)
     pretty.dump(self.all_staff_id_by_cid)
-    error("Assessor with Canvas ID "..acad_cid.." not found in staff list.")
+    error("Assessor with Canvas ID "..acad_cid.." not found in 'all staff' list.")
   end
 
   acad_lookup, acad_name = self:staff_lookup(acad_uid)
@@ -145,7 +144,15 @@ end
 
 function proj:read_csv_data(csvfile)
 
+  self:print("### Refreshing staff list")
   self:get_staff()
+  self.all_staff_id_by_name = {}
+  self.all_staff_id_by_cid = {}
+  for uid,v in pairs(self.staff) do
+    self:print("|  "..v.sortable_name.."  |  "..v.id.."  |  "..uid.."  |")
+    self.all_staff_id_by_cid[v.id] = uid
+    self.all_staff_id_by_name[v.sortable_name] = uid
+  end
 
   csvfile = csvfile or ("../csv/"..self.cohort.."-student-list.csv")
   print("Reading CSV data of students/projects/supervisors/moderators: "..csvfile)
@@ -154,8 +161,6 @@ function proj:read_csv_data(csvfile)
   self.proj_data = {}
   self.student_ind = {}
   self.all_staff = {}
-  self.all_staff_id_by_name = {}
-  self.all_staff_id_by_cid = {}
 
   local f = csv.open(csvfile,{header=true})
   if f == nil then
@@ -220,10 +225,6 @@ function proj:read_csv_data(csvfile)
 
 
 
-  for uid,v in pairs(self.staff) do
-    self.all_staff_id_by_cid[v.id] = uid
-    self.all_staff_id_by_name[v.sortable_name] = uid
-  end
 
   local not_found_canvas = ""
   for id,dat in pairs(self.all_staff) do
