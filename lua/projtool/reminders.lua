@@ -382,7 +382,7 @@ function proj:assessor_reminder_export(rem_table)
           local rem_text =
             "Project ID: "..prj.proj_id.."  ("..assn.assessment..")\n"..
             "Project title: "..prj.proj_title.."\n"..
-            "Speedgrader URL: "..prj.url.."\n"
+            "Speedgrader URL: "..prj.url
 
           merge_tbl[uid] = merge_tbl[uid] or {}
           merge_tbl[uid].assessor = v.details.short_name
