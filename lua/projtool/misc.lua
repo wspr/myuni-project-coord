@@ -12,13 +12,6 @@ local proj = {}
 
 
 
-function proj:info(s)
-
-  if self.verbose > 1 then
-    self:print("INFO:  "..s)
-  end
-
-end
 
 
 

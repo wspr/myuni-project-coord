@@ -47,7 +47,7 @@ function proj:check_assessment_flags(canvas_subm,verbose)
   local override = {}
   local comments = {}
   if path.exists(self.marks_csv) then
-    print("Loading marks resolutions and comments from: "..self.marks_csv)
+    self:print("Loading marks resolutions and comments from: "..self.marks_csv)
     local f = csv.open(self.marks_csv,{header=true})
 
     local count_lines = 0
@@ -65,11 +65,11 @@ function proj:check_assessment_flags(canvas_subm,verbose)
         end
       end
     end
-    print("Lines: ",count_lines)
+    self:print("Lines: ",count_lines)
 
     some_missing = false
     if (count_lines == 1) then
-      print("Zero lines in marks file")
+      self:print("Zero lines in marks file")
       some_missing = true
     end
     for k,v in pairs(resolve) do
@@ -79,7 +79,7 @@ function proj:check_assessment_flags(canvas_subm,verbose)
       end
     end
   else
-    print("Marks not found: "..self.marks_csv)
+    self:print("Marks not found: "..self.marks_csv)
   end
 
 
