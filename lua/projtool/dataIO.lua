@@ -82,7 +82,6 @@ function proj:check_assessment_flags(canvas_subm,verbose)
     self:print("Marks not found: "..self.marks_csv)
   end
 
-
   return some_missing
 
 end

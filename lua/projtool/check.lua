@@ -174,6 +174,24 @@ end
 
 function proj:check_moderated(assign_data,check_bool,assgn_lbl,debug_user)
 
+  -- Ensure canvas moderation settings are "correct"
+  local fixme = false
+  if self.assignments[self.assign_name_canvas].grader_count < 999 then
+    fixme = true
+  end
+  if self.assignments[self.assign_name_canvas].grader_comments_visible_to_graders == true then
+    fixme = true
+  end
+  if fixme then
+    pretty.dump(self.assignments[self.assign_name_canvas])
+    self:print("Fixing moderated assignment settings:")
+    self:create_assignment{
+       name  = self.assign_name_canvas ,
+       grader_comments_visible_to_graders = false,
+       grader_count = 999,
+      }
+  end
+
   local Nrubric = #self.assignments[self.assign_name_canvas].rubric
 
   for i,j in pairs(assign_data) do
