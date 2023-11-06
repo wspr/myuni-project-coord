@@ -60,7 +60,7 @@ end
 function proj:add_assessment_metadata(canvas_subm,verbose)
 
   verbose = verbose or false
-  self.marks_csv = self.marks_csv or ("csv/"..self.cohort.."-marks-"..self.deliverable..".csv")
+  self.marks_csv = self.marks_csv or string.lower("csv/"..self.cohort.."-marks-"..self.deliverable..".csv")
 
   local resolve = {}
   local override = {}

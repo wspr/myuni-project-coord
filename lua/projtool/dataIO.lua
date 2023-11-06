@@ -16,15 +16,15 @@ function proj:dl_check(opt,str)
   opt.download = opt.download or "ask"
   local check_bool = false
   if opt.download == "ask" then
-    print(str .. " Type y to do so:")
+    self:print(str .. " Type y to do so:")
     if io.read() == "y" then
       check_bool = true
     end
   elseif (opt.download == "always") or (opt.download == true) then
-    print(str .. " User requested 'Always'.")
+    self:print(str .. " User requested 'Always'.")
     check_bool = true
   elseif (opt.download == "never") or (opt.download == false) then
-    print(str .. " User requested 'Never'.")
+    self:print(str .. " User requested 'Never'.")
   else
     error("Interface: { download = 'ask' (default) | 'always' | 'never' } ")
   end
@@ -33,14 +33,19 @@ end
 
 
 
+function proj:check_csv_exists()
 
+  self.marks_csv = self.marks_csv or string.lower("csv/"..self.cohort.."-marks-"..self.deliverable..".csv")
+  return path.exists(self.marks_csv)
+
+end
 
 
 
 function proj:check_assessment_flags(canvas_subm,verbose)
 
   verbose = verbose or false
-  self.marks_csv = self.marks_csv or ("csv/"..self.cohort.."-marks-"..self.deliverable..".csv")
+  self.marks_csv = self.marks_csv or string.lower("csv/"..self.cohort.."-marks-"..self.deliverable..".csv")
 
   local some_missing = true
   local resolve = {}
@@ -92,11 +97,13 @@ end
 
 
 function proj:export_csv_marks_moderated(subm,arg)
+  self:print("## Export CSV marks (moderated)")
 
-  self.marks_csv = self.marks_csv or ("csv/"..self.cohort.."-marks-"..self.deliverable..".csv")
+  self.marks_csv = self.marks_csv or string.lower("csv/"..string.lower(self.cohort.."-marks-"..self.deliverable..".csv"))
 
   local weightings = arg.weightings or {0.5,0.5}
 
+  self:print("* Writing marks to file: '"..self.marks_csv.."'...")
   file.copy(self.marks_csv,("backup-"..self.marks_csv))
   local ff = io.output(self.marks_csv)
   io.write("INDEX,USERID,NAME,SCHOOL,PROJID,TITLE,MARK,DIFF,RESOLVED,OVERRIDE,COMMENTS,SIMILARITY,SUPERVISOR,SUPMARK,MODERATOR,MODMARK,SUPID,MODID,SUPURL,MODURL,UID1,ASSESSOR1,SCORE1,UID2,ASSESSOR2,SCORE2,UID3,ASSESSOR3,SCORE3,UID4,ASSESSOR4,SCORE4,UID5,ASSESSOR5,SCORE5,\n")
@@ -173,7 +180,7 @@ function proj:export_csv_marks_moderated(subm,arg)
     io.write(writestr.."\n")
   end
   io.close(ff)
-  print("\n\n==================\nMarks CSV written:\n    "..self.marks_csv)
+  self:print("* ...done: "..self.marks_csv)
 
 end
 
@@ -181,7 +188,9 @@ end
 
 function proj:export_csv_marks(subm)
 
-  self.marks_csv = self.marks_csv or ("csv/"..self.cohort.."-marks-"..self.deliverable..".csv")
+  self:print("## Export CSV marks (not moderated)")
+
+  self.marks_csv = self.marks_csv or string.lower("csv/"..string.lower(self.cohort.."-marks-"..self.deliverable..".csv"))
 
   local nameind = {}
   for i in pairs(subm) do
@@ -199,7 +208,7 @@ function proj:export_csv_marks(subm)
     return res
   end)
 
-  print("Writing marks to file: '"..self.marks_csv.."'...")
+  self:print("* Writing marks to file: '"..self.marks_csv.."'...")
   file.copy(self.marks_csv,("backup-"..self.marks_csv))
   local ff = io.output(self.marks_csv)
   io.write("INDEX,USERID,NAME,SCHOOL,PROJID,TITLE,SUPERVISOR,MARK,URL\n")
@@ -224,7 +233,7 @@ function proj:export_csv_marks(subm)
   end
 
   io.close(ff)
-  print("...done.")
+  self:print("* ...done: "..self.marks_csv)
 
 end
 
