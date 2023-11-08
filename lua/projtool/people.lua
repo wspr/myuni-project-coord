@@ -149,7 +149,7 @@ function proj:read_csv_data(csvfile)
   self.all_staff_id_by_name = {}
   self.all_staff_id_by_cid = {}
   for uid,v in pairs(self.staff) do
-    self:print("|  "..v.sortable_name.."  |  "..v.id.."  |  "..uid.."  |")
+--    self:print("|  "..v.sortable_name.."  |  "..v.id.."  |  "..uid.."  |")
     self.all_staff_id_by_cid[v.id] = uid
     self.all_staff_id_by_name[v.sortable_name] = uid
   end

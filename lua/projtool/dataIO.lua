@@ -47,44 +47,45 @@ function proj:check_assessment_flags(canvas_subm,verbose)
   verbose = verbose or false
   self.marks_csv = self.marks_csv or string.lower("csv/"..self.cohort.."-marks-"..self.deliverable..".csv")
 
-  local some_missing = true
   local resolve = {}
   local override = {}
   local comments = {}
-  if path.exists(self.marks_csv) then
-    self:print("Loading marks resolutions and comments from: "..self.marks_csv)
-    local f = csv.open(self.marks_csv,{header=true})
 
-    local count_lines = 0
-    for fields in f:lines() do
-      count_lines = count_lines + 1
-      local ind = 'USERID'
-      if self.assign_grouped then
-        ind = 'PROJID'
-      end
-      if fields[ind] then
-        if self.assign_moderated then
-          resolve[fields[ind]] = fields['RESOLVED']
-        else
-          resolve[fields[ind]] = not(fields['MARK'] == "") and "Y" or "N"
-        end
-      end
-    end
-    self:print("Lines: ",count_lines)
-
-    some_missing = false
-    if (count_lines == 1) then
-      self:print("Zero lines in marks file")
-      some_missing = true
-    end
-    for k,v in pairs(resolve) do
-      if not(v=="Y") then
-        some_missing = true
-        break
-      end
-    end
-  else
+  if not(path.exists(self.marks_csv)) then
     self:print("Marks not found: "..self.marks_csv)
+    return true
+  end
+
+  self:print("Loading marks resolutions and comments from: "..self.marks_csv)
+  local f = csv.open(self.marks_csv,{header=true})
+
+  local count_lines = 0
+  for fields in f:lines() do
+    count_lines = count_lines + 1
+    local ind = 'USERID'
+    if self.assign_grouped then
+      ind = 'PROJID'
+    end
+    if fields[ind] then
+      if self.assign_moderated then
+        resolve[fields[ind]] = fields['RESOLVED']
+      else
+        resolve[fields[ind]] = not(fields['MARK'] == "") and "Y" or "N"
+      end
+    end
+  end
+  self:info("Lines: ",count_lines)
+
+  local some_missing = false
+  if (count_lines < 2) then
+    self:print("Zero lines in marks file")
+    some_missing = true
+  end
+  for k,v in pairs(resolve) do
+    if not(v=="Y") then
+      some_missing = true
+      break
+    end
   end
 
   return some_missing
@@ -97,7 +98,14 @@ end
 
 
 function proj:export_csv_marks_moderated(subm,arg)
-  self:print("## Export CSV marks (moderated)")
+
+  self:print("## Export CSV marks (moderated): "..self.assign_name_canvas)
+
+  if next(subm)==nil then
+    self:print("Problem! Submission data to export is empty!")
+    io.read()
+    return
+  end
 
   self.marks_csv = self.marks_csv or string.lower("csv/"..string.lower(self.cohort.."-marks-"..self.deliverable..".csv"))
 
@@ -106,7 +114,7 @@ function proj:export_csv_marks_moderated(subm,arg)
   self:print("* Writing marks to file: '"..self.marks_csv.."'...")
   file.copy(self.marks_csv,("backup-"..self.marks_csv))
   local ff = io.output(self.marks_csv)
-  io.write("INDEX,USERID,NAME,SCHOOL,PROJID,TITLE,MARK,DIFF,RESOLVED,OVERRIDE,COMMENTS,SIMILARITY,SUPERVISOR,SUPMARK,MODERATOR,MODMARK,SUPID,MODID,SUPURL,MODURL,UID1,ASSESSOR1,SCORE1,UID2,ASSESSOR2,SCORE2,UID3,ASSESSOR3,SCORE3,UID4,ASSESSOR4,SCORE4,UID5,ASSESSOR5,SCORE5,\n")
+  io.write("INDEX,USERID,NAME,SCHOOL,PROJID,TITLE,MARK,DIFF,RESOLVED,LATE,SIMILARITY,SUPERVISOR,SUPMARK,MODERATOR,MODMARK,SUPID,MODID,SUPURL,MODURL,UID1,ASSESSOR1,SCORE1,UID2,ASSESSOR2,SCORE2,UID3,ASSESSOR3,SCORE3,UID4,ASSESSOR4,SCORE4,UID5,ASSESSOR5,SCORE5,\n")
 
   local nameind = {}
   for i in pairs(subm) do
@@ -126,6 +134,7 @@ function proj:export_csv_marks_moderated(subm,arg)
     end
   )
 
+  self:print("* ...Entries sorted: "..#nameind.."...")
   for cc,n in ipairs(nameind) do
     local j = subm[n]
     j.metadata = j.metadata or {}
@@ -154,8 +163,7 @@ function proj:export_csv_marks_moderated(subm,arg)
       (mark or "")..","..
       (diff or "")..","..
       (j.metadata.resolve  or "")..","..
-      (j.metadata.override or "")..","..
-      (j.metadata.comments or "")..","..
+      (j.seconds_late or 0)..","..
       (similarity_score)..","..
       "\""..(j.metadata.supervisor or "").."\""..","..
       (j.metadata.supervisor_mark or "")..","..
@@ -188,7 +196,7 @@ end
 
 function proj:export_csv_marks(subm)
 
-  self:print("## Export CSV marks (not moderated)")
+  self:print("## Export CSV marks (not moderated): "..self.assign_name_canvas)
 
   self.marks_csv = self.marks_csv or string.lower("csv/"..string.lower(self.cohort.."-marks-"..self.deliverable..".csv"))
 
@@ -211,7 +219,7 @@ function proj:export_csv_marks(subm)
   self:print("* Writing marks to file: '"..self.marks_csv.."'...")
   file.copy(self.marks_csv,("backup-"..self.marks_csv))
   local ff = io.output(self.marks_csv)
-  io.write("INDEX,USERID,NAME,SCHOOL,PROJID,TITLE,SUPERVISOR,MARK,URL\n")
+  io.write("INDEX,USERID,NAME,SCHOOL,PROJID,TITLE,SUPERVISOR,MARK,LATE,URL\n")
 
   for cc,n in ipairs(nameind) do
     local j = subm[n]
@@ -225,6 +233,7 @@ function proj:export_csv_marks(subm)
       "\"'"..(j.metadata.proj_title or "").."'\""..","..
       "\""..(j.metadata.supervisor or "").."\""..","..
       (j.grade or "")..","..
+      (j.seconds_late or 0)..","..
       (j.metadata.url or "")
 
     if not(j.grade == "-1") then

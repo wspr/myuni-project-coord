@@ -63,10 +63,8 @@ function proj:add_assessment_metadata(canvas_subm,verbose)
   self.marks_csv = self.marks_csv or string.lower("csv/"..self.cohort.."-marks-"..self.deliverable..".csv")
 
   local resolve = {}
-  local override = {}
-  local comments = {}
   if path.exists(self.marks_csv) then
-    print("Loading marks resolutions and comments from: "..self.marks_csv)
+    print("Loading marks resolutions from: "..self.marks_csv)
     local f = csv.open(self.marks_csv,{header=true})
     for fields in f:lines() do
       local ind = 'USERID'
@@ -75,8 +73,6 @@ function proj:add_assessment_metadata(canvas_subm,verbose)
       end
       if fields[ind] then
         resolve[fields[ind]]  = fields['RESOLVED']
-        override[fields[ind]] = fields['OVERRIDE']
-        comments[fields[ind]] = fields['COMMENTS']
       end
     end
   end
@@ -113,8 +109,6 @@ function proj:add_assessment_metadata(canvas_subm,verbose)
       end
       subm[hash_index].metadata.url         = url
       subm[hash_index].metadata.resolve     = resolve[hash_index]  or ""
-      subm[hash_index].metadata.override    = override[hash_index] or ""
-      subm[hash_index].metadata.comments    = comments[hash_index] or ""
     else
       print("WARNING!!! No metadata found for submission by: "..student_name.." (ID: "..student_id..")")
     end

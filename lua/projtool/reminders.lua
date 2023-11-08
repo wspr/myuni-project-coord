@@ -94,7 +94,8 @@ function proj:message_reminder_add(j,rem_table,args)
       remind_url_str = "      SpeedGrader link: <" .. j.metadata.url .. ">\n"
     end
   else
-    j.metadata.since = tostring(Date{} - df:parse(j.metadata.submitted_at))
+    self:print("Now:       "..tostring(Date{}))
+    j.metadata.since = "" -- tostring(Date{} - df:parse(j.metadata.submitted_at))
     local nicedate = Date.Format(dfformat):tostring(df:parse(j.metadata.submitted_at))
     remind_submitted_str = "             Submitted: " .. j.metadata.submitted_at .. " (".. j.metadata.since .."ago)\n"
 --    remind_submitted_str = "             Submitted: " .. j.metadata.submitted_at .. "\n"
@@ -299,9 +300,9 @@ end
 
 function proj:assessor_reminder_export(rem_table)
 
-  self:print("===================\nREMINDERS\n")
+  self:print("## REMINDERS")
 
-  local csvfile = "csv/assessment-reminders.csv"
+  local csvfile       = "csv/assessment-reminders.csv"
   local mailmergefile = "csv/assessment-reminders-mailmerge.csv"
 
   local function qq(str) return '"'..str..'"' end
@@ -319,9 +320,7 @@ function proj:assessor_reminder_export(rem_table)
     return str.."\n"
   end
 
-
-
-  print("Constructing reminders list:  "..csvfile)
+  self:print("Constructing reminders list:  "..csvfile)
   file.copy(csvfile,("backup-"..csvfile))
   local ff = io.output(csvfile)
 
@@ -361,9 +360,7 @@ function proj:assessor_reminder_export(rem_table)
   end
 
   io.close(ff)
-  print("...done.")
-
-
+  self:print("...done.")
 
   merge_tbl = {}
   for k,v in pairs(rem_table) do
@@ -397,8 +394,7 @@ function proj:assessor_reminder_export(rem_table)
     end
   end
 
-
-  print("Constructing mailmerge csv:  "..mailmergefile)
+  self:print("Constructing mailmerge csv:  "..mailmergefile)
   file.copy(mailmergefile,("backup-"..mailmergefile))
   local ff = io.output(mailmergefile)
 
@@ -416,7 +412,7 @@ function proj:assessor_reminder_export(rem_table)
   end
 
   io.close(ff)
-  print("...done.")
+  self:print("...done.")
 
 end
 

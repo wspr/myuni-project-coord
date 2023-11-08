@@ -114,22 +114,23 @@ function proj:copy_mod_grades(canvas_subfin,canvas_submod)
       pretty.dump(canvas_subfin)
       error("Processing moderating submission: no matching supervisor assessment found?\nStudent/Project: "..i)
     end
-    if not(canvas_submod[i].metadata == nil) then
-      canvas_subfin[i].metadata.moderator = canvas_submod[i].metadata.moderator
-      canvas_subfin[i].metadata.moderator_mark = canvas_submod[i].metadata.moderator_mark
-      canvas_subfin[i].metadata.moderator_mark_entered = canvas_submod[i].metadata.moderator_mark_entered
-      canvas_subfin[i].metadata.moderator_penalty = canvas_submod[i].metadata.moderator_penalty
-      canvas_subfin[i].metadata.supervisor_url = canvas_subfin[i].metadata.url
-      canvas_subfin[i].metadata.moderator_url  = canvas_submod[i].metadata.url
-      canvas_subfin[i].metadata.super_marks    = canvas_subfin[i].marks
-      canvas_subfin[i].metadata.moder_marks    = canvas_submod[i].marks
-    else
+    if (canvas_submod[i].metadata == nil) then
       error("No metadata for moderator assessment: should not happen?")
     end
   end
 
-  return canvas_subfin
+  for i in pairs(canvas_submod) do
+    canvas_subfin[i].metadata.moderator = canvas_submod[i].metadata.moderator
+    canvas_subfin[i].metadata.moderator_mark = canvas_submod[i].metadata.moderator_mark
+    canvas_subfin[i].metadata.moderator_mark_entered = canvas_submod[i].metadata.moderator_mark_entered
+    canvas_subfin[i].metadata.moderator_penalty = canvas_submod[i].metadata.moderator_penalty
+    canvas_subfin[i].metadata.supervisor_url = canvas_subfin[i].metadata.url
+    canvas_subfin[i].metadata.moderator_url  = canvas_submod[i].metadata.url
+    canvas_subfin[i].metadata.super_marks    = canvas_subfin[i].marks
+    canvas_subfin[i].metadata.moder_marks    = canvas_submod[i].marks
+  end
 
+  return canvas_subfin
 end
 
 function proj:resolve_grades(resolve_bool,canvas_subfin,canvas_submod)
@@ -139,92 +140,101 @@ function proj:resolve_grades(resolve_bool,canvas_subfin,canvas_submod)
     error("Must define assessment deliverable")
   end
 
-  print("\n\n## RESOLVING MARKS BETWEEN SUPERVISOR & MODERATOR: "..assm)
+  if next(canvas_subfin)==nil then
+    error("Submissions (supervisor) table should not be empty")
+  end
+  if next(canvas_submod)==nil then
+    error("Submissions (moderator) table should not be empty")
+  end
 
   canvas_subfin = self:copy_mod_grades(canvas_subfin,canvas_submod)
 
-  if resolve_bool then
-    for i,j in pairs(canvas_subfin) do
+  if not(resolve_bool) then
+    self:print("* Skipping marks resolution process")
+    return canvas_subfin
+  end
 
-      if (j.metadata.supervisor_mark and j.metadata.moderator_mark) then
+  self:print("## RESOLVING MARKS BETWEEN SUPERVISOR & MODERATOR: "..assm)
+  for i,j in pairs(canvas_subfin) do
 
-        local csv_resolve = j.metadata.resolve
-        local grade_diff = math.abs(j.metadata.supervisor_mark - j.metadata.moderator_mark)
+    if (j.metadata.supervisor_mark and j.metadata.moderator_mark) then
 
-        if csv_resolve == "" then
+      local csv_resolve = j.metadata.resolve
+      local grade_diff = math.abs(j.metadata.supervisor_mark - j.metadata.moderator_mark)
 
-          local close_rank
-          for gg = 1,#resolve_msg[assm] do
-            if grade_diff <= resolve_msg[assm][gg].threshold then
-              close_rank = gg
-              canvas_subfin[i].metadata.resolve = resolve_msg[assm][close_rank].flag
-              break
-            end
+      if csv_resolve == "" then
+
+        local close_rank
+        for gg = 1,#resolve_msg[assm] do
+          if grade_diff <= resolve_msg[assm][gg].threshold then
+            close_rank = gg
+            canvas_subfin[i].metadata.resolve = resolve_msg[assm][close_rank].flag
+            break
           end
+        end
 
-          if close_rank then
-            print("=====================================")
-            print("# Assessment resolution: "..j.user.name..", "..j.metadata.proj_title.." ("..j.metadata.proj_id..")")
-            print("Supervisor - "..j.metadata.supervisor_mark.." - "..j.metadata.supervisor)
-            print("Moderator  - "..j.metadata.moderator_mark.." - "..j.metadata.moderator)
-            print("Supervisor - "..j.metadata.supervisor_url)
-            print("Moderator  - "..j.metadata.moderator_url)
-            print("Difference - "..grade_diff.." - "..resolve_msg[assm][close_rank].rank)
-            print("Resolve flag - "..j.metadata.resolve)
+        if close_rank then
+          print("=====================================")
+          print("# Assessment resolution: "..j.user.name..", "..j.metadata.proj_title.." ("..j.metadata.proj_id..")")
+          print("Supervisor - "..j.metadata.supervisor_mark.." - "..j.metadata.supervisor)
+          print("Moderator  - "..j.metadata.moderator_mark.." - "..j.metadata.moderator)
+          print("Supervisor - "..j.metadata.supervisor_url)
+          print("Moderator  - "..j.metadata.moderator_url)
+          print("Difference - "..grade_diff.." - "..resolve_msg[assm][close_rank].rank)
+          print("Resolve flag - "..j.metadata.resolve)
 
-            print("## Confirm resolution? Type y to do so and send response, q to do so without a response ('quiet'), and anything else to move on:")
-            local resolve_str = io.read()
+          print("## Confirm resolution? Type y to do so and send response, q to do so without a response ('quiet'), and anything else to move on:")
+          local resolve_str = io.read()
 
-            if resolve_str=="y" then
-              self:message_resolution(true,j,close_rank,false)
-            elseif resolve_str=="q" then
-              -- nothing
-            else
-              -- reset the flag
-              self:message_resolution(false,j,close_rank,false)
-              canvas_subfin[i].metadata.resolve = ""
-            end
+          if resolve_str=="y" then
+            self:message_resolution(true,j,close_rank,false)
+          elseif resolve_str=="q" then
+            -- nothing
+          else
+            -- reset the flag
+            self:message_resolution(false,j,close_rank,false)
+            canvas_subfin[i].metadata.resolve = ""
           end
+        end
 
-        elseif csv_resolve == "N" then
+      elseif csv_resolve == "N" then
 
-          local close_rank
-          for gg = 1,#resolve_msg[assm] do
-            if grade_diff <= resolve_msg[assm][gg].threshold then
-              close_rank = gg
-              canvas_subfin[i].metadata.resolve = resolve_msg[assm][close_rank].flag
-              break
-            end
+        local close_rank
+        for gg = 1,#resolve_msg[assm] do
+          if grade_diff <= resolve_msg[assm][gg].threshold then
+            close_rank = gg
+            canvas_subfin[i].metadata.resolve = resolve_msg[assm][close_rank].flag
+            break
           end
+        end
 
-          if (csv_resolve == "N") and (resolve_msg[assm][close_rank].flag == "Y") then
-            print("=====================================")
-            print("# Assessment resolution: "..j.user.name..", "..j.metadata.proj_title.." ("..j.metadata.proj_id..")")
-            print("INCONSISTENCY RESOLVED")
-            print("Supervisor - "..j.metadata.supervisor_mark.." - "..j.metadata.supervisor)
-            print("Moderator  - "..j.metadata.moderator_mark.." - "..j.metadata.moderator)
-            print("Supervisor - "..j.metadata.supervisor_url)
-            print("Moderator  - "..j.metadata.moderator_url)
-            print("Difference - "..grade_diff.." - "..resolve_msg[assm][close_rank].rank)
+        if (csv_resolve == "N") and (resolve_msg[assm][close_rank].flag == "Y") then
+          print("=====================================")
+          print("# Assessment resolution: "..j.user.name..", "..j.metadata.proj_title.." ("..j.metadata.proj_id..")")
+          print("INCONSISTENCY RESOLVED")
+          print("Supervisor - "..j.metadata.supervisor_mark.." - "..j.metadata.supervisor)
+          print("Moderator  - "..j.metadata.moderator_mark.." - "..j.metadata.moderator)
+          print("Supervisor - "..j.metadata.supervisor_url)
+          print("Moderator  - "..j.metadata.moderator_url)
+          print("Difference - "..grade_diff.." - "..resolve_msg[assm][close_rank].rank)
 
-            print("## Confirm updated resolution? Type y to do so and send response, q to do so without a response ('quiet'), and anything else to move on:")
-            local resolve_str = io.read()
+          print("## Confirm updated resolution? Type y to do so and send response, q to do so without a response ('quiet'), and anything else to move on:")
+          local resolve_str = io.read()
 
-            if resolve_str=="y" then
-              self:message_resolution(true,j,close_rank,true)
-            elseif resolve_str=="q" then
-              -- nothing
-            else
-              -- reset the flag
-              self:message_resolution(false,j,close_rank,false)
-              canvas_subfin[i].metadata.resolve = csv_resolve
-            end
-
+          if resolve_str=="y" then
+            self:message_resolution(true,j,close_rank,true)
+          elseif resolve_str=="q" then
+            -- nothing
+          else
+            -- reset the flag
+            self:message_resolution(false,j,close_rank,false)
+            canvas_subfin[i].metadata.resolve = csv_resolve
           end
 
         end
 
       end
+
     end
   end
 
