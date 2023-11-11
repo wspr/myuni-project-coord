@@ -142,7 +142,7 @@ function proj:staff_lookup_cid(acad_cid)
 end
 
 
-function proj:read_csv_data(csvfile)
+function proj:read_student_lists(csvfile)
 
   self:print("### Refreshing staff list")
   self:get_staff()

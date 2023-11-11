@@ -57,6 +57,7 @@ function proj:message_reminder_add(j,rem_table,args)
     rem_table[acad_name].marking[assm].moderator  = ""
     rem_table[acad_name].marking[assm].projects   = {}
     rem_table[acad_name].marking[assm].assessment = self.assign_name_colloq
+    rem_table[acad_name].marking[assm].assign_grouped = self.assign_grouped
     rem_table[acad_name].marking[assm].courseid   = self.courseid
     rem_table[acad_name].marking[assm].school     = school
     rem_table[acad_name].marking[assm].coordinator = coord_str
@@ -94,11 +95,10 @@ function proj:message_reminder_add(j,rem_table,args)
       remind_url_str = "      SpeedGrader link: <" .. j.metadata.url .. ">\n"
     end
   else
-    self:print("Now:       "..tostring(Date{}))
-    j.metadata.since = "" -- tostring(Date{} - df:parse(j.metadata.submitted_at))
+    j.metadata.since = tostring(Date{} - df:parse(j.metadata.submitted_at))
     local nicedate = Date.Format(dfformat):tostring(df:parse(j.metadata.submitted_at))
     remind_submitted_str = "             Submitted: " .. j.metadata.submitted_at .. " (".. j.metadata.since .."ago)\n"
---    remind_submitted_str = "             Submitted: " .. j.metadata.submitted_at .. "\n"
+    remind_submitted_str = "             Submitted: " .. j.metadata.submitted_at .. "\n"
     if self.assign_has_submission then
       remind_url_str = "      SpeedGrader link: <" .. j.metadata.url .. ">\n"
     end
@@ -376,10 +376,19 @@ function proj:assessor_reminder_export(rem_table)
 
         local uid = v.details.login_id
         if uid then
-          local rem_text =
-            "Project ID: "..prj.proj_id.."  ("..assn.assessment..")\n"..
-            "Project title: "..prj.proj_title.."\n"..
-            "Speedgrader URL: "..prj.url
+          local rem_text
+          if v.assign_grouped then
+            rem_text =
+              "Assessment: "..assn.assessment.."  (group)\n"..
+              "Project: "..prj.proj_id.." - "..prj.proj_title.."\n"..
+              "Speedgrader URL: "..prj.url
+          else
+            rem_text =
+              "Assessment: "..assn.assessment.."  (individual)\n"..
+              "Student: "..v.details.short_name.."  ("..v.details.login_id..")\n"..
+              "Project: "..prj.proj_id.." - "..prj.proj_title.."\n"..
+              "Speedgrader URL: "..prj.url
+          end
 
           merge_tbl[uid] = merge_tbl[uid] or {}
           merge_tbl[uid].assessor = v.details.short_name
