@@ -320,6 +320,7 @@ function proj:check_moderated(assign_data,check_bool,assgn_lbl,debug_user)
         end
         if assgn_lbl then
           assign_data[i].metadata[assgn_lbl.."_mark"] = scr
+          assign_data[i].metadata[assgn_lbl.."_provisional_id"] = jg.provisional_grade_id
           assign_data[i].metadata[assgn_lbl.."_mark_entered"] = scr
           assign_data[i].metadata[assgn_lbl.."_penalty"] = marks_lost
           assign_data[i].metadata[assgn_lbl.."_seconds_late"] = (j.seconds_late or 0)

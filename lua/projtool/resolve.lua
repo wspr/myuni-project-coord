@@ -186,6 +186,14 @@ function proj:resolve_grades(resolve_bool,canvas_subfin,canvas_submod)
           print("## Confirm resolution? Type y to do so and send response, q to do so without a response ('quiet'), and anything else to move on:")
           local resolve_str = io.read()
 
+          local canv_assign_id = self.assignments[assign_name].id
+          local canv_assign = self:get(self.course_prefix .. "assignments/"..canv_assign_id)
+
+          if resolve_str=="y" or resolve_str=="q" then
+            self:put(canv_assign.."/provisional_grades/"..j.metadata.supervisor_provisional_id.."/select")
+            self:put(canv_assign.."/provisional_grades/"..j.metadata.moderator_provisional_id.."/select")
+          end
+
           if resolve_str=="y" then
             self:message_resolution(true,j,close_rank,false)
           elseif resolve_str=="q" then
