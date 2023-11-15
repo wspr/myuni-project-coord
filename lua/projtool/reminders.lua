@@ -62,6 +62,8 @@ function proj:message_reminder_add(j,rem_table,args)
     rem_table[acad_name].marking[assm].school     = school
     rem_table[acad_name].marking[assm].coordinator = coord_str
     rem_table[acad_name].marking[assm].coord_cid   = self.staff[coord].id
+    rem_table[acad_name].marking[assm].submitter    = j.user.name
+    rem_table[acad_name].marking[assm].submitter_id = j.user.login_id
   end
 
   local assess_student_str
@@ -377,15 +379,15 @@ function proj:assessor_reminder_export(rem_table)
         local uid = v.details.login_id
         if uid then
           local rem_text
-          if v.assign_grouped then
+          if assn.assign_grouped then
             rem_text =
-              "Assessment: "..assn.assessment.."  (group)\n"..
+              "Assessment: "..assn.assessment.." (group)\n"..
               "Project: "..prj.proj_id.." - "..prj.proj_title.."\n"..
               "Speedgrader URL: "..prj.url
           else
             rem_text =
-              "Assessment: "..assn.assessment.."  (individual)\n"..
-              "Student: "..v.details.short_name.."  ("..v.details.login_id..")\n"..
+              "Assessment: "..assn.assessment.." (individual)\n"..
+              "Student: "..assn.submitter.."  ("..assn.submitter_id..")\n"..
               "Project: "..prj.proj_id.." - "..prj.proj_title.."\n"..
               "Speedgrader URL: "..prj.url
           end
