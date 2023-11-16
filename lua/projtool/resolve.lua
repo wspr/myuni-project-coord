@@ -17,7 +17,7 @@ resolve_msg.final = {
     rank = "Close",
     flag = "Y",
     body = [[
-These grades are very close and will be taken to calculate the final grade for the group.]]
+These grades are very consistent and will be taken to calculate the final grade for the student/group.]]
   } ,
   {
     threshold = 8 ,
@@ -25,7 +25,7 @@ These grades are very close and will be taken to calculate the final grade for t
     rank = "Near",
     flag = "Y",
     body = [[
-These grades are quite consistent and will be taken to calculate the final grade for the group.]]
+These grades are quite consistent and will be taken to calculate the final grade for the student/group.]]
   } ,
   {
     threshold = 12 ,
@@ -33,7 +33,7 @@ These grades are quite consistent and will be taken to calculate the final grade
     rank = "Far",
     flag = "Y",
     body = [[
-These grades are rather inconsistent but are close enough that, unless I hear otherwise from you, they will be taken to calculate the final grade for the student/group. I invite you to view the assessment of your colleague, and discuss with them, to consider the discrepancy.]]
+These grades are somewhat inconsistent but are close enough that, unless I hear otherwise from you, they will be taken to calculate the final grade for the student/group. I invite you to view the assessment of your colleague, and discuss with them, to consider the discrepancy.]]
   } ,
   {
     threshold = 20 ,
@@ -59,49 +59,18 @@ After discussion, if appropriate please update your mark against the rubric in M
 
 If this is necessary, please advise ASAP to allow us to resolve the situation in a timely fashion.]]
   } ,
+  {
+    threshold = 999 ,
+    subject = "Marking thanks" ,
+    rank = "Fail",
+    flag = "Y",
+    body = [[
+Both assessors have awarded a fail mark. These values will be used to calculate the final grade for the student/group.]]
+  } ,
 }
 
 resolve_msg.paper = resolve_msg.final
-
-resolve_msg.progress = {
-  {
-    threshold = 5 ,
-    subject = "Marking thanks" ,
-    rank = "Close",
-    flag = "Y",
-    body = [[
-These grades are very close and will be taken to calculate the final grade for the group.]]
-  } ,
-  {
-    threshold = 10 ,
-    subject = "Marking thanks" ,
-    rank = "Near",
-    flag = "Y",
-    body = [[
-These grades are quite consistent and will be taken to calculate the final grade for the group.]]
-  } ,
-  {
-    threshold = 20 ,
-    subject = "Marking concern" ,
-    rank = "Far",
-    flag = "Y",
-    body = [[
-These grades are rather inconsistent but are close enough that, unless I hear otherwise from you, they will be taken to calculate the final grade for the student/group. I invite you to view the assessment of your colleague, and discuss with them, to consider the discrepancy.]]
-  } ,
-  {
-    threshold = 99 ,
-    subject = "Marking review needed" ,
-    rank = "Critical",
-    flag = "N",
-    body = [[
-These grades are inconsistent and should be reviewed. Please discuss with your colleague to reappraise your assessments.
-
-After discussion, if appropriate please update your mark against the rubric in MyUni. Your marks do not need to be identical; if the discrepancy remains we can assign a third assessor.
-
-If this is necessary, please advise ASAP to allow us to resolve the situation in a timely fashion.]]
-  } ,
-}
-
+resolve_msg.progress = resolve_msg.final
 resolve_msg.interim = resolve_msg.progress
 
 
@@ -154,6 +123,8 @@ function proj:resolve_grades(resolve_bool,canvas_subfin,canvas_submod)
     return canvas_subfin
   end
 
+  local skip_all_bool = false
+
   self:print("## RESOLVING MARKS BETWEEN SUPERVISOR & MODERATOR: "..assm)
   for i,j in pairs(canvas_subfin) do
 
@@ -165,17 +136,22 @@ function proj:resolve_grades(resolve_bool,canvas_subfin,canvas_submod)
       if csv_resolve == "" then
 
         local close_rank
-        for gg = 1,#resolve_msg[assm] do
-          if grade_diff <= resolve_msg[assm][gg].threshold then
-            close_rank = gg
-            canvas_subfin[i].metadata.resolve = resolve_msg[assm][close_rank].flag
-            break
+        if (math.abs(j.metadata.supervisor_mark)<50) and (math.abs(j.metadata.moderator_mark)<50) then
+          close_rank = #resolve_msg[assm]
+          canvas_subfin[i].metadata.resolve = "Y"
+        else
+          for gg = 1,#resolve_msg[assm] do
+            if grade_diff <= resolve_msg[assm][gg].threshold then
+              close_rank = gg
+              canvas_subfin[i].metadata.resolve = resolve_msg[assm][close_rank].flag
+              break
+            end
           end
         end
 
         if close_rank then
           print("=====================================")
-          print("# Assessment resolution: "..j.user.name..", "..j.metadata.proj_title.." ("..j.metadata.proj_id..")")
+          print("### Assessment resolution: "..j.user.name..", "..j.metadata.proj_title.." ("..j.metadata.proj_id..")")
           print("Supervisor - "..j.metadata.supervisor_mark.." - "..j.metadata.supervisor)
           print("Moderator  - "..j.metadata.moderator_mark.." - "..j.metadata.moderator)
           print("Supervisor - "..j.metadata.supervisor_url)
@@ -183,15 +159,25 @@ function proj:resolve_grades(resolve_bool,canvas_subfin,canvas_submod)
           print("Difference - "..grade_diff.." - "..resolve_msg[assm][close_rank].rank)
           print("Resolve flag - "..j.metadata.resolve)
 
-          print("## Confirm resolution? Type y to do so and send response, q to do so without a response ('quiet'), and anything else to move on:")
-          local resolve_str = io.read()
+          print("Confirm resolution? Type y to do so and send response, q to do so without a response ('quiet'), s to skip this and all the rest, and anything else to move on:")
+          local resolve_str
+          if not(skip_all_bool) then
+            resolve_str = io.read()
+          else
+            resolve_str = ""
+          end
+          if resolve_str == "s" then
+            skip_all_bool = true
+            resolve_str = ""
+          end
 
-          local canv_assign_id = self.assignments[assign_name].id
-          local canv_assign = self:get(self.course_prefix .. "assignments/"..canv_assign_id)
+          if j.metadata.resolve == "Y" and self.assignments[self.assign_name_canvas].moderated_grading then
+            local canv_assign_id = self.assignments[self.assign_name_canvas].id
 
-          if resolve_str=="y" or resolve_str=="q" then
-            self:put(canv_assign.."/provisional_grades/"..j.metadata.supervisor_provisional_id.."/select")
-            self:put(canv_assign.."/provisional_grades/"..j.metadata.moderator_provisional_id.."/select")
+            if resolve_str=="y" or resolve_str=="q" then
+--              self:put(self.course_prefix.."assignments/"..canv_assign_id.."/provisional_grades/"..j.metadata.supervisor_provisional_id.."/select")
+--              self:put(self.course_prefix.."assignments/"..canv_assign_id.."/provisional_grades/"..j.metadata.moderator_provisional_id.."/select")
+            end
           end
 
           if resolve_str=="y" then
@@ -230,9 +216,18 @@ function proj:resolve_grades(resolve_bool,canvas_subfin,canvas_submod)
           local resolve_str = io.read()
 
           if resolve_str=="y" then
+            local canv_assign_id = self.assignments[self.assign_name_canvas].id
+            if resolve_str=="y" or resolve_str=="q" then
+--              self:put(self.course_prefix.."assignments/"..canv_assign_id.."/provisional_grades/"..j.metadata.supervisor_provisional_id.."/select")
+--              self:put(self.course_prefix.."assignments/"..canv_assign_id.."/provisional_grades/"..j.metadata.moderator_provisional_id.."/select")
+            end
             self:message_resolution(true,j,close_rank,true)
           elseif resolve_str=="q" then
-            -- nothing
+            local canv_assign_id = self.assignments[self.assign_name_canvas].id
+            if resolve_str=="y" or resolve_str=="q" then
+--              self:put(self.course_prefix.."assignments/"..canv_assign_id.."/provisional_grades/"..j.metadata.supervisor_provisional_id.."/select")
+--              self:put(self.course_prefix.."assignments/"..canv_assign_id.."/provisional_grades/"..j.metadata.moderator_provisional_id.."/select")
+            end
           else
             -- reset the flag
             self:message_resolution(false,j,close_rank,false)
