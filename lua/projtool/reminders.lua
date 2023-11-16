@@ -62,8 +62,6 @@ function proj:message_reminder_add(j,rem_table,args)
     rem_table[acad_name].marking[assm].school     = school
     rem_table[acad_name].marking[assm].coordinator = coord_str
     rem_table[acad_name].marking[assm].coord_cid   = self.staff[coord].id
-    rem_table[acad_name].marking[assm].submitter    = j.user.name
-    rem_table[acad_name].marking[assm].submitter_id = j.user.login_id
   end
 
   local assess_student_str
@@ -387,7 +385,7 @@ function proj:assessor_reminder_export(rem_table)
           else
             rem_text =
               "Assessment: "..assn.assessment.." (individual)\n"..
-              "Student: "..assn.submitter.."  ("..assn.submitter_id..")\n"..
+              "Student: "..prj.student_name.."  ("..prj.student_id..")\n"..
               "Project: "..prj.proj_id.." - "..prj.proj_title.."\n"..
               "Speedgrader URL: "..prj.url
           end
