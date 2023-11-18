@@ -46,7 +46,7 @@ function proj:check_assignment(assign_data,check_bool,assgn_lbl,debug_user)
 
   for i,j in pairs(assign_data) do
 
-    self:print("* SUBMISSION: "..i..". Student: "..j.user.name.."  ("..j.user.sis_user_id..")")
+--    self:print("* SUBMISSION: "..i..". Student: "..j.user.name.."  ("..j.user.sis_user_id..")")
 
     local assr
     local grade = j.grade

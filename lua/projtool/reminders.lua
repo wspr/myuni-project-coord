@@ -300,7 +300,7 @@ end
 
 function proj:assessor_reminder_export(rem_table)
 
-  self:print("## REMINDERS")
+  self:print("# REMINDERS")
 
   local csvfile       = "csv/assessment-reminders.csv"
   local mailmergefile = "csv/assessment-reminders-mailmerge.csv"
