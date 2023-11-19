@@ -84,10 +84,10 @@ proj.summarise_marks = function(self,assign_data,assign_data2,args)
 \begingroup
 \parindent=0pt\relax
 \Large
-Faculty of Science, Engineering, and Technology
+Faculty of Sciences, Engineering and Technology
 \par
 \Huge\fontspec{palatino-nova-titling}
-ENG 4001 Honours Research Project
+ENG 4002 Honours Research Project
 \par
 \endgroup
 \section*{%
@@ -177,7 +177,7 @@ proj.assessor_print = function(self,assm_rubric,prov_grade)
         io.write("\\midrule\n"..
               "".."&&"..
               "\\textbf{Total}".."&"..
-              "\\textbf{"..(jd.score or "").."}".."&"..
+              "\\textbf{"..(jd.score or "").."} / 100".."&"..
               ""..
               "\\\\\n")
 
