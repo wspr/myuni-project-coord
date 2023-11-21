@@ -116,12 +116,10 @@ function proj:check_assignment(assign_data,check_bool,assgn_lbl,debug_user)
         rubric_fail = true
       end
 
-      if rubric_fail then
-        if check_bool then
-          logmessage = logmessage .. "\n" ..("Rubric fail: send message? Type y to do so:")
-          print(logmessage)
-          self:message_rubric_fail( io.read()=="y" ,j,grade,rubric_sum,rubric_count,Nrubric)
-        end
+      if rubric_fail and check_bool then
+        logmessage = logmessage .. "\n" ..("Rubric fail: send message? Type y to do so:")
+        print(logmessage)
+        self:message_rubric_fail( io.read()=="y" ,j,grade,rubric_sum,rubric_count,Nrubric)
       end
     else
       if j.rubric_assessment then
@@ -230,6 +228,7 @@ function proj:check_moderated(assign_data,check_bool,assgn_lbl,debug_user)
         local assr
         local assr_uid
         local scr
+        local scr_orig
         local marks_lost   = 0
         local rubric_count = 0
         local rubric_sum   = 0
@@ -259,7 +258,7 @@ function proj:check_moderated(assign_data,check_bool,assgn_lbl,debug_user)
               if check_bool then
                 self:print(logmessage)
                 self:print("Rubric complete but no score: send message? Type y to do so:")
-                self:message_rubric_no_grade(io.read()=="y",j,assr)
+                self:message_rubric_no_grade(io.read()=="y",j,assr,assr_uid)
               end
             else
               logmessage = logmessage .. "\n" .. ("      Assessor: "..assr.." - "..rubric_count.." of "..Nrubric.." rubric entries and no score.")
@@ -273,13 +272,15 @@ function proj:check_moderated(assign_data,check_bool,assgn_lbl,debug_user)
             scr  = jj.score
             if rubric_count == Nrubric then
               logmessage = logmessage .. "\n" .. ("      Assessor: "..assr.." ("..scr..") - rubric complete.")
-              if rubric_sum-jj.score>0.5 or rubric_sum-scr<-0.5 then
+              if math.abs(rubric_sum-jj.score)>0.5 then
                 logmessage = logmessage .. "\n" .. ("      Assessor: "..assr.." ("..scr..") - ERROR: rubric sum ("..rubric_sum..") does not match final mark awarded ("..jj.score..")")
                 rubric_fail = true
               end
             elseif rubric_count < Nrubric then
               logmessage = logmessage .. "\n" .. ("      Assessor: "..assr.." ("..scr..") - ERROR: Only "..rubric_count.." of "..Nrubric.." rubric entries completed.")
               rubric_fail = true
+              scr_orig = scr
+              scr = nil
             end
 
           end
@@ -299,7 +300,7 @@ function proj:check_moderated(assign_data,check_bool,assgn_lbl,debug_user)
         if rubric_fail and check_bool then
           self:print(logmessage)
           self:print("Rubric fail: send message? Type y to do so:")
-          self:message_rubric_fail(io.read()=="y",j,scr,rubric_sum,rubric_count,Nrubric,assr)
+          self:message_rubric_fail(io.read()=="y",j,scr_orig,rubric_sum,rubric_count,Nrubric,assr,assr_uid)
         else
           if self.verbose > 1 then
             self:print(logmessage)
@@ -330,8 +331,8 @@ function proj:check_moderated(assign_data,check_bool,assgn_lbl,debug_user)
       end
 
       if j.user.name == debug_user then
-        pretty.dump(j.metadata)
-        error()
+        pretty.dump(j)
+--        error()
       end
 
     end
@@ -343,9 +344,10 @@ end
 
 
 
-function proj:message_rubric_fail(remind_check,j,score,rubric_sum,rubric_count,Nrubric,assessor_name)
+function proj:message_rubric_fail(remind_check,j,score,rubric_sum,rubric_count,Nrubric,assr,assr_uid)
 
-  local assr = assessor_name or j.metadata.supervisor
+  local assr = assr or j.metadata.supervisor
+  local assr_uid = assr_uid or j.metadata.supervisor_id
 
   local rubric_fail_str = ""
   if rubric_count == 0 then
@@ -360,14 +362,8 @@ function proj:message_rubric_fail(remind_check,j,score,rubric_sum,rubric_count,N
     error("Rubric count does not compare properly. This shouldn't happen")
   end
 
-  local coord = self.coordinators[j.metadata.school]
-  if coord == nil then
-    error("Coordinator not found.")
-  end
-  local coord_id = self.all_staff[coord].id
-
   self:message_user(remind_check,{
-    canvasid  = {self.all_staff[assr].id,coord_id} ,
+    canvasid  = {self.all_staff[assr_uid].id} ,
     subject   = self.assign_name_colloq.." marking: " .. j.user.name ,
     body      = "Dear " .. assr .. ",\n\n" .. [[
 This is an semi-automated reminder. ]]  .. "\n\n" .. [[
@@ -380,15 +376,13 @@ j.metadata.url .. "\n\n" .. self.message.signoff
 
 end
 
-function proj:message_rubric_no_grade(remind_check,j,assessor_name)
+function proj:message_rubric_no_grade(remind_check,j,assessor_name,assr_uid)
 
   local assr = assessor_name or j.metadata.supervisor
-
-  local coord = self.coordinators[j.metadata.school]
-  local coord_id = self.all_staff[coord].id
+  local assr_uid = assr_uid or j.metadata.supervisor_id
 
   self:message_user(remind_check,{
-    canvasid  = {self.all_staff[assr].id,coord_id} ,
+    canvasid  = {self.all_staff[assr_uid].id} ,
     subject   = self.assign_name_colloq.." marking: " .. j.user.name ,
     body      = "Dear " .. assr .. ",\n\n" .. [[
 This is an semi-automated reminder. ]]  .. "\n\n" .. [[
