@@ -34,7 +34,7 @@ function proj:list_students(dl_bool,semnow,cohort,UGPG)
   local f = csv.open(sonia_csv,{header=true})
   local lookup_groups = {}
   for fields in f:lines() do
-    if not(fields.Cohort==nil) then
+    if not(fields.Cohort==nil) and (fields.Active=="True") then
       lookup_groups[fields["MyUni Project ID"]] = fields
     end
   end
@@ -60,7 +60,7 @@ function proj:list_students(dl_bool,semnow,cohort,UGPG)
   local sonia_groups  = {}
   for fields in f:lines() do
     if not(fields.Cohort==nil) then
-      if (fields.Cohort == self.cohort) and (fields.UGPG == UGPG) then
+      if (fields.Cohort == self.cohort) and (fields.UGPG == UGPG) and (fields.Active=="True") then
         sonia_groups[#sonia_groups+1] = fields
       end
     end
