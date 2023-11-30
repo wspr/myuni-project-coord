@@ -15,7 +15,9 @@ local proj = {}
     return str
   end
 
-proj.summarise_marks = function(self,assign_data,assign_data2,args)
+
+
+function proj:summarise_marks(assign_data,assign_data2,args)
 
   self:get_assignments()
 
@@ -114,10 +116,10 @@ ENG 4002 Honours Research Project
 ))
 
       for _,prov_grade in ipairs(assign_data[i].provisional_grades) do
-        self:assessor_print(assm_rubric,prov_grade)
+        self:assessor_print(assm_rubric,prov_grade,j.metadata.supervisor)
       end
       for _,prov_grade in ipairs(assign_data2[i].provisional_grades) do
-        self:assessor_print(assm_rubric,prov_grade)
+        self:assessor_print(assm_rubric,prov_grade,j.metadata.moderator)
       end
       io.write [[
 \end{document}
@@ -131,12 +133,54 @@ ENG 4002 Honours Research Project
   end
 end
 
-proj.assessor_print = function(self,assm_rubric,prov_grade)
+
+
+function proj:assessor_print(assm_rubric,prov_grade,assessor_name)
 
       local jd = prov_grade.rubric_assessments[#prov_grade.rubric_assessments]
       -- only take the last entry from an assessor
 
-      if jd and (jd.score > 1) then
+      if (jd == nil) and (prov_grade.score) then -- didn't use the rubric
+
+        io.write [[
+\Needspace{0.6\textheight}
+\subsection*{Assessor --- ]]
+        io.write(assessor_name)
+        io.write [[
+}
+\bigskip
+
+\noindent
+[\emph{No rubric entries, assessor input final score only.}]
+\bigskip
+
+\noindent
+\begin{tabular}{llp{3.5cm}cp{16cm}}
+\toprule
+]]
+        io.write("".."&&"..
+              "\\textbf{Total}".."&"..
+              "\\textbf{"..(prov_grade.score).."} / 100".."&"..
+              ""..
+              "\\\\\n")
+
+        io.write [[
+\bottomrule
+\end{tabular}
+
+
+]]
+
+        for _,jjd in ipairs(prov_grade.submission_comments) do
+            io.write("\\subsubsection*{Comments}\n\\begin{minipage}{0.6\\textwidth}\n\\parskip=5pt\\parindent=0pt\\relax\n")
+            local comment = (jjd.comment or "")
+            io.write(texencode(comment))
+            io.write("\\end{minipage}\n")
+        end
+
+      end
+
+      if jd and (jd.score > 1) then -- did use the rubric
 
         io.write [[
 \Needspace{0.6\textheight}
@@ -185,6 +229,7 @@ proj.assessor_print = function(self,assm_rubric,prov_grade)
 \bottomrule
 \end{longtable}
 ]]
+
         for _,jjd in ipairs(prov_grade.submission_comments) do
           if jd.assessor_name == jjd.author_name then
             io.write("\\subsubsection*{Comments}\n\\begin{minipage}{0.6\\textwidth}\n\\parskip=5pt\\parindent=0pt\\relax\n")
@@ -193,7 +238,10 @@ proj.assessor_print = function(self,assm_rubric,prov_grade)
             io.write("\\end{minipage}\n")
           end
         end
+
       end
+
+
 
 end
 
