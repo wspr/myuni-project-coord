@@ -1,6 +1,27 @@
 
 local proj = {}
 
+
+function proj:message_student_no_submission(remind_check,j)
+
+  local assr = assessor_name or j.metadata.supervisor
+  local assr_uid = assr_uid or j.metadata.supervisor_id
+
+  self:message_user(remind_check,{
+    canvasid  = {j.user.id,self.all_staff[assr_uid].id} ,
+    subject   = self.assign_name_colloq.." submission: " .. j.user.name ,
+    body      = "Dear " .. j.user.name .. ",\n\n" .. [[
+This is an automated message. ]]  .. "\n\n" .. [[
+The following submission is being assessed for student/group:]] .. "\n\n" ..
+j.user.name .. ": " .. j.metadata.proj_title .. " ("..j.metadata.proj_id..")" .. "\n\n" .. [[
+You have submitted a report for the supervisor to assess but the submission for the moderator is missing.]] .. "\n\n" .. [[
+Please upload a copy of the report for the moderator to assess immediately:]] .. "\n\n    " ..
+j.metadata.url .. "\n" .. self.message.signoff
+          })
+
+end
+
+
 proj.message         = {}
 proj.message.interim = {}
 proj.message.progress= {}
@@ -30,7 +51,7 @@ Note the "Submit" button is only connected to the comment box BELOW the rubric -
 proj.message.draft.body_opening = [[
 The final/progress draft reports are not assessed but provided by the students for broad and general feedback by their supervisor.
 
-Feedback must be provided quickly as the due dates for the students to submit these reports are Monday Week 12. 
+Feedback must be provided quickly as the due dates for the students to submit these reports are Monday Week 12.
 
 You should not provide extensive and detailed comments — the students' work is their own and you will be marking their submission, so guidance at this stage is all that is needed.
 ]]

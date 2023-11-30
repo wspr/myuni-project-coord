@@ -160,7 +160,7 @@ function proj:check_assignment(assign_data,check_bool,assgn_lbl,debug_user)
 
     if j.user.name == debug_user then
       pretty.dump(j)
-      error()
+--      error()
     end
 
   end

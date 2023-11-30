@@ -89,6 +89,14 @@ function proj:copy_mod_grades(canvas_subfin,canvas_submod)
   end
 
   for i in pairs(canvas_submod) do
+    if (canvas_submod[i].attachments==nil) then
+      self:print("MISSING SUBMISSION FOR MODERATOR")
+      self:print("Student/group: "..canvas_subfin[i].user.name.."/"..canvas_subfin[i].metadata.myuni_proj_id)
+      self:print("Project title: "..canvas_subfin[i].metadata.proj_title)
+      self:print("Supervisor: "..canvas_subfin[i].metadata.supervisor)
+      print("Send message to student?")
+      self:message_student_no_submission(io.read()=="y",canvas_submod[i])
+    end
     canvas_subfin[i].metadata.moderator = canvas_submod[i].metadata.moderator
     canvas_subfin[i].metadata.moderator_mark = canvas_submod[i].metadata.moderator_mark
     canvas_subfin[i].metadata.moderator_mark_entered = canvas_submod[i].metadata.moderator_mark_entered
@@ -102,7 +110,7 @@ function proj:copy_mod_grades(canvas_subfin,canvas_submod)
   return canvas_subfin
 end
 
-function proj:resolve_grades(resolve_bool,canvas_subfin,canvas_submod)
+function proj:resolve_grades(resolve_bool,canvas_subfin,canvas_submod,debug_user)
 
   local assm = self.deliverable
   if assm == nil then
@@ -239,6 +247,12 @@ function proj:resolve_grades(resolve_bool,canvas_subfin,canvas_submod)
       end
 
     end
+
+    if j.user.name == debug_user then
+      pretty.dump(j)
+      io.read()
+    end
+
   end
 
   print("DONE.")
@@ -329,6 +343,7 @@ Thank you for your significant contributions towards the success of our capstone
           })
 
 end
+
 
 
 
