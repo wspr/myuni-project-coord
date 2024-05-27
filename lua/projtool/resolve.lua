@@ -89,7 +89,7 @@ function proj:copy_mod_grades(canvas_subfin,canvas_submod)
   end
 
   for i in pairs(canvas_submod) do
-    if (canvas_submod[i].attachments==nil) then
+    if not(canvas_subfin[i].attachments==nil) and (canvas_submod[i].attachments==nil) then
       self:print("MISSING SUBMISSION FOR MODERATOR")
       self:print("Student/group: "..canvas_subfin[i].user.name.."/"..canvas_subfin[i].metadata.myuni_proj_id)
       self:print("Project title: "..canvas_subfin[i].metadata.proj_title)

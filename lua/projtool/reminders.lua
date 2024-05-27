@@ -43,6 +43,10 @@ function proj:message_reminder_add(j,rem_table,args)
     print("Coordinator data/name: "..coord)
     error("Coordinator table must list UoA ID as second entry")
   end
+  
+  if self.staff[coord] == nil then
+    error("Staff member '"..coord.."' not found as coordinator for school '"..school.."'")
+  end
 
   local coord_str = self.staff[coord].name.." <"..self.staff[coord].login_id.."@adelaide.edu.au>"
   self:info("Coordinator: "..coord_str)
