@@ -50,7 +50,7 @@ function proj:check_assignment(assign_data,check_bool,assgn_lbl,debug_user)
 
     local assr
     local grade = j.grade
-    local grader_cid = j.grader_id
+--    local grader_cid = j.grader_id -- DELETE IF NOT NEEDED
 
     local marks_lost   = 0
     local rubric_count = 0
@@ -78,7 +78,7 @@ function proj:check_assignment(assign_data,check_bool,assgn_lbl,debug_user)
 
       assign_data[i].marks = assign_data[i].marks or {}
 
-      _,assr = self:staff_lookup_cid(grader_cid)
+--      _,assr = self:staff_lookup_cid(grader_cid) -- DELETE IF NOT NEEDED
 
       j.metadata.assessment_check.graded = true
       logmessage = logmessage .. "\n" ..("Grade: "..grade.." | Entered grade: "..j.entered_grade)
@@ -177,13 +177,14 @@ function proj:check_moderated(assign_data,check_bool,assgn_lbl,debug_user)
   -- Ensure canvas moderation settings are "correct"
   local fixme = false
   if self.assignments[self.assign_name_canvas].grader_count < 999 then
+    self:print("Grader count = "..self.assignments[self.assign_name_canvas].grader_count.." -- should be 999")
     fixme = true
   end
   if self.assignments[self.assign_name_canvas].grader_comments_visible_to_graders == true then
+    self:print("Grader comments visible -- should not be")
     fixme = true
   end
   if fixme then
-    pretty.dump(self.assignments[self.assign_name_canvas])
     self:print("Fixing moderated assignment settings:")
     self:create_assignment{
        name  = self.assign_name_canvas ,
@@ -215,7 +216,7 @@ function proj:check_moderated(assign_data,check_bool,assgn_lbl,debug_user)
       logmessage = logmessage .. "\n" .. ("URL: "..j.metadata.url)
 
       if j.late then
-        marks_lost = j.points_deducted
+        marks_lost = j.points_deducted or 0
         logmessage = logmessage .. "\n" .. ("LATE - points deducted: "..marks_lost.." - late by: "..(j.seconds_late/60).." min = "..(j.seconds_late/60/60).." hrs = "..(j.seconds_late/60/60/24).." days")
         if j.seconds_late < 60*60 then
           print(logmessage)

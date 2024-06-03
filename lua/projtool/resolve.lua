@@ -78,10 +78,13 @@ function proj:copy_mod_grades(canvas_subfin,canvas_submod)
 
   for i in pairs(canvas_submod) do
     if (canvas_subfin[i] == nil) then
-      print("Student/group: "..i)
-      pretty.dump(canvas_submod[i])
-      pretty.dump(canvas_subfin)
-      error("Processing moderating submission: no matching supervisor assessment found?\nStudent/Project: "..i)
+      self:print("MISSING SUBMISSION FOR SUPERVISOR")
+      self:print("Student/group: "..canvas_submod[i].user.name.."/"..canvas_submod[i].metadata.myuni_proj_id)
+      self:print("Project title: "..canvas_submod[i].metadata.proj_title)
+      self:print("Supervisor: "..canvas_submod[i].metadata.supervisor)
+      self:print("URL: "..canvas_submod[i].metadata.url)
+      print("Send message to student?")
+      self:message_student_no_submission_sup(io.read()=="y",canvas_submod[i])
     end
     if (canvas_submod[i].metadata == nil) then
       error("No metadata for moderator assessment: should not happen?")
@@ -89,24 +92,26 @@ function proj:copy_mod_grades(canvas_subfin,canvas_submod)
   end
 
   for i in pairs(canvas_submod) do
-    if not(canvas_subfin[i].attachments==nil) and (canvas_submod[i].attachments==nil) then
-      self:print("MISSING SUBMISSION FOR MODERATOR")
-      self:print("Student/group: "..canvas_subfin[i].user.name.."/"..canvas_subfin[i].metadata.myuni_proj_id)
-      self:print("Project title: "..canvas_subfin[i].metadata.proj_title)
-      self:print("Supervisor: "..canvas_subfin[i].metadata.supervisor)
-      print("Send message to student?")
-      self:message_student_no_submission(io.read()=="y",canvas_submod[i])
+    if not(canvas_subfin[i] == nil) then
+      if not(canvas_subfin[i].attachments==nil) and (canvas_submod[i].attachments==nil) then
+        self:print("MISSING SUBMISSION FOR MODERATOR")
+        self:print("Student/group: "..canvas_subfin[i].user.name.."/"..canvas_subfin[i].metadata.myuni_proj_id)
+        self:print("Project title: "..canvas_subfin[i].metadata.proj_title)
+        self:print("Supervisor: "..canvas_subfin[i].metadata.supervisor)
+        self:print("URL: "..canvas_submod[i].metadata.url)
+        print("Send message to student?")
+        self:message_student_no_submission(io.read()=="y",canvas_submod[i])
+      end
+      canvas_subfin[i].metadata.moderator = canvas_submod[i].metadata.moderator
+      canvas_subfin[i].metadata.moderator_mark = canvas_submod[i].metadata.moderator_mark
+      canvas_subfin[i].metadata.moderator_mark_entered = canvas_submod[i].metadata.moderator_mark_entered
+      canvas_subfin[i].metadata.moderator_penalty = canvas_submod[i].metadata.moderator_penalty
+      canvas_subfin[i].metadata.supervisor_url = canvas_subfin[i].metadata.url
+      canvas_subfin[i].metadata.moderator_url  = canvas_submod[i].metadata.url
+      canvas_subfin[i].metadata.super_marks    = canvas_subfin[i].marks
+      canvas_subfin[i].metadata.moder_marks    = canvas_submod[i].marks
     end
-    canvas_subfin[i].metadata.moderator = canvas_submod[i].metadata.moderator
-    canvas_subfin[i].metadata.moderator_mark = canvas_submod[i].metadata.moderator_mark
-    canvas_subfin[i].metadata.moderator_mark_entered = canvas_submod[i].metadata.moderator_mark_entered
-    canvas_subfin[i].metadata.moderator_penalty = canvas_submod[i].metadata.moderator_penalty
-    canvas_subfin[i].metadata.supervisor_url = canvas_subfin[i].metadata.url
-    canvas_subfin[i].metadata.moderator_url  = canvas_submod[i].metadata.url
-    canvas_subfin[i].metadata.super_marks    = canvas_subfin[i].marks
-    canvas_subfin[i].metadata.moder_marks    = canvas_submod[i].marks
   end
-
   return canvas_subfin
 end
 

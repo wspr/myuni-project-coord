@@ -20,6 +20,23 @@ j.metadata.url .. "\n" .. self.message.signoff
           })
 
 end
+function proj:message_student_no_submission_sup(remind_check,j)
+
+  local assr = assessor_name or j.metadata.supervisor
+  local assr_uid = assr_uid or j.metadata.supervisor_id
+
+  self:message_user(remind_check,{
+    canvasid  = {j.user.id,self.all_staff[assr_uid].id} ,
+    subject   = self.assign_name_colloq.." submission: " .. j.user.name ,
+    body      = "Dear " .. j.user.name .. ",\n\n" .. [[
+This is an automated message. ]]  .. "\n\n" .. [[
+The following submission is being assessed for student/group:]] .. "\n\n" ..
+j.user.name .. ": " .. j.metadata.proj_title .. " ("..j.metadata.proj_id..")" .. "\n\n" .. [[
+You have submitted a report for the moderator to assess but the submission for the supervisor is missing.]] .. "\n\n" .. [[
+Please upload a copy of the report for the supervisor to assess immediately.]] .. "\n" .. self.message.signoff
+          })
+
+end
 
 
 proj.message         = {}
@@ -35,7 +52,7 @@ proj.message.draft   = {}
 
 proj.message.signoff = "\n" .. [[
 Best regards,
-William Robertson, on behalf of the Project Coordination Team
+Project Coordination Team
 ]]
 
 proj.message.body_opening = [[
