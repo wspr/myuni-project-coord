@@ -59,6 +59,11 @@ function proj:check_assignment(assign_data,check_bool,assgn_lbl,debug_user)
 
     local logmessage = ""
 
+    -- sometimes Canvas sets the grade to zero before the marking is complete:
+    if grade and grade == "0" then
+      grade = nil
+    end
+
     if grade then
 
       logmessage = logmessage .. "\n" ..("\n"..i..". Student: "..j.user.name.."  ("..j.user.sis_user_id..")")

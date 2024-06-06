@@ -12,7 +12,7 @@ local resolve_msg = {}
 
 resolve_msg.final = {
   {
-    threshold = 4 ,
+    threshold = 5 ,
     subject = "Marking thanks" ,
     rank = "Close",
     flag = "Y",
@@ -20,7 +20,7 @@ resolve_msg.final = {
 These grades are very consistent and will be taken to calculate the final grade for the student/group.]]
   } ,
   {
-    threshold = 8 ,
+    threshold = 10 ,
     subject = "Marking thanks" ,
     rank = "Near",
     flag = "Y",
@@ -28,12 +28,16 @@ These grades are very consistent and will be taken to calculate the final grade 
 These grades are quite consistent and will be taken to calculate the final grade for the student/group.]]
   } ,
   {
-    threshold = 12 ,
+    threshold = 15 ,
     subject = "Marking concern" ,
     rank = "Far",
     flag = "Y",
     body = [[
-These grades are somewhat inconsistent but are close enough that, unless I hear otherwise from you, they will be taken to calculate the final grade for the student/group. I invite you to view the assessment of your colleague, and discuss with them, to consider the discrepancy.]]
+These grades are somewhat inconsistent and must be resolved. I invite you to view the assessment of your colleague, and discuss with them, to consider the discrepancy.
+
+After discussion, update your mark against the rubric in MyUni as needed. Your marks do not need to be identical; we will still take an average of the two to calculate the final mark for the student/group.
+
+If you cannot come to a sufficiently close assessment we will organise a third assessment by another independent moderator, but this is not our preferred approach in this case.]]
   } ,
   {
     threshold = 20 ,
@@ -41,11 +45,13 @@ These grades are somewhat inconsistent but are close enough that, unless I hear 
     rank = "Problem",
     flag = "N",
     body = [[
-These grades are inconsistent and must be resolved. Please discuss with your colleague to reappraise your assessments.
+These grades are quite inconsistent and must be resolved. Please discuss with your colleague to reappraise your assessments.
 
 After discussion, update your mark against the rubric in MyUni as needed. Your marks do not need to be identical; we will still take an average of the two to calculate the final mark for the student/group.
 
-If you cannot come to a sufficiently close assessment we will organise a third assessment by another independent moderator.]]
+If you cannot come to a sufficiently close assessment we will organise a third assessment by another independent moderator.
+
+If this is necessary, please advise ASAP to allow us to resolve the situation in a timely fashion.]]
   } ,
   {
     threshold = 99 ,
@@ -59,19 +65,86 @@ After discussion, if appropriate please update your mark against the rubric in M
 
 If this is necessary, please advise ASAP to allow us to resolve the situation in a timely fashion.]]
   } ,
-  {
+  -- from here these messages should never be reached:
+  ["both fail"] = {
     threshold = 999 ,
     subject = "Marking thanks" ,
     rank = "Fail",
     flag = "Y",
     body = [[
 Both assessors have awarded a fail mark. These values will be used to calculate the final grade for the student/group.]]
+  } ,  
+  ["one fail"] = {
+    threshold = 999 ,
+    subject = "Marking fail inconsistency" ,
+    rank = "Fail",
+    flag = "Y",
+    body = [[
+One assessor has awarded a fail mark. Our new marking policy requires that either both assessors award a fail mark, or neither do.
+
+Therefore, these grades are inconsistent and must be resolved. This will be done using a third assessor if necessary. Before we go to that step, please discuss with your colleague to reappraise your assessments.
+
+After discussion, if appropriate please update your mark against the rubric in MyUni. Your marks do not need to be identical; if the discrepancy remains we will assign a third assessor.
+
+If this is necessary, please advise ASAP to allow us to resolve the situation in a timely fashion.
+]]
   } ,
 }
 
 resolve_msg.paper = resolve_msg.final
 resolve_msg.progress = resolve_msg.final
 resolve_msg.interim = resolve_msg.progress
+
+
+resolve_msg_hd = {
+  {
+    threshold = 5 ,
+    subject = "Marking thanks" ,
+    rank = "Close",
+    flag = "Y",
+    body = [[
+These grades are very consistent and will be taken to calculate the final grade for the student/group.]]
+  } ,
+  {
+    threshold = 10 ,
+    subject = "Marking concern" ,
+    rank = "Far",
+    flag = "Y",
+    body = [[
+One assessor has awarded a mark of ≥90, which now requires a tighter tolerance for agreement (within 5 marks). Please discuss with your colleague to reappraise your assessments.
+
+After discussion, update your mark against the rubric in MyUni as needed. Your marks do not need to be identical; we will still take an average of the two to calculate the final mark for the student/group.
+
+If you cannot come to a sufficiently close assessment we will organise a third assessment by another independent moderator, but this is not our preferred approach.]]
+  } ,
+  {
+    threshold = 20 ,
+    subject = "Marking resolution needed" ,
+    rank = "Problem",
+    flag = "N",
+    body = [[
+These grades are highly inconsistent and must be resolved. One assessor has awarded a mark of ≥90, which now requires a tighter tolerance for agreement (within 5 marks). Please discuss with your colleague to reappraise your assessments.
+
+After discussion, update your mark against the rubric in MyUni as needed. Your marks do not need to be identical; we will still take an average of the two to calculate the final mark for the student/group.
+
+If you cannot come to a sufficiently close assessment we will organise a third assessment by another independent moderator.
+
+If this is necessary, please advise ASAP to allow us to resolve the situation in a timely fashion.]]
+  } ,
+  {
+    threshold = 99 ,
+    subject = "Marking 3rd moderator" ,
+    rank = "Critical",
+    flag = "N",
+    body = [[
+These grades are extremely inconsistent and must be resolved. This will be done using a third assessor if necessary. Before we go to that step, please discuss with your colleague to reappraise your assessments. Note that one assessor has awarded a mark of ≥90, which now requires a tighter tolerance for agreement (within 5 marks).
+
+After discussion, if appropriate please update your mark against the rubric in MyUni. Your marks do not need to be identical; if the discrepancy remains we will assign a third assessor.
+
+If this is necessary, please advise ASAP to allow us to resolve the situation in a timely fashion.]]
+  } ,
+}
+
 
 
 function proj:copy_mod_grades(canvas_subfin,canvas_submod)
@@ -150,11 +223,22 @@ function proj:resolve_grades(resolve_bool,canvas_subfin,canvas_submod,debug_user
 
         local close_rank
         if (math.abs(j.metadata.supervisor_mark)<50) and (math.abs(j.metadata.moderator_mark)<50) then
-          close_rank = #resolve_msg[assm]
+          close_rank = "both fail"
           canvas_subfin[i].metadata.resolve = "Y"
+        elseif (math.abs(j.metadata.supervisor_mark)<50) and (math.abs(j.metadata.moderator_mark)>=50) then
+          close_rank = "one fail"
+          canvas_subfin[i].metadata.resolve = "N"
+        elseif (math.abs(j.metadata.supervisor_mark)>=90) and (math.abs(j.metadata.moderator_mark)>=90) then
+          for gg = 1,#resolve_msg[assm] do
+            if grade_diff < resolve_msg_hd[gg].threshold then
+              close_rank = gg
+              canvas_subfin[i].metadata.resolve = resolve_msg_hd[close_rank].flag
+              break
+            end
+          end
         else
           for gg = 1,#resolve_msg[assm] do
-            if grade_diff <= resolve_msg[assm][gg].threshold then
+            if grade_diff < resolve_msg[assm][gg].threshold then
               close_rank = gg
               canvas_subfin[i].metadata.resolve = resolve_msg[assm][close_rank].flag
               break

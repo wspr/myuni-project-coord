@@ -402,6 +402,9 @@ function proj:assessor_reminder_export(rem_table)
           else
             merge_tbl[uid][role] = merge_tbl[uid][role] .. "\n\n" .. rem_text
           end
+        else
+          print("Missing UID?")
+          pretty.dump(v)
         end
       end
     end
