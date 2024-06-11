@@ -8,9 +8,7 @@ local proj = {}
 
 
 
-local resolve_msg = {}
-
-resolve_msg.final = {
+local resolve_msg = {
   {
     threshold = 5 ,
     subject = "Marking thanks" ,
@@ -73,7 +71,7 @@ If this is necessary, please advise ASAP to allow us to resolve the situation in
     flag = "Y",
     body = [[
 Both assessors have awarded a fail mark. These values will be used to calculate the final grade for the student/group.]]
-  } ,  
+  } ,
   ["one fail"] = {
     threshold = 999 ,
     subject = "Marking fail inconsistency" ,
@@ -91,12 +89,8 @@ If this is necessary, please advise ASAP to allow us to resolve the situation in
   } ,
 }
 
-resolve_msg.paper = resolve_msg.final
-resolve_msg.progress = resolve_msg.final
-resolve_msg.interim = resolve_msg.progress
 
-
-resolve_msg_hd = {
+local resolve_msg_hd = {
   {
     threshold = 5 ,
     subject = "Marking thanks" ,
@@ -228,8 +222,8 @@ function proj:resolve_grades(resolve_bool,canvas_subfin,canvas_submod,debug_user
         elseif (math.abs(j.metadata.supervisor_mark)<50) and (math.abs(j.metadata.moderator_mark)>=50) then
           close_rank = "one fail"
           canvas_subfin[i].metadata.resolve = "N"
-        elseif (math.abs(j.metadata.supervisor_mark)>=90) and (math.abs(j.metadata.moderator_mark)>=90) then
-          for gg = 1,#resolve_msg[assm] do
+        elseif (math.abs(j.metadata.supervisor_mark)>=90) or (math.abs(j.metadata.moderator_mark)>=90) then
+          for gg = 1,#resolve_msg_hd do
             if grade_diff < resolve_msg_hd[gg].threshold then
               close_rank = gg
               canvas_subfin[i].metadata.resolve = resolve_msg_hd[close_rank].flag
@@ -237,10 +231,10 @@ function proj:resolve_grades(resolve_bool,canvas_subfin,canvas_submod,debug_user
             end
           end
         else
-          for gg = 1,#resolve_msg[assm] do
-            if grade_diff < resolve_msg[assm][gg].threshold then
+          for gg = 1,#resolve_msg do
+            if grade_diff < resolve_msg[gg].threshold then
               close_rank = gg
-              canvas_subfin[i].metadata.resolve = resolve_msg[assm][close_rank].flag
+              canvas_subfin[i].metadata.resolve = resolve_msg[close_rank].flag
               break
             end
           end
@@ -253,7 +247,7 @@ function proj:resolve_grades(resolve_bool,canvas_subfin,canvas_submod,debug_user
           print("Moderator  - "..j.metadata.moderator_mark.." - "..j.metadata.moderator)
           print("Supervisor - "..j.metadata.supervisor_url)
           print("Moderator  - "..j.metadata.moderator_url)
-          print("Difference - "..grade_diff.." - "..resolve_msg[assm][close_rank].rank)
+          print("Difference - "..grade_diff.." - "..resolve_msg[close_rank].rank)
           print("Resolve flag - "..j.metadata.resolve)
 
           print("Confirm resolution? Type y to do so and send response, q to do so without a response ('quiet'), s to skip this and all the rest, and anything else to move on:")
@@ -291,15 +285,15 @@ function proj:resolve_grades(resolve_bool,canvas_subfin,canvas_submod,debug_user
       elseif csv_resolve == "N" then
 
         local close_rank
-        for gg = 1,#resolve_msg[assm] do
-          if grade_diff <= resolve_msg[assm][gg].threshold then
+        for gg = 1,#resolve_msg do
+          if grade_diff <= resolve_msg[gg].threshold then
             close_rank = gg
-            canvas_subfin[i].metadata.resolve = resolve_msg[assm][close_rank].flag
+            canvas_subfin[i].metadata.resolve = resolve_msg[close_rank].flag
             break
           end
         end
 
-        if (csv_resolve == "N") and (resolve_msg[assm][close_rank].flag == "Y") then
+        if (csv_resolve == "N") and (resolve_msg[close_rank].flag == "Y") then
           print("=====================================")
           print("# Assessment resolution: "..j.user.name..", "..j.metadata.proj_title.." ("..j.metadata.proj_id..")")
           print("INCONSISTENCY RESOLVED")
@@ -307,7 +301,7 @@ function proj:resolve_grades(resolve_bool,canvas_subfin,canvas_submod,debug_user
           print("Moderator  - "..j.metadata.moderator_mark.." - "..j.metadata.moderator)
           print("Supervisor - "..j.metadata.supervisor_url)
           print("Moderator  - "..j.metadata.moderator_url)
-          print("Difference - "..grade_diff.." - "..resolve_msg[assm][close_rank].rank)
+          print("Difference - "..grade_diff.." - "..resolve_msg[close_rank].rank)
 
           print("## Confirm updated resolution? Type y to do so and send response, q to do so without a response ('quiet'), and anything else to move on:")
           local resolve_str = io.read()
@@ -400,7 +394,7 @@ Thank you for your significant contributions towards the success of our capstone
   if inconsistent_resolved then
     close_text =  "Thank you for re-assessing and/or reviewing your marks for this project, they are now close enough to be resolved."
   else
-    close_text = resolve_msg[assm][close_rank].body
+    close_text = resolve_msg[close_rank].body
   end
 
   local recip = {}
@@ -424,7 +418,7 @@ Thank you for your significant contributions towards the success of our capstone
     subject   =
       self.assign_name_colloq ..
       " marking: " ..
-      resolve_msg[assm][close_rank].subject ..
+      resolve_msg[close_rank].subject ..
       " ("..j.metadata.proj_id..")"   ,
     body      =
       "Dear " .. j.metadata.supervisor .. ", " .. j.metadata.moderator ..
