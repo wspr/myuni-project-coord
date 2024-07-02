@@ -215,7 +215,7 @@ function proj:assessor_print(assm_rubric,prov_grade,assessor_name)
               "\\SPLIT "..texencode(assm_rubric[iid].description).."&"..
 --              texencode(descr).."&"..
               (jjd.points or "").." / "..assm_rubric[iid].points.." &"..
-              "\\raggedright\\arraybackslash\\parindent=1.8em\\relax "..texencode(comments)..
+              "\\raggedright\\arraybackslash\\parindent=1.8em\\relax\\noindent "..texencode(comments)..
               "\\\\\n")
         end
         io.write("\\midrule\n"..
@@ -232,7 +232,7 @@ function proj:assessor_print(assm_rubric,prov_grade,assessor_name)
 
         for _,jjd in ipairs(prov_grade.submission_comments) do
           if jd.assessor_name == jjd.author_name then
-            io.write("\\subsubsection*{Comments}\n\\begin{minipage}{0.6\\textwidth}\n\\parskip=5pt\\parindent=0pt\\relax\n")
+            io.write("\\subsubsection*{Comments}\n\\begin{minipage}{0.6\\textwidth}\n\\parskip=5pt\\parindent=0pt\\relax\\noindent\n")
             local comment = (jjd.comment or "")
             io.write(texencode(comment))
             io.write("\\end{minipage}\n")
