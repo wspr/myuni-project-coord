@@ -75,12 +75,18 @@ function proj:summarise_marks(assign_data,assign_data2,args)
       io.write [[
 \def\NOBIB{}
 \documentclass{willarticle}
-\usepackage{longtable,booktabs,needspace,xcolor,colortbl}
-\usepackage[margin=2cm,landscape]{geometry}
+\usepackage{longtable,booktabs,xcolor,colortbl,geometry}
+\geometry{margin=2cm,landscape,paperwidth=29cm}
 \usepackage{siunitx}
 \def\SPLIT#1 #2 {%
   \textsc{\MakeLowercase{#1}} & \itshape
   \raggedright\arraybackslash\hangindent=0.8em\relax
+}
+\def\GREYRULE{%
+  \arrayrulecolor{lightgray}\midrule\arrayrulecolor{black}%
+}
+\def\COMMENT{%
+  \raggedright\arraybackslash\parindent=1.8em\relax\noindent
 }
 \begin{document}
 \begingroup
@@ -183,14 +189,14 @@ function proj:assessor_print(assm_rubric,prov_grade,assessor_name)
       if jd and (jd.score > 1) then -- did use the rubric
 
         io.write [[
-\Needspace{0.6\textheight}
+\newpage
 \subsection*{Assessor --- ]]
         io.write(jd.assessor_name)
         io.write [[
 }
 ]]
         io.write [[
-\begin{longtable}{llp{3.5cm}cp{16cm}}
+\begin{longtable}{llp{3.5cm}@{}cp{16cm}}
 \toprule
    &                   &       & {Points}  &  \\
 \# & Category & Criterion   & {awarded} & Comments \\
@@ -208,14 +214,14 @@ function proj:assessor_print(assm_rubric,prov_grade,assessor_name)
             comments = "---"
           end
           if iid > 1 then
-            io.write("\\arrayrulecolor{lightgray}\\midrule\\arrayrulecolor{black}\n")
+            io.write("\\GREYRULE\n")
           end
           io.write(
               iid.."&"..
               "\\SPLIT "..texencode(assm_rubric[iid].description).."&"..
 --              texencode(descr).."&"..
               (jjd.points or "").." / "..assm_rubric[iid].points.." &"..
-              "\\raggedright\\arraybackslash\\parindent=1.8em\\relax\\noindent "..texencode(comments)..
+              "\\COMMENT "..texencode(comments)..
               "\\\\\n")
         end
         io.write("\\midrule\n"..
