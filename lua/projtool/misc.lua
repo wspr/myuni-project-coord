@@ -19,6 +19,7 @@ function proj:list_students(dl_bool,semnow,cohort,UGPG)
 
 
   local csv_path       = "../csv/"
+  local local_csv_path = "./csv/"
   local sonia_csv      = csv_path .. "erp-projects-export.csv"
   local moderators_csv = csv_path .. "erp-"..semnow.."-moderators.csv"
 
@@ -100,7 +101,7 @@ function proj:list_students(dl_bool,semnow,cohort,UGPG)
 
 
   local student_list_filename = UGPG.."-"..cohort.."-student-list.csv"
-  local student_list_filepath = csv_path .. student_list_filename
+  local student_list_filepath = local_csv_path .. student_list_filename
 
   print("Constructing student list: "..student_list_filepath)
 

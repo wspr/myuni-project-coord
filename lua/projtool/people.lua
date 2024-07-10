@@ -154,7 +154,7 @@ function proj:read_student_lists(csvfile)
     self.all_staff_id_by_name[v.sortable_name] = uid
   end
 
-  csvfile = csvfile or ("../csv/"..self.cohort.."-student-list.csv")
+  csvfile = csvfile or ("./csv/"..self.cohort.."-student-list.csv")
   print("Reading CSV data of students/projects/supervisors/moderators: "..csvfile)
 
   self.projects = {}
