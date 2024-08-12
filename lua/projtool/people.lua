@@ -164,7 +164,7 @@ function proj:read_student_lists(csvfile)
 
   local f = csv.open(csvfile,{header=true})
   if f == nil then
-    error("CSV file '"..csvfile.."' not found.")
+    error("\n\nCSV file '"..csvfile.."' not found. Build student list using `lua proj` (option `l`).\n\n")
   end
 
   local nn = 0

@@ -30,8 +30,10 @@ function proj:list_students(dl_bool,semnow,cohort,UGPG)
   end
   checkpath("OneDrive folder",csv_path)
   checkpath("CSV file",sonia_csv)
-  checkpath("Moderators CSV file",moderators_csv)
-
+  if not(path.exists(moderators_csv)) then
+    print("Path to Moderators CSV file not found (skipping, it can be added later): \n\n    ".. moderators_csv .."\n")
+  end
+    
   local f = csv.open(sonia_csv,{header=true})
   local lookup_groups = {}
   for fields in f:lines() do
@@ -68,6 +70,7 @@ function proj:list_students(dl_bool,semnow,cohort,UGPG)
   end
 
   print("# Consistency check of data\n")
+  consistency_error = false
 
   local count = 0
   local sonia_names = {}
@@ -76,9 +79,11 @@ function proj:list_students(dl_bool,semnow,cohort,UGPG)
     local grp = v["MyUni Project ID"]
     if myuni_groups[grp] == nil then
       print("• CSV group not found in MyUni: "..grp)
+      consistency_error = true
     else
       if not( tonumber( v["N students"] ) == myuni_groups[grp].Nstudents ) then
-      print("• "..grp.." : check group size : MyUni = "..myuni_groups[grp].Nstudents.." | CSV = "..v["N students"] )
+        print("• "..grp.." : check group size : MyUni = "..myuni_groups[grp].Nstudents.." | CSV = "..v["N students"] )
+        consistency_error = true
       end
     end
     sonia_names[grp] = v
@@ -90,6 +95,7 @@ function proj:list_students(dl_bool,semnow,cohort,UGPG)
     count2 = count2 + 1
     if (sonia_names[grp] == nil) then
       print("• MyUni group not found in CSV: "..grp.." ("..myuni_groups[grp].Nstudents.." students)")
+      consistency_error = true
     end
   end
 
@@ -97,6 +103,9 @@ function proj:list_students(dl_bool,semnow,cohort,UGPG)
   print("• Total number of MyUni groups: "..count2)
   if count == count2 then
     print("Good!")
+  else
+    print("Mismatch -- check!")
+    consistency_error = true
   end
 
 
@@ -139,6 +148,8 @@ function proj:list_students(dl_bool,semnow,cohort,UGPG)
 
   io.close(ff)
   print("...done.")
+  
+  return consistency_error
 
 end
 
