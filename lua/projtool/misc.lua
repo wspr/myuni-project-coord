@@ -22,6 +22,7 @@ function proj:list_students(dl_bool,semnow,cohort,UGPG)
   local local_csv_path = "./csv/"
   local sonia_csv      = csv_path .. "erp-projects-export.csv"
   local moderators_csv = csv_path .. "erp-"..semnow.."-moderators.csv"
+  local group_name     = self.group_name or "Project Groups"
 
   local function checkpath(s,p)
     if not(path.exists(p)) then
@@ -52,7 +53,7 @@ function proj:list_students(dl_bool,semnow,cohort,UGPG)
     end
   end
 
-  myuni_groups = self:get_groups_by_cat(dl_bool,"Project Groups")
+  myuni_groups = self:get_groups_by_cat(dl_bool,group_name)
   for grp,v in pairs(myuni_groups) do
     if grp:sub(-5,-1) == "00000" then
       myuni_groups[grp] = nil

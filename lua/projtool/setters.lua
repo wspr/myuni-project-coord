@@ -27,6 +27,9 @@ end
 function proj:set_assign_grouped(bool)
   self.assign_grouped = bool
 end
+function proj:set_group_name(str)
+  self.group_name = str
+end
 function proj:set_assign_moderated(bool)
   self.assign_moderated = bool
 end
