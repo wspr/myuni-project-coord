@@ -306,8 +306,8 @@ function proj:assessor_reminder_export(rem_table)
 
   self:print("# REMINDERS")
 
-  local csvfile       = "csv/assessment-reminders.csv"
-  local mailmergefile = "csv/assessment-reminders-mailmerge.csv"
+  local csvfile       = "csv/assessment-reminders-"..os.date("%Y-%m-%d").."-table.csv"
+  local mailmergefile = "csv/assessment-reminders-"..os.date("%Y-%m-%d").."-mailmerge.csv"
 
   local function qq(str) return '"'..str..'"' end
   local function csvrow(tbl)
