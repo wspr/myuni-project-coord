@@ -22,6 +22,7 @@ function proj:message_reminder_add(j,rem_table,args)
   local acad_id   = j.metadata[sup_or_mod.."_id"]
   local staff_lookup, acad_name
   if (acad_id == nil) or (acad_id == "") then
+    pretty.dump(j)
     pretty.dump(j.metadata)
     print("!!!!!!!!!!!! Huh? Missing metadata: '"..sup_or_mod.."_id'")
     staff_lookup = {}
@@ -302,12 +303,18 @@ end
 
 
 
-function proj:assessor_reminder_export(rem_table)
+function proj:assessor_reminder_export(rem_table,suffix)
 
   self:print("# REMINDERS")
 
-  local csvfile       = "csv/assessment-reminders-"..os.date("%Y-%m-%d").."-table.csv"
-  local mailmergefile = "csv/assessment-reminders-"..os.date("%Y-%m-%d").."-mailmerge.csv"
+  local suffix = suffix or ""
+  if suffix == "" then
+    suffix = "-"
+  else
+    suffix = "-"..suffix.."-"
+  end
+  local csvfile       = "csv/assessment-reminders"..suffix.."table.csv"
+  local mailmergefile = "csv/assessment-reminders"..suffix.."mailmerge.csv"
 
   local function qq(str) return '"'..str..'"' end
   local function csvrow(tbl)

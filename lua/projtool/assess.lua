@@ -81,6 +81,10 @@ function proj:add_assessment_metadata(canvas_subm,verbose)
   for i,subm_entry in ipairs(canvas_subm) do
 
     local student_id   = subm_entry.user.sis_user_id
+    if student_id == "" then -- sometimes this entry is not populated (grr)
+      student_id   = string.sub(subm_entry.user.login_id,2) -- "a1063023" -> "1063023"
+
+    end
     local student_name = subm_entry.user.name
     local ind          = self.student_ind[student_id]
 

@@ -140,7 +140,7 @@ function proj:export_csv_marks_moderated(subm,arg)
     j.metadata = j.metadata or {}
 
     local mark, diff
-    if j.metadata.supervisor_mark and j.metadata.moderator_mark then
+    if (type(j.metadata.supervisor_mark) == "number" and type(j.metadata.moderator_mark) == "number") and (j.metadata.supervisor_mark and j.metadata.moderator_mark) then
       mark = weightings[1]*j.metadata.supervisor_mark + weightings[2]*j.metadata.moderator_mark
       diff = j.metadata.supervisor_mark-j.metadata.moderator_mark
     end
