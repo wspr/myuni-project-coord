@@ -370,7 +370,7 @@ You have assessed the following student/group:]] .. "\n\n" ..
   local body_end
   if self.assign_moderated then
     body_end = "\n\n" .. [[
-You may view your own assessment at the following links: (note you will not be able to see the rubric of the other assessor)
+You may view both assessments at the following links:
 
     • Supervisor: ]] .. j.metadata.supervisor_url .. "\n" .. [[
     • Moderator: ]] .. j.metadata.moderator_url .. "\n" .. [[
@@ -401,19 +401,19 @@ Thank you for your significant contributions towards the success of our capstone
   if self.staff[j.metadata.supervisor_id] == nil then
     print("Assessor '"..j.metadata.supervisor_id.."' not found in staff list.")
   else
-    recip[#recip+1] = self.staff[j.metadata.supervisor_id].id
+    recip[#recip+1] = tostring(self.staff[j.metadata.supervisor_id].id)
   end
   if self.staff[j.metadata.moderator_id] == nil then
     print("Assessor '"..j.metadata.moderator_id.."' not found in staff list.")
   else
-    recip[#recip+1] = self.staff[j.metadata.moderator_id].id
+    recip[#recip+1] = tostring(self.staff[j.metadata.moderator_id].id)
   end
   if self.coordinators then
     local coord = self.coordinators[j.metadata.school]
-    recip[#recip+1] = self.staff[coord[2]].id
+    recip[#recip+1] = tostring(self.staff[coord[2]].id)
   end
 
-  self:message_user(send_bool,{
+  xx = self:message_user(send_bool,{
     canvasid  = recip ,
     subject   =
       self.assign_name_colloq ..
@@ -421,9 +421,15 @@ Thank you for your significant contributions towards the success of our capstone
       resolve_msg[close_rank].subject ..
       " ("..j.metadata.proj_id..")"   ,
     body      =
-      "Dear " .. j.metadata.supervisor .. ", " .. j.metadata.moderator ..
+      "Dear " .. j.metadata.supervisor .. " and " .. j.metadata.moderator ..
       body_text .. penalty_text .. close_text .. body_end .. self.message.signoff   ,
           })
+
+  if xx and xx[1] and xx[1]["audience"] == nil then
+    print(">>>> LIKELY ERROR >>>>")
+    pretty.dump(xx)
+    print("<<<< LIKELY ERROR <<<<")
+  end
 
 end
 
