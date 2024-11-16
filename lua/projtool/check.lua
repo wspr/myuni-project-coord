@@ -41,6 +41,8 @@ end
 
 function proj:check_assignment(assign_data,check_bool,assgn_lbl,debug_user)
 
+  local late_thresh  = 30 -- minutes
+
   assgn_lbl = assgn_lbl or self.deliverable -- argument to customise if needed to differentiate supervisor/moderator, say
   local Nrubric = #self.assignments[self.assign_name_canvas].rubric
 
@@ -87,12 +89,15 @@ function proj:check_assignment(assign_data,check_bool,assgn_lbl,debug_user)
 
       j.metadata.assessment_check.graded = true
       logmessage = logmessage .. "\n" ..("Grade: "..grade.." | Entered grade: "..j.entered_grade)
-      if j.late then
+      if j.late and j.late_policy_status == "late" then
         marks_lost = j.points_deducted or marks_lost
         logmessage = logmessage .. "\n" ..("LATE - points deducted: "..marks_lost.." - late by: "..(j.seconds_late/60).." min = "..(j.seconds_late/60/60).." hrs = "..(j.seconds_late/60/60/24).." days")
-        if j.seconds_late < 60*60 then
+        if j.seconds_late < late_thresh*60 then
           print(logmessage)
-          print("Late penalty should be waived (<1hr) -- correct manually")
+          print("Penalty should be waived (<"..late_thresh.." minutes late) -- correct? y to send response, anything else to ignore")
+          if io.read() == "y" then
+            self:put(self.course_prefix.."assignments/"..j.assignment_id.."/submissions/"..j.user.id,{submission={late_policy_status="none"},comment={group_comment=true,text_comment="Submission was late but close to the deadline; late penalty waived."}})
+          end
         end
       end
       if j.rubric_assessment then
@@ -111,10 +116,16 @@ function proj:check_assignment(assign_data,check_bool,assgn_lbl,debug_user)
             logmessage = logmessage .. "\n" ..("ERROR: rubric sum ("..rubric_sum..") does not match final mark awarded ("..grade..")")
             rubric_fail = true
           end
-        elseif rubric_count < Nrubric then
+        elseif rubric_count > 0 and rubric_count < Nrubric then
           j.metadata.assessment_check.rubric_incomplete = true
           logmessage = logmessage .. "\n" ..("ERROR: Only "..rubric_count.." of "..Nrubric.." rubric entries completed.")
-          rubric_fail = true
+          print(logmessage)
+          print("Delete grade entry for academic to fix in next reminder? y if so, anything else to ignore")
+          if io.read() == "y" then
+            self:put(self.course_prefix.."assignments/"..j.assignment_id.."/submissions/"..j.user.id,{submission={posted_grade=""}})
+          else
+            rubric_fail = true
+          end
         end
       else
         logmessage = logmessage .. "\n" ..("ERROR: Grade entered but no rubric information.")
@@ -179,6 +190,8 @@ end
 
 function proj:check_moderated(assign_data,check_bool,assgn_lbl,debug_user)
 
+  local late_thresh  = 30 -- minutes
+
   -- Ensure canvas moderation settings are "correct"
   local fixme = false
   if self.assignments[self.assign_name_canvas].grader_count < 999 then
@@ -220,12 +233,15 @@ function proj:check_moderated(assign_data,check_bool,assgn_lbl,debug_user)
       logmessage = logmessage .. "\n" .. ("Supervisor: "..j.metadata.supervisor .. " | Moderator: "..j.metadata.moderator)
       logmessage = logmessage .. "\n" .. ("URL: "..j.metadata.url)
 
-      if j.late then
+      if j.late and j.late_policy_status == "late" then
         marks_lost = j.points_deducted or 0
         logmessage = logmessage .. "\n" .. ("LATE - points deducted: "..marks_lost.." - late by: "..(j.seconds_late/60).." min = "..(j.seconds_late/60/60).." hrs = "..(j.seconds_late/60/60/24).." days")
-        if j.seconds_late < 60*60 then
+        if j.seconds_late < late_thresh*60 then
           print(logmessage)
-          print("Late penalty should be waived (<1hr) -- correct manually")
+          print("Penalty should be waived (<"..late_thresh.." minutes late) -- correct? y to send response, anything else to ignore")
+          if io.read() == "y" then
+            self:put(self.course_prefix.."assignments/"..j.assignment_id.."/submissions/"..j.user.id,{submission={late_policy_status="none"},comment={group_comment=true,text_comment="Submission was late but close to the deadline; late penalty waived."}})
+          end
         end
       end
 
