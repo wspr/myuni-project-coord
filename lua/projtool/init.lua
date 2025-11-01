@@ -16,7 +16,7 @@ copy_functions("projtool.check")
 copy_functions("projtool.resolve")
 copy_functions("projtool.reminders")
 copy_functions("projtool.dataIO")
-copy_functions("projtool.misc")
+copy_functions("projtool.students")
 copy_functions("projtool.marksprint")
 
 

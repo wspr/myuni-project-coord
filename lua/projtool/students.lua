@@ -21,7 +21,7 @@ function proj:list_students(dl_bool,semnow,cohort,UGPG)
   local csv_path       = "../csv/"
   local local_csv_path = "./csv/"
   local sonia_csv      = csv_path .. "erp-projects-export.csv"
-  local moderators_csv = csv_path .. "erp-"..semnow.."-moderators.csv"
+  local moderators_csv = csv_path .. "erp-moderators-export.csv"
   local group_name     = self.group_name or "Project Groups"
 
   local function checkpath(s,p)
@@ -31,10 +31,8 @@ function proj:list_students(dl_bool,semnow,cohort,UGPG)
   end
   checkpath("OneDrive folder",csv_path)
   checkpath("CSV file",sonia_csv)
-  if not(path.exists(moderators_csv)) then
-    print("Path to Moderators CSV file not found (skipping, it can be added later): \n\n    ".. moderators_csv .."\n")
-  end
-    
+  checkpath("Moderators file",moderators_csv)
+
   local f = csv.open(sonia_csv,{header=true})
   local lookup_groups = {}
   for fields in f:lines() do
@@ -124,7 +122,7 @@ function proj:list_students(dl_bool,semnow,cohort,UGPG)
     return str
   end
 
-  io.write(csvrow{"Name","ID","ProjID","ShortID","ProjTitle","School","Supervisor","SupervisorID","Moderator","ModeratorID"})
+  io.write(csvrow{"Name","ID","ProjID","ShortID","ProjTitle","School","Supervisor","SupervisorID","Assessor","AssessorID","Moderator","ModeratorID"})
   for k,v in pairs(myuni_groups) do
     for _,u in ipairs(v.users) do
       local id = u.sis_user_id or string.sub(u.login_id,2,-1) or ""
@@ -140,8 +138,10 @@ function proj:list_students(dl_bool,semnow,cohort,UGPG)
           this_group["Project School"],
           qq(this_group["Project supervisor"]),
           this_group["Supervisor ID"],
+          qq(lookup_mods[k]["AssessorName"] or ""),
+          lookup_mods[k]["AssessorID"] or "",
           qq(lookup_mods[k]["Moderator"] or ""),
-          lookup_mods[k]["Mod ID"] or ""
+          lookup_mods[k]["Mod ID"] or "",
         })
       end
     end
@@ -149,7 +149,7 @@ function proj:list_students(dl_bool,semnow,cohort,UGPG)
 
   io.close(ff)
   print("...done.")
-  
+
   return consistency_error
 
 end
