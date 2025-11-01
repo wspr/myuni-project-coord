@@ -76,6 +76,7 @@ function proj:list_students(dl_bool,semnow,cohort,UGPG)
   for k,v in pairs(sonia_groups) do
     count = count + 1
     local grp = v["MyUni Project ID"]
+    grp = grp:gsub("%a$", "") -- remove trailing digit when group has been split
     if myuni_groups[grp] == nil then
       print("• CSV group not found in MyUni: "..grp)
       consistency_error = true
@@ -91,6 +92,7 @@ function proj:list_students(dl_bool,semnow,cohort,UGPG)
 
   local count2 = 0
   for grp,v in pairs(myuni_groups) do
+    grp = grp:gsub("%a$", "") -- remove trailing digit when group has been split
     count2 = count2 + 1
     if (sonia_names[grp] == nil) then
       print("• MyUni group not found in CSV: "..grp.." ("..myuni_groups[grp].Nstudents.." students)")
@@ -123,27 +125,29 @@ function proj:list_students(dl_bool,semnow,cohort,UGPG)
   end
 
   io.write(csvrow{"Name","ID","ProjID","ShortID","ProjTitle","School","Supervisor","SupervisorID","Assessor","AssessorID","Moderator","ModeratorID"})
-  for k,v in pairs(myuni_groups) do
+  for gid,v in pairs(myuni_groups) do
+    grp = gid:gsub("%a$", "") -- remove trailing digit when group has been split
     for _,u in ipairs(v.users) do
-      local id = u.sis_user_id or string.sub(u.login_id,2,-1) or ""
-      lookup_mods[k] = lookup_mods[k] or {}
-      local this_group = lookup_groups[k]
-      if this_group then
-        io.write(csvrow{
-          qq(u.sortable_name),
-          id,
-          k,
-          this_group["Short Project ID"],
-          qq(this_group["Project title"]),
-          this_group["Project School"],
-          qq(this_group["Project supervisor"]),
-          this_group["Supervisor ID"],
-          qq(lookup_mods[k]["AssessorName"] or ""),
-          lookup_mods[k]["AssessorID"] or "",
-          qq(lookup_mods[k]["Moderator"] or ""),
-          lookup_mods[k]["Mod ID"] or "",
-        })
+      local id = string.sub(u.login_id,2,-1) or u.sis_user_id or ""
+      lookup_mods[grp] = lookup_mods[grp] or {}
+      local this_group = lookup_groups[grp]
+      if not this_group then
+        print("Group not found in lookup: ",this_group)
       end
+      io.write(csvrow{
+        qq(u.sortable_name),
+        id,
+        gid,
+        this_group["Short Project ID"],
+        qq(this_group["Project title"]),
+        this_group["Project School"],
+        qq(this_group["Project supervisor"]),
+        this_group["Supervisor ID"],
+        qq(lookup_mods[grp]["Assessor"] or ""),
+        lookup_mods[grp]["Assessor ID"] or "",
+        qq(lookup_mods[grp]["Moderator"] or ""),
+        lookup_mods[grp]["Mod ID"] or "",
+      })
     end
   end
 

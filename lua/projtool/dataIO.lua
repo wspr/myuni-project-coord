@@ -114,7 +114,7 @@ function proj:export_csv_marks_moderated(subm,arg)
   self:print("* Writing marks to file: '"..self.marks_csv.."'...")
   file.copy(self.marks_csv,("backup-"..self.marks_csv))
   local ff = io.output(self.marks_csv)
-  io.write("INDEX,USERID,NAME,SCHOOL,PROJID,TITLE,MARK,DIFF,RESOLVED,LATE,SIMILARITY,SUPERVISOR,SUPMARK,MODERATOR,MODMARK,SUPID,MODID,SUPURL,MODURL,UID1,ASSESSOR1,SCORE1,UID2,ASSESSOR2,SCORE2,UID3,ASSESSOR3,SCORE3,UID4,ASSESSOR4,SCORE4,UID5,ASSESSOR5,SCORE5,\n")
+  io.write("INDEX,USERID,NAME,SCHOOL,PROJID,TITLE,MARK,DIFF,RESOLVED,LATE_HRS,SIMILARITY,SUPERVISOR,SUPMARK,MODERATOR,MODMARK,SUPID,MODID,SUPURL,MODURL,UID1,ASSESSOR1,SCORE1,UID2,ASSESSOR2,SCORE2,UID3,ASSESSOR3,SCORE3,UID4,ASSESSOR4,SCORE4,UID5,ASSESSOR5,SCORE5,\n")
 
   local nameind = {}
   for i in pairs(subm) do
@@ -154,8 +154,16 @@ function proj:export_csv_marks_moderated(subm,arg)
       end
     end
 
+    local id_num = string.sub(j.user.login_id,2)
+    local late_hrs = ""
+    if j.seconds_late and j.seconds_late > 0 then
+      late_hrs = string.format("%.3f", j.seconds_late / 60 / 60)
+      if late_hrs == "0.000" then
+        late_hrs = "0.0001"
+      end
+    end
     local writestr = cc..","..
-      (j.user.sis_user_id or "")..","..
+      (id_num)..","..
       (j.user.name or "")..","..
       (j.metadata.school or "")..","..
       (j.metadata.proj_id or "")..","..
@@ -163,7 +171,7 @@ function proj:export_csv_marks_moderated(subm,arg)
       (mark or "")..","..
       (diff or "")..","..
       (j.metadata.resolve  or "")..","..
-      (j.seconds_late or 0)..","..
+      (late_hrs)..","..
       (similarity_score)..","..
       "\""..(j.metadata.supervisor or "").."\""..","..
       (j.metadata.supervisor_mark or "")..","..
@@ -219,21 +227,30 @@ function proj:export_csv_marks(subm)
   self:print("* Writing marks to file: '"..self.marks_csv.."'...")
   file.copy(self.marks_csv,("backup-"..self.marks_csv))
   local ff = io.output(self.marks_csv)
-  io.write("INDEX,USERID,NAME,SCHOOL,PROJID,TITLE,SUPERVISOR,MARK,LATE,URL\n")
+  io.write("INDEX,USERID,NAME,SCHOOL,PROJID,TITLE,SUPERVISOR,MARK,LATE_HRS,URL\n")
 
   for cc,n in ipairs(nameind) do
     local j = subm[n]
 
+    local id_num = string.sub(j.user.login_id,2)
+    local late_hrs = ""
+    if j.seconds_late and j.seconds_late > 0 then
+      late_hrs = string.format("%.3f", j.seconds_late / 60 / 60)
+      if late_hrs == "0.000" then
+        late_hrs = "0.0001"
+      end
+    end
+
     j.metadata = j.metadata or {}
     local writestr = cc..","..
-      (j.user.sis_user_id or "")..","..
+      (id_num)..","..
       (j.user.name or "")..","..
       (j.metadata.school or "")..","..
       (j.metadata.proj_id or "")..","..
       "\"'"..(j.metadata.proj_title or "").."'\""..","..
       "\""..(j.metadata.supervisor or "").."\""..","..
       (j.grade or "")..","..
-      (j.seconds_late or 0)..","..
+      (late_hrs)..","..
       (j.metadata.url or "")
 
     if not(j.grade == "-1") then

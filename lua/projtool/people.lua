@@ -178,6 +178,8 @@ function proj:read_student_lists(csvfile)
       self.proj_data[nn].school        = fields["School"] or ""
       self.proj_data[nn].supervisor    = fields["Supervisor"] or ""
       self.proj_data[nn].supervisor_id = fields["SupervisorID"] or ""
+      self.proj_data[nn].assessor    = fields["Assessor"] or ""
+      self.proj_data[nn].assessor_id = fields["AssessorID"] or ""
       self.proj_data[nn].myuni_proj_id = fields["MyUniProjID"] or ""
       if self.proj_data[nn].myuni_proj_id == "" then
         self.proj_data[nn].myuni_proj_id = self.proj_data[nn].proj_id
@@ -190,6 +192,8 @@ function proj:read_student_lists(csvfile)
       self.projects[jj.proj_id].school        = self.projects[jj.proj_id].school        or jj.school
       self.projects[jj.proj_id].supervisor    = self.projects[jj.proj_id].supervisor    or jj.supervisor
       self.projects[jj.proj_id].supervisor_id = self.projects[jj.proj_id].supervisor_id or jj.supervisor_id
+      self.projects[jj.proj_id].assessor      = self.projects[jj.proj_id].assesspr      or jj.assessor
+      self.projects[jj.proj_id].assessor_id   = self.projects[jj.proj_id].assesspr_id   or jj.assessor_id
       self.projects[jj.proj_id].student_ids   = self.projects[jj.proj_id].student_ids   or {}
       self.projects[jj.proj_id].student_names = self.projects[jj.proj_id].student_names or {}
       self.projects[jj.proj_id].student_ids[#self.projects[jj.proj_id].student_ids+1]     = self.proj_data[nn].student_id

@@ -19,7 +19,10 @@ function proj:message_reminder_add(j,rem_table,args)
   local assign_grouped = args.grouped or self.assign_grouped or false
   local assm = self.deliverable
 
-  local acad_id   = j.metadata[sup_or_mod.."_id"]
+  local acad_id = j.metadata[sup_or_mod.."_id"]
+  if sup_or_mod == "supervisor" and j.metadata["assessor_id"] then
+      acad_id = j.metadata["assessor_id"] -- override supervisor with alternate assessor
+  end
   local staff_lookup, acad_name
   if (acad_id == nil) or (acad_id == "") then
     pretty.dump(j)
@@ -44,7 +47,7 @@ function proj:message_reminder_add(j,rem_table,args)
     print("Coordinator data/name: "..coord)
     error("Coordinator table must list UoA ID as second entry")
   end
-  
+
   if self.staff[coord] == nil then
     error("Staff member '"..coord.."' not found as coordinator for school '"..school.."'")
   end
@@ -340,7 +343,7 @@ function proj:assessor_reminder_export(rem_table,suffix)
     "Coordinator","Assessment","Role","Since submission","Student ID","Student name","Project ID","Project title",
     "Speedgrader URL"})
 
-  for k,v in pairs(rem_table) do
+  for name,v in pairs(rem_table) do
     for _,assn in pairs(v.marking) do
       for _,prj in ipairs(assn.projects) do
 
@@ -351,7 +354,7 @@ function proj:assessor_reminder_export(rem_table,suffix)
           role = "Moderator"
         end
         io.write(
-          csvrow{qq(k),
+          csvrow{qq(name),
           v.details.short_name,
           v.details.login_id,
           (v.details.email) or "",
@@ -374,7 +377,7 @@ function proj:assessor_reminder_export(rem_table,suffix)
   self:print("...done.")
 
   merge_tbl = {}
-  for k,v in pairs(rem_table) do
+  for name,v in pairs(rem_table) do
     for _,assn in pairs(v.marking) do
       for _,prj in ipairs(assn.projects) do
 
@@ -424,9 +427,9 @@ function proj:assessor_reminder_export(rem_table,suffix)
   io.write(csvrow{
     "UID","ASSESSOR","EMAIL","SUPERVISED","MODERATED"})
 
-  for k,v in pairs(merge_tbl) do
+  for name,v in pairs(merge_tbl) do
         io.write(
-          csvrow{k,
+          csvrow{name,
           v.assessor,
           v.email,
           qq(v.Supervisor or "[none]"),
