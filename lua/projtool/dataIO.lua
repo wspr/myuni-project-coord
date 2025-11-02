@@ -1,15 +1,11 @@
 
 
 local csv     = require("csv")
-local pretty  = require("pl.pretty")
+--local pretty  = require("pl.pretty")
 local path    = require("pl.path")
 local file    = require("pl.file")
-local canvas  = require("canvas-lms")
-
 
 local proj = {}
-
-
 
 
 function proj:dl_check(opt,str)
@@ -32,7 +28,6 @@ function proj:dl_check(opt,str)
 end
 
 
-
 function proj:check_csv_exists()
 
   self.marks_csv = self.marks_csv or string.lower("csv/"..self.cohort.."-marks-"..self.deliverable..".csv")
@@ -41,15 +36,16 @@ function proj:check_csv_exists()
 end
 
 
-
-function proj:check_assessment_flags(canvas_subm,verbose)
+function proj:check_assessment_flags(verbose)
 
   verbose = verbose or false
   self.marks_csv = self.marks_csv or string.lower("csv/"..self.cohort.."-marks-"..self.deliverable..".csv")
 
+  if verbose then
+    self:print("### Checking assessment flags")
+  end
+
   local resolve = {}
-  local override = {}
-  local comments = {}
 
   if not(path.exists(self.marks_csv)) then
     self:print("Marks not found: "..self.marks_csv)
@@ -81,7 +77,7 @@ function proj:check_assessment_flags(canvas_subm,verbose)
     self:print("Zero lines in marks file")
     some_missing = true
   end
-  for k,v in pairs(resolve) do
+  for _,v in pairs(resolve) do
     if not(v=="Y") then
       some_missing = true
       break
