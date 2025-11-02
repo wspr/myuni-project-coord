@@ -2,12 +2,8 @@
 local pretty  = require("pl.pretty")
 local Date    = require("pl.Date")
 local file    = require("pl.file")
-local canvas  = require("canvas-lms")
-
 
 local proj = {}
-
-
 
 function proj:message_reminder_add(j,rem_table,args)
 
@@ -87,10 +83,10 @@ function proj:message_reminder_add(j,rem_table,args)
   local not_submitted_str = ""
   local remind_submitted_str = ""
   local remind_url_str = ""
-  local remind_due_str = ""
+  local remind_due_str
   local df = Date.Format()
-  local dfformat = "yyyy-mm-dd HH:MM"
-  local nicedate
+  --local dfformat = "yyyy-mm-dd HH:MM"
+  --local nicedate
   if self.assign_has_submission then
     not_submitted_str = "~~ NOT SUBMITTED YET ~~"
   end
@@ -104,18 +100,17 @@ function proj:message_reminder_add(j,rem_table,args)
     end
   else
     j.metadata.since = tostring(Date{} - df:parse(j.metadata.submitted_at))
-    local nicedate = Date.Format(dfformat):tostring(df:parse(j.metadata.submitted_at))
-    remind_submitted_str = "             Submitted: " .. j.metadata.submitted_at .. " (".. j.metadata.since .."ago)\n"
+    --nicedate = Date.Format(dfformat):tostring(df:parse(j.metadata.submitted_at))
+    --remind_submitted_str = "             Submitted: " .. j.metadata.submitted_at .. " (".. j.metadata.since .."ago)\n"
     remind_submitted_str = "             Submitted: " .. j.metadata.submitted_at .. "\n"
     if self.assign_has_submission then
       remind_url_str = "      SpeedGrader link: <" .. j.metadata.url .. ">\n"
     end
   end
   if j.cached_due_date then
-    nicedate = Date.Format(dfformat):tostring(Date.toLocal(df:parse(j.cached_due_date)))
+    --nicedate = Date.Format(dfformat):tostring(Date.toLocal(df:parse(j.cached_due_date)))
     remind_due_str = "                   Due: " .. j.cached_due_date .. "\n"
   else
-    nicedate = nil
     remind_due_str = ""
   end
 
@@ -163,7 +158,7 @@ function proj:assessor_reminder_collect_single(rem_table,subm1)
 
   local count = 0
   for _,j in pairs(subm1) do
-    if not(next(j) == nil) and not(j.grade) then
+    if next(j) and not(j.grade) then
       count = count + 1
       rem_table = self:message_reminder_add(j,rem_table,{whom="supervisor"})
     end
@@ -182,14 +177,14 @@ function proj:assessor_reminder_collect_moderated(rem_table,subm1,subm2)
 
   local count = 0
   for _,j in pairs(subm1) do
-    if not(j.metadata==nil) and not(j.metadata.supervisor_mark) then
+    if j.metadata and not(j.metadata.supervisor_mark) then
       count = count + 1
       rem_table = self:message_reminder_add(j,rem_table,{whom="supervisor"})
     end
   end
 
   for _,j in pairs(subm2) do
-    if not(j.metadata==nil) and not(j.metadata.moderator_mark) then
+    if j.metadata and not(j.metadata.moderator_mark) then
       count = count + 1
       rem_table = self:message_reminder_add(j,rem_table,{whom="moderator"})
     end
@@ -214,15 +209,15 @@ function proj:assessor_reminder_summarise(rem_table,args)
       print("ASSESSOR: "..acad_name)
 
       local body = ""
-      for stub,assm in pairs(assr.marking) do
+      for _,assm in pairs(assr.marking) do
 
-        if not(assm.supervisor == "") then
+        if assm.supervisor ~= "" then
           body = body .. "\n# "..assm.assessment.." -- Supervisor assessment\n\n" .. assm.supervisor
         end
-        if not(assm.supervisor == "") and not(assm.moderator == "") then
+        if assm.supervisor ~= "" and assm.moderator ~= "" then
           body = body .. "\n"
         end
-        if not(assm.moderator == "") then
+        if assm.moderator ~= "" then
           body = body .. "\n# "..assm.assessment.." -- Moderator assessment\n\n" .. assm.moderator
         end
 
@@ -249,7 +244,7 @@ function proj:assessor_reminder_send(remind_check,rem_table,args)
       additional_message = "[[Additional message would go here.]]"
     end
   end
-  if not(additional_message == "") then
+  if additional_message ~= "" then
     additional_message = additional_message .. "\n\n"
   end
 
@@ -269,13 +264,13 @@ function proj:assessor_reminder_send(remind_check,rem_table,args)
       context_course = context_course or assm.courseid
       self:info("COURSE: "..assm.courseid.." | ASSESSMENT: "..assm.assessment.." ("..stub..")")
 
-      if not(assm.supervisor == "") then
+      if assm.supervisor ~= "" then
         body = body .. "\n# "..assm.assessment.." -- Supervisor assessment\n\n" .. self.message[stub].body_opening .. assm.supervisor
       end
-      if not(assm.supervisor == "") and not(assm.moderator == "") then
+      if assm.supervisor ~= "" and assm.moderator ~= "" then
         body = body .. "\n"
       end
-      if not(assm.moderator == "") then
+      if assm.moderator ~= "" then
         body = body .. "\n# "..assm.assessment.." -- Moderator assessment\n\n" .. self.message[stub].body_opening .. assm.moderator
       end
       recip_lookup[assm.coord_cid] = true
@@ -310,7 +305,7 @@ function proj:assessor_reminder_export(rem_table,suffix)
 
   self:print("# REMINDERS")
 
-  local suffix = suffix or ""
+  suffix = suffix or ""
   if suffix == "" then
     suffix = "-"
   else
@@ -376,8 +371,8 @@ function proj:assessor_reminder_export(rem_table,suffix)
   io.close(ff)
   self:print("...done.")
 
-  merge_tbl = {}
-  for name,v in pairs(rem_table) do
+  local merge_tbl = {}
+  for _,v in pairs(rem_table) do
     for _,assn in pairs(v.marking) do
       for _,prj in ipairs(assn.projects) do
 
@@ -422,7 +417,7 @@ function proj:assessor_reminder_export(rem_table,suffix)
 
   self:print("Constructing mailmerge csv:  "..mailmergefile)
   file.copy(mailmergefile,("backup-"..mailmergefile))
-  local ff = io.output(mailmergefile)
+  local mmff = io.output(mailmergefile)
 
   io.write(csvrow{
     "UID","ASSESSOR","EMAIL","SUPERVISED","MODERATED"})
@@ -437,7 +432,7 @@ function proj:assessor_reminder_export(rem_table,suffix)
         })
   end
 
-  io.close(ff)
+  io.close(mmff)
   self:print("...done.")
 
 end
