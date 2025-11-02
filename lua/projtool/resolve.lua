@@ -1,12 +1,7 @@
 
-
 local pretty  = require("pl.pretty")
-local canvas  = require("canvas-lms")
-
 
 local proj = {}
-
-
 
 local resolve_msg = {
   {
@@ -159,8 +154,8 @@ function proj:copy_mod_grades(canvas_subfin,canvas_submod)
   end
 
   for i in pairs(canvas_submod) do
-    if not(canvas_subfin[i] == nil) then
-      if not(canvas_subfin[i].attachments==nil) and (canvas_submod[i].attachments==nil) then
+    if canvas_subfin[i] ~= nil then
+      if (canvas_subfin[i].attachments ~= nil) and (canvas_submod[i].attachments == nil) then
         self:print("MISSING SUBMISSION FOR MODERATOR")
         self:print("Student/group: "..canvas_subfin[i].user.name.."/"..canvas_subfin[i].metadata.myuni_proj_id)
         self:print("Project title: "..canvas_subfin[i].metadata.proj_title)
@@ -262,19 +257,18 @@ function proj:resolve_grades(resolve_bool,canvas_subfin,canvas_submod,debug_user
             resolve_str = ""
           end
 
-          if j.metadata.resolve == "Y" and self.assignments[self.assign_name_canvas].moderated_grading then
-            local canv_assign_id = self.assignments[self.assign_name_canvas].id
-
-            if resolve_str=="y" or resolve_str=="q" then
+--          if j.metadata.resolve == "Y" and self.assignments[self.assign_name_canvas].moderated_grading then
+--            local canv_assign_id = self.assignments[self.assign_name_canvas].id
+--            if resolve_str=="y" or resolve_str=="q" then
 --              self:put(self.course_prefix.."assignments/"..canv_assign_id.."/provisional_grades/"..j.metadata.supervisor_provisional_id.."/select")
 --              self:put(self.course_prefix.."assignments/"..canv_assign_id.."/provisional_grades/"..j.metadata.moderator_provisional_id.."/select")
-            end
-          end
+--            end
+--          end
 
           if resolve_str=="y" then
             self:message_resolution(true,j,close_rank,false)
           elseif resolve_str=="q" then
-            -- nothing
+            print("    <continuing quietly, no message>")
           else
             -- reset the flag
             self:message_resolution(false,j,close_rank,false)
@@ -307,18 +301,19 @@ function proj:resolve_grades(resolve_bool,canvas_subfin,canvas_submod,debug_user
           local resolve_str = io.read()
 
           if resolve_str=="y" then
-            local canv_assign_id = self.assignments[self.assign_name_canvas].id
-            if resolve_str=="y" or resolve_str=="q" then
+--            local canv_assign_id = self.assignments[self.assign_name_canvas].id
+--            if resolve_str=="y" or resolve_str=="q" then
 --              self:put(self.course_prefix.."assignments/"..canv_assign_id.."/provisional_grades/"..j.metadata.supervisor_provisional_id.."/select")
 --              self:put(self.course_prefix.."assignments/"..canv_assign_id.."/provisional_grades/"..j.metadata.moderator_provisional_id.."/select")
-            end
+--            end
             self:message_resolution(true,j,close_rank,true)
           elseif resolve_str=="q" then
-            local canv_assign_id = self.assignments[self.assign_name_canvas].id
-            if resolve_str=="y" or resolve_str=="q" then
+--            local canv_assign_id = self.assignments[self.assign_name_canvas].id
+--            if resolve_str=="y" or resolve_str=="q" then
 --              self:put(self.course_prefix.."assignments/"..canv_assign_id.."/provisional_grades/"..j.metadata.supervisor_provisional_id.."/select")
 --              self:put(self.course_prefix.."assignments/"..canv_assign_id.."/provisional_grades/"..j.metadata.moderator_provisional_id.."/select")
-            end
+--            end
+            print("    <resolved quietly, no message sent>")
           else
             -- reset the flag
             self:message_resolution(false,j,close_rank,false)
@@ -333,7 +328,7 @@ function proj:resolve_grades(resolve_bool,canvas_subfin,canvas_submod,debug_user
 
     if j.user.name == debug_user then
       pretty.dump(j)
-      io.read()
+      local _ = io.read()
     end
 
   end
@@ -347,10 +342,7 @@ end
 
 function proj:message_resolution(send_bool,j,close_rank,inconsistent_resolved)
 
-  local assm = self.deliverable or "final"
-
-  local body_text = "\n\n" .. [[
-You have assessed the following student/group:]] .. "\n\n" ..
+  local body_text = "\n\n" .. "You have assessed (for " .. self.deliverable .. ") the following student/group:\n\n" ..
 " • " .. j.user.name .. ": " .. j.metadata.proj_title .. " ("..j.metadata.proj_id..")" .. "\n\n" ..
     "They have been awarded marks of: " .. "\n\n" ..
     " • Supervisor - "..j.metadata.supervisor_mark_entered.." (" .. j.metadata.supervisor .. ")\n" ..
@@ -413,7 +405,7 @@ Thank you for your significant contributions towards the success of our capstone
     recip[#recip+1] = tostring(self.staff[coord[2]].id)
   end
 
-  xx = self:message_user(send_bool,{
+  local xx = self:message_user(send_bool,{
     canvasid  = recip ,
     subject   =
       self.assign_name_colloq ..
