@@ -66,7 +66,7 @@ function proj:check_assessment_flags(verbose)
       if self.assign_moderated then
         resolve[fields[ind]] = fields['RESOLVED']
       else
-        resolve[fields[ind]] = not(fields['MARK'] == "") and "Y" or "N"
+        resolve[fields[ind]] = fields['MARK'] ~= "" and "Y" or "N"
       end
     end
   end
@@ -78,7 +78,7 @@ function proj:check_assessment_flags(verbose)
     some_missing = true
   end
   for _,v in pairs(resolve) do
-    if not(v=="Y") then
+    if v ~= "Y" then
       some_missing = true
       break
     end
@@ -99,7 +99,7 @@ function proj:export_csv_marks_moderated(subm,arg)
 
   if next(subm)==nil then
     self:print("Problem! Submission data to export is empty!")
-    io.read()
+    local _ = io.read()
     return
   end
 
@@ -143,7 +143,7 @@ function proj:export_csv_marks_moderated(subm,arg)
 
     local similarity_score = ""
     if j.turnitin_data then
-      for k,v in pairs(j.turnitin_data) do
+      for _,v in pairs(j.turnitin_data) do
         if v.similarity_score then
           similarity_score = v.similarity_score
         end
@@ -249,7 +249,7 @@ function proj:export_csv_marks(subm)
       (late_hrs)..","..
       (j.metadata.url or "")
 
-    if not(j.grade == "-1") then
+    if j.grade ~= "-1" then
       io.write(writestr.."\n")
 	end
   end
