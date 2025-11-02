@@ -1,7 +1,6 @@
 
 
 local pretty  = require("pl.pretty")
-local canvas  = require("canvas-lms")
 
 local proj = {}
 
@@ -29,7 +28,7 @@ function proj:check_marking(assign_data,check_bool,assgn_lbl,debug_user)
 
   if self.assignments[self.assign_name_canvas].moderated_grading then
     self:print("\n## CHECKING ASSIGNMENT MARKING (MODERATED): "..self.assign_name_canvas)
-    assign_data = self:check_moderated(assign_data,check_bool,assgn_lbl,debug_user)
+    assign_data = self:check_moderated(assign_data,check_bool,debug_user)
   else
     self:print("\n## CHECKING ASSIGNMENT MARKING (NOT MODERATED): "..self.assign_name_canvas)
     assign_data = self:check_assignment(assign_data,check_bool,assgn_lbl,debug_user)
@@ -50,7 +49,6 @@ function proj:check_assignment(assign_data,check_bool,assgn_lbl,debug_user)
 
 --    self:print("* SUBMISSION: "..i..". Student: "..j.user.name.."  ("..j.user.sis_user_id..")")
 
-    local assr
     local grade = j.grade
 --    local grader_cid = j.grader_id -- DELETE IF NOT NEEDED
 
@@ -156,6 +154,7 @@ function proj:check_assignment(assign_data,check_bool,assgn_lbl,debug_user)
         end
         if rubric_count < Nrubric then
           logmessage = logmessage .. "\n" ..("Assessment started but not yet complete; no grade and only "..rubric_count.." of "..Nrubric.." rubric entries.")
+          print(logmessage)
         else
           if check_bool then
             print(logmessage)
@@ -176,7 +175,7 @@ function proj:check_assignment(assign_data,check_bool,assgn_lbl,debug_user)
 
     if j.user.name == debug_user then
       pretty.dump(j)
---      error()
+      local _ = io.read()
     end
 
   end
@@ -188,7 +187,7 @@ end
 
 
 
-function proj:check_moderated(assign_data,check_bool,assgn_lbl,debug_user)
+function proj:check_moderated(assign_data,check_bool,debug_user)
 
   local late_thresh  = 30 -- minutes
 
@@ -234,7 +233,7 @@ function proj:check_moderated(assign_data,check_bool,assgn_lbl,debug_user)
       logmessage = logmessage .. "\n" .. ("URL: "..j.metadata.url)
 
       if j.late and j.late_policy_status == "late" then
-        marks_lost = j.points_deducted or 0
+        local marks_lost = j.points_deducted or 0
         logmessage = logmessage .. "\n" .. ("LATE - points deducted: "..marks_lost.." - late by: "..(j.seconds_late/60).." min = "..(j.seconds_late/60/60).." hrs = "..(j.seconds_late/60/60/24).." days")
         if j.seconds_late < late_thresh*60 then
           print(logmessage)
@@ -262,7 +261,7 @@ function proj:check_moderated(assign_data,check_bool,assgn_lbl,debug_user)
           local jj = jg.rubric_assessments[#jg.rubric_assessments]
 
           assr = jj.assessor_name
-          assessor_lookup = self:staff_lookup_cid(jj.assessor_id)
+          local assessor_lookup = self:staff_lookup_cid(jj.assessor_id)
           assr_uid = assessor_lookup.login_id
 
           logmessage = logmessage .. "\n" .. ("Assessor "..ig..": "..assr.." ("..assr_uid..")")
@@ -307,9 +306,10 @@ function proj:check_moderated(assign_data,check_bool,assgn_lbl,debug_user)
 
           end
 
-        elseif #jg.rubric_assessments == 0 and not(jg.score==nil) then
+        elseif #jg.rubric_assessments == 0 and jg.score then
 
           scr  = jg.score
+          local assessor_lookup
           assessor_lookup, assr = self:staff_lookup_cid(jg.scorer_id)
           assr_uid = assessor_lookup.login_id
 
@@ -333,7 +333,7 @@ function proj:check_moderated(assign_data,check_bool,assgn_lbl,debug_user)
         if self.verbose > 0 then print("Assessor: "..(assr or "").." | Score: "..(scr or "").." | rubric_fail: "..(rubric_fail and "TRUE" or "FALSE")) end
         if assr and scr and not(rubric_fail) then
           assign_data[i].marks[assr_uid] = {assr,scr}
-          if not(assign_data[i].metadata==nil) then
+          if assign_data[i].metadata then
             if assign_data[i].metadata.supervisor_id == assr_uid then
               assgn_lbl = "supervisor"
             elseif assign_data[i].metadata.moderator_id == assr_uid then
@@ -347,7 +347,7 @@ function proj:check_moderated(assign_data,check_bool,assgn_lbl,debug_user)
           assign_data[i].metadata[assgn_lbl.."_mark_entered"] = scr
           assign_data[i].metadata[assgn_lbl.."_penalty"] = marks_lost
           assign_data[i].metadata[assgn_lbl.."_seconds_late"] = (j.seconds_late or 0)
-          assign_data[i].metadata[assgn_lbl.."_graded_at"] = (graded_at or "")
+          assign_data[i].metadata[assgn_lbl.."_graded_at"] = (j.graded_at or "")
         end
 
       end
@@ -368,8 +368,8 @@ end
 
 function proj:message_rubric_fail(remind_check,j,score,rubric_sum,rubric_count,Nrubric,assr,assr_uid)
 
-  local assr = assr or j.metadata.supervisor
-  local assr_uid = assr_uid or j.metadata.supervisor_id
+  assr = assr or j.metadata.supervisor
+  assr_uid = assr_uid or j.metadata.supervisor_id
 
   local rubric_fail_str = ""
   if rubric_count == 0 then
@@ -401,7 +401,7 @@ end
 function proj:message_rubric_no_grade(remind_check,j,assessor_name,assr_uid)
 
   local assr = assessor_name or j.metadata.supervisor
-  local assr_uid = assr_uid or j.metadata.supervisor_id
+  assr_uid = assr_uid or j.metadata.supervisor_id
 
   self:message_user(remind_check,{
     canvasid  = {self.all_staff[assr_uid].id} ,
