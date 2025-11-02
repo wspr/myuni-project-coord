@@ -1,16 +1,13 @@
 
 local csv     = require("csv")
 local pretty  = require("pl.pretty")
-local path    = require("pl.path")
-local canvas  = require("canvas-lms")
 
 local proj = {}
-
 
 function proj:read_staff(opt)
 
   opt = opt or {}
-  csvfile = opt.csvfile or ("../csv/erp-staff-export.csv")
+  local csvfile = opt.csvfile or ("../csv/erp-staff-export.csv")
 
   print("Reading CSV data of projects & supervisors: "..csvfile)
   local f = csv.open(csvfile,{header=true})
@@ -34,9 +31,9 @@ function proj:read_supervisors(opt)
   self:read_staff()
 
   opt = opt or {}
-  cohort  = opt.cohort or self.cohort
-  csvfile = opt.csvfile or ("../csv/erp-projects-export.csv")
-  ugpg    = opt.ugpg or ""
+  local cohort  = opt.cohort or self.cohort
+  local csvfile = opt.csvfile or ("../csv/erp-projects-export.csv")
+  local ugpg    = opt.ugpg or ""
 
   if ugpg == "" then
     error("Need to specify ' ugpg = \"UG\" ' or PG")
