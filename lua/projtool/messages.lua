@@ -4,8 +4,7 @@ local proj = {}
 
 function proj:message_student_no_submission(remind_check,j)
 
-  local assr = assessor_name or j.metadata.supervisor
-  local assr_uid = assr_uid or j.metadata.supervisor_id
+  local assr_uid = j.metadata.supervisor_id
 
   self:message_user(remind_check,{
     canvasid  = {j.user.id,self.all_staff[assr_uid].id} ,
@@ -22,8 +21,7 @@ j.metadata.url .. "\n" .. self.message.signoff
 end
 function proj:message_student_no_submission_sup(remind_check,j)
 
-  local assr = assessor_name or j.metadata.supervisor
-  local assr_uid = assr_uid or j.metadata.supervisor_id
+  local assr_uid = j.metadata.supervisor_id
 
   self:message_user(remind_check,{
     canvasid  = {j.user.id,self.all_staff[assr_uid].id} ,
