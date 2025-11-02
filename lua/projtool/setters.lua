@@ -1,9 +1,4 @@
 
-local pretty  = require("pl.pretty")
-local path    = require("pl.path")
-local binser  = require("binser")
-local canvas  = require("canvas-lms")
-
 local proj = {}
 
 function proj:set_canvas(c)

@@ -1,10 +1,10 @@
 
 
 local csv     = require("csv")
-local pretty  = require("pl.pretty")
+-- local pretty  = require("pl.pretty")
 local path    = require("pl.path")
-local file    = require("pl.file")
-local canvas  = require("canvas-lms")
+-- local file    = require("pl.file")
+-- local canvas  = require("canvas-lms")
 
 
 local proj = {}

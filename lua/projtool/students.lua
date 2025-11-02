@@ -1,21 +1,12 @@
 
-
 local csv     = require("csv")
-local canvas  = require("canvas-lms")
-local pretty  = require("pl.pretty")
+--local pretty  = require("pl.pretty")
 local path    = require("pl.path")
 local file    = require("pl.file")
 
-
-
 local proj = {}
 
-
-
-
-
-
-function proj:list_students(dl_bool,semnow,cohort,UGPG)
+function proj:list_students(dl_bool,_,cohort,UGPG)
 
 
   local csv_path       = "../csv/"
@@ -33,26 +24,30 @@ function proj:list_students(dl_bool,semnow,cohort,UGPG)
   checkpath("CSV file",sonia_csv)
   checkpath("Moderators file",moderators_csv)
 
-  local f = csv.open(sonia_csv,{header=true})
   local lookup_groups = {}
+  do
+  local f = csv.open(sonia_csv,{header=true})
   for fields in f:lines() do
-    if not(fields.Cohort==nil) and (fields.Active=="True") then
+    if fields.Cohort and (fields.Active=="True") then
       lookup_groups[fields["MyUni Project ID"]] = fields
     end
   end
+  end
 
   local lookup_mods = {}
+  do
   local f = csv.open(moderators_csv,{header=true})
   if f then
     for fields in f:lines() do
-      if not(fields["MyUni Project ID"]==nil) then
+      if fields["MyUni Project ID"] then
         lookup_mods[fields["MyUni Project ID"]] = fields
       end
     end
   end
+  end
 
-  myuni_groups = self:get_groups_by_cat(dl_bool,group_name)
-  for grp,v in pairs(myuni_groups) do
+  local myuni_groups = self:get_groups_by_cat(dl_bool,group_name)
+  for grp in pairs(myuni_groups) do
     if grp:sub(-5,-1) == "00000" then
       myuni_groups[grp] = nil
     end
@@ -61,7 +56,7 @@ function proj:list_students(dl_bool,semnow,cohort,UGPG)
   local f = csv.open(sonia_csv,{header=true})
   local sonia_groups  = {}
   for fields in f:lines() do
-    if not(fields.Cohort==nil) then
+    if fields.Cohort then
       if (fields.Cohort == self.cohort) and (fields.UGPG == UGPG) and (fields.Active=="True") then
         sonia_groups[#sonia_groups+1] = fields
       end
@@ -69,11 +64,11 @@ function proj:list_students(dl_bool,semnow,cohort,UGPG)
   end
 
   print("# Consistency check of data\n")
-  consistency_error = false
+  local consistency_error = false
 
   local count = 0
   local sonia_names = {}
-  for k,v in pairs(sonia_groups) do
+  for _,v in pairs(sonia_groups) do
     count = count + 1
     local grp = v["MyUni Project ID"]
     grp = grp:gsub("%a$", "") -- remove trailing digit when group has been split
@@ -81,7 +76,7 @@ function proj:list_students(dl_bool,semnow,cohort,UGPG)
       print("• CSV group not found in MyUni: "..grp)
       consistency_error = true
     else
-      if not( tonumber( v["N students"] ) == myuni_groups[grp].Nstudents ) then
+      if tonumber( v["N students"] ) ~= myuni_groups[grp].Nstudents then
         print("• "..grp.." : check group size : MyUni = "..myuni_groups[grp].Nstudents.." | CSV = "..v["N students"] )
         consistency_error = true
       end
@@ -91,7 +86,7 @@ function proj:list_students(dl_bool,semnow,cohort,UGPG)
 
 
   local count2 = 0
-  for grp,v in pairs(myuni_groups) do
+  for grp in pairs(myuni_groups) do
     grp = grp:gsub("%a$", "") -- remove trailing digit when group has been split
     count2 = count2 + 1
     if (sonia_names[grp] == nil) then
@@ -126,7 +121,7 @@ function proj:list_students(dl_bool,semnow,cohort,UGPG)
 
   io.write(csvrow{"Name","ID","ProjID","ShortID","ProjTitle","School","Supervisor","SupervisorID","Assessor","AssessorID","Moderator","ModeratorID"})
   for gid,v in pairs(myuni_groups) do
-    grp = gid:gsub("%a$", "") -- remove trailing digit when group has been split
+    local grp = gid:gsub("%a$", "") -- remove trailing digit when group has been split
     for _,u in ipairs(v.users) do
       local id = string.sub(u.login_id,2,-1) or u.sis_user_id or ""
       lookup_mods[grp] = lookup_mods[grp] or {}
