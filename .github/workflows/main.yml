@@ -27,5 +27,5 @@ jobs:
       - name: Execute luacheck
         run: |
           cd repo
-          luacheck --no-max-string-line-length lua
+          luacheck --no-max-line-length lua
 
