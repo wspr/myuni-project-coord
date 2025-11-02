@@ -1,6 +1,6 @@
 
 local path     = require("pl.path")
-local pretty   = require("pl.pretty")
+--local pretty   = require("pl.pretty")
 
 local proj = {}
 
@@ -22,9 +22,10 @@ function proj:summarise_marks(assign_data,assign_data2,args)
   self:get_assignments()
 
   local assm_rubric
-  local entr, tabl = next(assign_data)
-  aid = tabl.assignment_id
-  for i,v in pairs(self.assignments) do
+  local _, tabl = next(assign_data)
+  tabl = tabl or {}
+  local aid = tabl.assignment_id
+  for _,v in pairs(self.assignments) do
     if v.id == aid then
       assm_rubric = v.rubric
       break
@@ -37,7 +38,7 @@ function proj:summarise_marks(assign_data,assign_data2,args)
   local prefix = args.prefix or "marks-"
   local runs = args.runs or 2
   local subpath = args.path or "assessments"
-  if not (subpath:sub(-1,-1) == "/") then
+  if subpath:sub(-1,-1) ~= "/" then
     subpath = subpath.."/"
   end
   local buildpath = subpath.."build/"
@@ -205,10 +206,10 @@ function proj:assessor_print(assm_rubric,prov_grade,assessor_name)
 ]]
         for iid,jjd in ipairs(jd.data) do
 
-          local descr = jjd.description
-          if descr == "No Details" then
-            descr = "---"
-          end
+--          local descr = jjd.description
+--          if descr == "No Details" then
+--            descr = "---"
+--          end
           local comments = (jjd.comments or "")
           if comments == "" then
             comments = "---"
