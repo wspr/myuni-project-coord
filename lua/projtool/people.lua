@@ -54,7 +54,7 @@ function proj:read_supervisors(opt)
   end
 
   local ids = {}
-  for ii,jj in ipairs(projects) do
+  for _,jj in ipairs(projects) do
     ids[jj["Supervisor ID"]] = true
     ids[jj["Co ID 1"]] = true
     ids[jj["Co ID 2"]] = true
@@ -62,7 +62,7 @@ function proj:read_supervisors(opt)
   end
   ids[""] = nil
 
-  for kk,vv in pairs(ids) do
+  for kk in pairs(ids) do
     if kk:len() ~= 8 then
       print(kk,"- ID looks wrong")
       ids[kk] = nil
@@ -84,7 +84,7 @@ function proj:read_extra_staff(opt)
   self:read_staff()
 
   opt = opt or {}
-  csvfile = opt.csvfile or ("../csv/erp-extra-staff-myuni.csv")
+  local csvfile = opt.csvfile or ("../csv/erp-extra-staff-myuni.csv")
 
   print("Reading CSV data of professional staff: "..csvfile)
   local f = csv.open(csvfile,{header=true})
@@ -127,13 +127,13 @@ function proj:staff_lookup_cid(acad_cid)
   if acad_cid == nil then
     error("'acad_cid' argument is nil. Use action 'redownload staf[f]'?")
   end
-  acad_uid = self.all_staff_id_by_cid[acad_cid]
+  local acad_uid = self.all_staff_id_by_cid[acad_cid]
   if acad_uid == nil then
     pretty.dump(self.all_staff_id_by_cid)
     error("Assessor with Canvas ID "..acad_cid.." not found in 'all staff' list.")
   end
 
-  acad_lookup, acad_name = self:staff_lookup(acad_uid)
+  local acad_lookup, acad_name = self:staff_lookup(acad_uid)
   return acad_lookup, acad_name
 
 end
@@ -224,12 +224,9 @@ function proj:read_student_lists(csvfile)
       end
   end
 
-
-
-
   local not_found_canvas = ""
-  for id,dat in pairs(self.all_staff) do
-    if not(id == "") then
+  for id,_ in pairs(self.all_staff) do
+    if id ~= "" then
       local tbl = self.staff[id]
       if tbl == nil then
         print("No user found for user: "..id)
