@@ -16,14 +16,18 @@ function proj:message_reminder_add(j,rem_table,args)
   local assm = self.deliverable
 
   local acad_id = j.metadata[sup_or_mod.."_id"]
-  if sup_or_mod == "supervisor" and j.metadata["assessor_id"] then
+  local alt_assessor = j.metadata["assessor_id"]
+  if alt_assessor == "" then alt_assessor = nil end
+  if sup_or_mod == "supervisor" and alt_assessor then
+      print("Using alternate assessor instead of supervisor")
       acad_id = j.metadata["assessor_id"] -- override supervisor with alternate assessor
   end
   local staff_lookup, acad_name
   if (acad_id == nil) or (acad_id == "") then
-    pretty.dump(j)
+    print("!!!!!!!!!!!!")
     pretty.dump(j.metadata)
-    print("!!!!!!!!!!!! Huh? Missing metadata: '"..sup_or_mod.."_id'")
+    print("!!!!!!!!!!!! Missing metadata for assessor: '"..sup_or_mod.."_id'")
+    _ = io.read()
     staff_lookup = {}
     acad_name = "MISSING"
   else
@@ -372,7 +376,7 @@ function proj:assessor_reminder_export(rem_table,suffix)
   self:print("...done.")
 
   local merge_tbl = {}
-  for _,v in pairs(rem_table) do
+  for ii,v in pairs(rem_table) do
     for _,assn in pairs(v.marking) do
       for _,prj in ipairs(assn.projects) do
 
@@ -408,8 +412,8 @@ function proj:assessor_reminder_export(rem_table,suffix)
             merge_tbl[uid][role] = merge_tbl[uid][role] .. "\n\n" .. rem_text
           end
         else
-          print("Missing UID?")
-          pretty.dump(v)
+          print("rem_table["..ii.."]: Missing assessor details")
+          _ = io.read()
         end
       end
     end
