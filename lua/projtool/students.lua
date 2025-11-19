@@ -1,8 +1,8 @@
 
 local csv     = require("csv")
---local pretty  = require("pl.pretty")
 local path    = require("pl.path")
 local file    = require("pl.file")
+--local pretty  = require("pl.pretty")
 
 local proj = {}
 
@@ -126,6 +126,7 @@ function proj:list_students(dl_bool,_,cohort,UGPG)
       local id = string.sub(u.login_id,2,-1) or u.sis_user_id or ""
       lookup_mods[grp] = lookup_mods[grp] or {}
       local this_group = lookup_groups[grp]
+      local this_mod   = lookup_mods[grp]
       if not this_group then
         print("Group not found in lookup: ",this_group)
       end
@@ -138,10 +139,10 @@ function proj:list_students(dl_bool,_,cohort,UGPG)
         this_group["Project School"],
         qq(this_group["Project supervisor"]),
         this_group["Supervisor ID"],
-        qq(lookup_mods[grp]["Assessor"] or ""),
-        lookup_mods[grp]["Assessor ID"] or "",
-        qq(lookup_mods[grp]["Moderator"] or ""),
-        lookup_mods[grp]["Mod ID"] or "",
+        qq(this_mod["AssessorName"] or ""),
+        this_mod["AssessorID"] or "",
+        qq(this_mod["Moderator"] or ""),
+        this_mod["Mod ID"] or "",
       })
     end
   end
