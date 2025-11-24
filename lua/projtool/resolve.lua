@@ -287,7 +287,7 @@ function proj:resolve_grades(resolve_bool,canvas_subfin,canvas_submod,debug_user
           end
         end
 
-        if (csv_resolve == "N") and (resolve_msg[close_rank].flag == "Y") then
+        if false and (csv_resolve == "N") and (resolve_msg[close_rank].flag == "Y") then
           print("=====================================")
           print("# Assessment resolution: "..j.user.name..", "..j.metadata.proj_title.." ("..j.metadata.proj_id..")")
           print("INCONSISTENCY RESOLVED")
