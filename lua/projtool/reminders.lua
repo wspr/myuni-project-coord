@@ -19,7 +19,7 @@ function proj:message_reminder_add(j,rem_table,args)
   local alt_assessor = j.metadata["assessor_id"]
   if alt_assessor == "" then alt_assessor = nil end
   if sup_or_mod == "supervisor" and alt_assessor then
-      print("Using alternate assessor instead of supervisor")
+      self:info("Using alternate assessor «" .. j.metadata["assessor"] .. "» instead of supervisor «" .. j.metadata["supervisor"] .. "»")
       acad_id = j.metadata["assessor_id"] -- override supervisor with alternate assessor
   end
   local staff_lookup, acad_name
